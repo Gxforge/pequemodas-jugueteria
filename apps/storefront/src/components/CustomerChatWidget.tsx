@@ -1,25 +1,28 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Bot, MessageCircle, Send, Sparkles, X } from 'lucide-react';
 import {
   fetchCustomerChatThread,
   getStoredCustomerIdentity,
   isChatSupabaseConfigured,
+  isSupabaseConfigured,
   openOrResumeCustomerChat,
-  sendCustomerChatMessage
+  sendCustomerChatMessage,
+  type CrmChatMessage
 } from '@pequemodas/shared';
-import { Button, Input } from '@pequemodas/ui';
+import { Button, Input, MessageStatusTicks } from '@pequemodas/ui';
 import { formatDateTimeEs } from '@pequemodas/utils';
 
 export function CustomerChatWidget() {
-  const configured = isChatSupabaseConfigured();
+  const configured = isSupabaseConfigured() || isChatSupabaseConfigured();
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
   const [identity, setIdentity] = useState(() => getStoredCustomerIdentity());
   const [nameInput, setNameInput] = useState(identity?.fullName ?? '');
   const [phoneInput, setPhoneInput] = useState(identity?.phone ?? '');
   const [draft, setDraft] = useState('');
-  const [busy, setBusy] = useState(false);
+  const [starting, setStarting] = useState(false);
+  const [pendingQueue, setPendingQueue] = useState<CrmChatMessage[]>([]);
   const [errMsg, setErrMsg] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
 
@@ -37,21 +40,35 @@ export function CustomerChatWidget() {
     queryKey: ['customer-live-chat', identity?.customerToken],
     queryFn: fetchCustomerChatThread,
     enabled: configured && isOpen && Boolean(identity?.customerToken),
-    refetchInterval: isOpen ? 5000 : false
+    refetchInterval: isOpen ? 2500 : false
   });
+
+  const mergedMessages = useMemo(() => {
+    const serverMsgs = thread?.messages ?? [];
+    const serverBodies = new Set(
+      serverMsgs
+        .filter((m) => m.sender_role === 'customer')
+        .slice(-10)
+        .map((m) => m.body)
+    );
+    const activePending = pendingQueue.filter(
+      (p) => p.delivery_state === 'failed' || !serverBodies.has(p.body)
+    );
+    return [...serverMsgs, ...activePending];
+  }, [thread?.messages, pendingQueue]);
 
   useEffect(() => {
     if (isOpen) {
       endRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [isOpen, thread?.messages.length]);
+  }, [isOpen, mergedMessages.length]);
 
   if (!configured) return null;
 
   const handleStartChat = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrMsg(null);
-    setBusy(true);
+    setStarting(true);
     try {
       const saved = await openOrResumeCustomerChat({
         fullName: nameInput,
@@ -62,30 +79,53 @@ export function CustomerChatWidget() {
     } catch (err) {
       setErrMsg(err instanceof Error ? err.message : 'No se pudo abrir el chat.');
     } finally {
-      setBusy(false);
+      setStarting(false);
     }
   };
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!draft.trim() || busy) return;
-    setErrMsg(null);
-    setBusy(true);
+  const dispatchOptimisticMessage = async (text: string, tempId?: string) => {
+    const id = tempId ?? `temp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    const optimistic: CrmChatMessage = {
+      id,
+      sender_role: 'customer',
+      sender_name: identity?.fullName ?? 'Tú',
+      body: text,
+      order_id: null,
+      read_at: null,
+      created_at: new Date().toISOString(),
+      delivery_state: 'sending'
+    };
+
+    setPendingQueue((prev) =>
+      tempId
+        ? prev.map((m) => (m.id === tempId ? { ...m, delivery_state: 'sending' } : m))
+        : [...prev, optimistic]
+    );
+
     try {
-      const msg = draft.trim();
-      setDraft('');
-      await sendCustomerChatMessage(msg);
+      await sendCustomerChatMessage(text);
+      setPendingQueue((prev) =>
+        prev.map((m) => (m.id === id ? { ...m, delivery_state: 'sent' } : m))
+      );
       await queryClient.invalidateQueries({ queryKey: ['customer-live-chat'] });
-    } catch (err) {
-      setErrMsg(err instanceof Error ? err.message : 'Error al enviar mensaje.');
-    } finally {
-      setBusy(false);
+      setPendingQueue((prev) => prev.filter((m) => m.id !== id));
+    } catch {
+      setPendingQueue((prev) =>
+        prev.map((m) => (m.id === id ? { ...m, delivery_state: 'failed' } : m))
+      );
     }
+  };
+
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    const clean = draft.trim();
+    if (!clean) return;
+    setDraft('');
+    void dispatchOptimisticMessage(clean);
   };
 
   return (
     <>
-      {/* Botón flotante para conversar directo con la tienda */}
       {!isOpen && (
         <button
           type="button"
@@ -102,9 +142,8 @@ export function CustomerChatWidget() {
         <div
           role="dialog"
           aria-label="Chat en vivo PequeModas-Juguetería"
-          className="fixed z-50 bottom-0 sm:bottom-5 left-0 sm:left-5 w-full sm:w-[390px] h-[82vh] sm:h-[540px] bg-white sm:rounded-3xl shadow-2xl border border-brand-100 flex flex-col overflow-hidden"
+          className="fixed z-50 bottom-0 sm:bottom-5 left-0 sm:left-5 w-full sm:w-[392px] h-[82vh] sm:h-[545px] bg-white sm:rounded-3xl shadow-2xl border border-brand-100 flex flex-col overflow-hidden"
         >
-          {/* Cabecera estilo mensajería moderna */}
           <div className="bg-gradient-to-r from-brand-600 via-brand-500 to-sky-500 text-white px-4 py-3.5 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <img
@@ -136,7 +175,7 @@ export function CustomerChatWidget() {
             <form onSubmit={handleStartChat} className="p-5 space-y-4 flex-1 overflow-y-auto">
               <div className="rounded-2xl bg-brand-50/70 border border-brand-100 p-3.5 text-xs text-slate-700 leading-relaxed">
                 Déjanos tu <strong>nombre</strong> y <strong>teléfono</strong> para abrir tu
-                conversación directa con Katia y guardar tus pedidos sin perder el hilo.
+                conversación directa estilo WhatsApp con Katia.
               </div>
               {errMsg && <p className="text-xs font-bold text-rose-600">{errMsg}</p>}
               <Input
@@ -153,27 +192,30 @@ export function CustomerChatWidget() {
                 value={phoneInput}
                 onChange={(e) => setPhoneInput(e.target.value)}
               />
-              <Button type="submit" fullWidth isLoading={busy}>
+              <Button type="submit" fullWidth isLoading={starting}>
                 Iniciar conversación
               </Button>
             </form>
           ) : (
             <>
-              <div className="flex-1 overflow-y-auto bg-slate-50 p-3.5 space-y-2.5">
-                {(thread?.messages ?? []).map((msg) => {
+              <div className="flex-1 overflow-y-auto bg-[#efeae2]/60 p-3.5 space-y-2">
+                {mergedMessages.map((msg) => {
                   const isCustomer = msg.sender_role === 'customer';
                   const isBot = msg.sender_role === 'bot';
+                  const tickState =
+                    msg.delivery_state ?? (msg.read_at ? 'read' : 'sent');
+
                   return (
                     <div
                       key={msg.id}
                       className={`flex ${isCustomer ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
-                        className={`max-w-[84%] rounded-2xl px-3.5 py-2.5 text-xs sm:text-sm shadow-sm ${
+                        className={`max-w-[84%] rounded-2xl px-3.5 py-2 text-xs sm:text-sm shadow-sm ${
                           isCustomer
-                            ? 'bg-brand-600 text-white rounded-br-sm'
+                            ? 'bg-[#dcf8c6] border border-emerald-200 text-slate-900 rounded-br-sm'
                             : isBot
-                              ? 'bg-sky-50 border border-sky-200 text-slate-800 rounded-bl-sm'
+                              ? 'bg-sky-50 border border-sky-200 text-slate-900 rounded-bl-sm'
                               : 'bg-white border border-slate-200 text-slate-900 rounded-bl-sm'
                         }`}
                       >
@@ -184,25 +226,21 @@ export function CustomerChatWidget() {
                           </p>
                         )}
                         <p className="whitespace-pre-wrap leading-relaxed">{msg.body}</p>
-                        <p
-                          className={`text-[10px] mt-1 text-right ${
-                            isCustomer ? 'text-white/80' : 'text-slate-400'
-                          }`}
-                        >
-                          {formatDateTimeEs(msg.created_at)}
-                        </p>
+                        <div className="mt-1 flex items-center justify-end gap-1 text-[10px] text-slate-500">
+                          <span>{formatDateTimeEs(msg.created_at)}</span>
+                          {isCustomer && (
+                            <MessageStatusTicks
+                              state={tickState}
+                              onRetry={() => void dispatchOptimisticMessage(msg.body, msg.id)}
+                            />
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
                 })}
                 <div ref={endRef} />
               </div>
-
-              {errMsg && (
-                <p className="px-3 py-1 text-xs font-bold text-rose-600 bg-rose-50">
-                  {errMsg}
-                </p>
-              )}
 
               <form
                 onSubmit={handleSendMessage}
@@ -212,14 +250,14 @@ export function CustomerChatWidget() {
                   type="text"
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
-                  placeholder="Escribe tu mensaje aquí..."
+                  placeholder="Escribe un mensaje..."
                   className="flex-1 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm focus:bg-white focus:border-brand-400 focus:outline-none"
                 />
                 <button
                   type="submit"
-                  disabled={busy || !draft.trim()}
+                  disabled={!draft.trim()}
                   aria-label="Enviar mensaje"
-                  className="h-10 w-10 rounded-full bg-brand-600 text-white flex items-center justify-center disabled:opacity-50"
+                  className="h-10 w-10 rounded-full bg-brand-600 text-white flex items-center justify-center disabled:opacity-40 transition-transform active:scale-95"
                 >
                   <Send className="h-4 w-4" />
                 </button>

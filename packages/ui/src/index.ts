@@ -5,4 +5,5 @@ export * from './FormFields';
 export * from './CardAndBadge';
 export * from './ModalAndAlert';
 export * from './EmptyAndSkeleton';
+export * from './MessageStatusTicks';
 export * from './DesignSystemShowcase';

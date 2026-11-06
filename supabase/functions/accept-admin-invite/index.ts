@@ -25,9 +25,16 @@ Deno.serve(async (req: Request) => {
     const password = String(body?.password ?? '');
     const fullName = String(body?.fullName ?? '').trim();
 
-    if (token.length < 16 || !email.includes('@') || password.length < 8 || fullName.length < 2) {
+    if (
+      token.length < 16 ||
+      !email.includes('@') ||
+      password.length < 8 ||
+      fullName.length < 2
+    ) {
       return new Response(
-        JSON.stringify({ error: 'Completa todos los campos válidos (contraseña mínimo 8 caracteres).' }),
+        JSON.stringify({
+          error: 'Completa todos los campos válidos (contraseña mínimo 8 caracteres).'
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -50,17 +57,20 @@ Deno.serve(async (req: Request) => {
 
     if (invErr || !invite) {
       return new Response(
-        JSON.stringify({ error: 'Este enlace de invitación no es válido, ya fue usado o expiró.' }),
+        JSON.stringify({
+          error: 'Este enlace de invitación no es válido, ya fue usado o expiró.'
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const { data: created, error: createErr } = await adminClient.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: { full_name: fullName }
-    });
+    const { data: created, error: createErr } =
+      await adminClient.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { full_name: fullName }
+      });
 
     if (createErr || !created?.user) {
       const msg = createErr?.message?.includes('already')
@@ -80,13 +90,22 @@ Deno.serve(async (req: Request) => {
       email,
       full_name: fullName,
       role: invite.role,
+      job_title: invite.job_title ?? null,
+      permissions: invite.permissions ?? {
+        chat: true,
+        products: true,
+        categories: true,
+        inventory: true,
+        settings: invite.role === 'owner' || invite.role === 'admin',
+        team: invite.role === 'owner' || invite.role === 'admin'
+      },
       is_active: true
     });
 
     if (profErr) {
       await adminClient.auth.admin.deleteUser(userId);
       return new Response(
-        JSON.stringify({ error: 'Error al activar el perfil administrativo.' }),
+        JSON.stringify({ error: 'Error al activar el perfil del equipo.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -99,10 +118,10 @@ Deno.serve(async (req: Request) => {
     await adminClient.from('audit_logs').insert({
       store_id: invite.store_id,
       actor_id: userId,
-      action: 'admin.invite_accepted',
+      action: 'team.accept_invite',
       entity_type: 'profile',
       entity_id: userId,
-      metadata: { email, role: invite.role, full_name: fullName }
+      metadata: { email, role: invite.role, name: fullName }
     });
 
     return new Response(JSON.stringify({ ok: true, email, role: invite.role }), {

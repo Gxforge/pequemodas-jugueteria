@@ -17,12 +17,25 @@ export interface StoreRow {
   updated_at: string;
 }
 
+export type TeamRole = 'owner' | 'admin' | 'sales' | 'catalog' | 'moderator';
+
+export interface TeamPermissions {
+  chat: boolean;
+  products: boolean;
+  categories: boolean;
+  inventory: boolean;
+  settings: boolean;
+  team: boolean;
+}
+
 export interface ProfileRow {
   id: string;
   store_id: string | null;
   email: string;
   full_name: string | null;
-  role: 'owner' | 'admin';
+  role: TeamRole;
+  job_title?: string | null;
+  permissions?: Partial<TeamPermissions> | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;

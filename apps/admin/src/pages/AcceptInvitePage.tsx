@@ -10,6 +10,7 @@ import {
 import {
   acceptAdminInvitation,
   previewAdminInvitation,
+  ROLE_PRESETS,
   type InvitationPreview
 } from '@pequemodas/shared';
 import {
@@ -103,8 +104,10 @@ export function AcceptInvitePage() {
         ) : (
           <>
             <Alert variant="info" title={`¡Hola ${preview.intended_name ?? 'Katia'}!`}>
-              Crea tu acceso personal ({preview.role === 'owner' ? 'Propietaria' : 'Administrador'}).
-              Este enlace es de un solo uso para proteger tu tienda.
+              Crea tu acceso personal (
+              {preview.job_title ||
+                (preview.role ? ROLE_PRESETS[preview.role]?.label : 'Equipo')}
+              ). Este enlace es de un solo uso para proteger tu tienda.
             </Alert>
 
             {submitError && <Alert variant="error">{submitError}</Alert>}

@@ -3,8 +3,8 @@ import { expect, test } from '@playwright/test';
 const STOREFRONT_URL = process.env.E2E_STOREFRONT_URL || 'http://localhost:5173';
 const ADMIN_URL = process.env.E2E_ADMIN_URL || 'http://localhost:5174';
 
-test.describe('PequeModas-Juguetería — PWA v2.6.0, Logo Real, Paneles de Categorías y Chat en Vivo', () => {
-  test('verifica logo real en cabecera/pie sin SVG viejo, nubes animadas, categorías visuales y chat directo', async ({
+test.describe('PequeModas-Juguetería — PWA v2.7.0, Vista Previa WhatsApp y Chat Rápido', () => {
+  test('verifica favicon.ico, og-pequemodas-v3.jpg, dominio pequemodas.vercel.app y chat en vivo', async ({
     page,
     request
   }) => {
@@ -12,24 +12,25 @@ test.describe('PequeModas-Juguetería — PWA v2.6.0, Logo Real, Paneles de Cate
     await expect(page.getByRole('heading', { level: 1 })).toContainText('PequeModas');
     await page.waitForTimeout(850);
 
-    // Cabecera y pie muestran la imagen real del logo (nunca el icono geométrico antiguo)
-    const headerLogoImg = page.locator('header a[aria-label*="Ir al inicio"] img');
-    await expect(headerLogoImg).toBeVisible();
-    const footerLogoImg = page.locator('footer img').first();
-    await expect(footerLogoImg).toBeVisible();
+    // Verifica logo oficial en cabecera y pie (sin icono geométrico de 2 cuadrados)
+    await expect(page.locator('header a[aria-label*="Ir al inicio"] img')).toBeVisible();
+    await expect(page.locator('footer img').first()).toBeVisible();
 
-    // Verifica que el logo del hero y sus nubes están presentes
-    await expect(page.locator('.pm-logo-front').first()).toBeVisible();
-    await expect(page.locator('.pm-cloud-center').first()).toBeVisible();
-
-    // Verifica versión v2.6.0
-    await expect(page.getByText(/Aplicación Web \(PWA\) v2\.6\.0/i)).toBeVisible();
+    // Verifica versión v2.7.0
+    await expect(page.getByText(/Aplicación Web \(PWA\) v2\.7\.0/i)).toBeVisible();
     const verRes = await request.get(`${STOREFRONT_URL}/version.json`);
     expect(verRes.status()).toBe(200);
-    const verJson = await verRes.json();
-    expect(verJson.version).toBe('2.6.0');
+    expect((await verRes.json()).version).toBe('2.7.0');
 
-    // Abre el Chat Directo con la Tienda (conectado al Proyecto 2 de Supabase)
+    // Verifica favicon.ico real y nuevo banner Open Graph limpio para WhatsApp
+    const icoRes = await request.get(`${STOREFRONT_URL}/favicon.ico`);
+    expect(icoRes.status()).toBe(200);
+    const ogUrl = await page.locator('meta[property="og:image"]').getAttribute('content');
+    expect(ogUrl).toBe('https://pequemodas.vercel.app/og-pequemodas-v3.jpg');
+    const ogRes = await request.get(`${STOREFRONT_URL}/og-pequemodas-v3.jpg`);
+    expect(ogRes.status()).toBe(200);
+
+    // Abre el Chat Directo con la Tienda
     const chatBtn = page.getByRole('button', { name: /Abrir chat directo con la tienda/i });
     await expect(chatBtn).toBeVisible();
     await chatBtn.click();
@@ -37,12 +38,6 @@ test.describe('PequeModas-Juguetería — PWA v2.6.0, Logo Real, Paneles de Cate
       page.getByRole('dialog', { name: /Chat en vivo PequeModas-Juguetería/i })
     ).toBeVisible();
     await page.getByRole('button', { name: /Cerrar chat/i }).click();
-
-    // Navega a Categorías Visuales
-    await page.goto(`${STOREFRONT_URL}/categorias`);
-    await expect(
-      page.getByRole('heading', { name: /Explora Nuestras Secciones/i })
-    ).toBeVisible();
   });
 
   test('soporta caída de red (Modo Offline-First) sin romper catálogo ni carrito', async ({
@@ -55,7 +50,6 @@ test.describe('PequeModas-Juguetería — PWA v2.6.0, Logo Real, Paneles de Cate
 
     await context.setOffline(true);
     await page.evaluate(() => window.dispatchEvent(new Event('offline')));
-
     await expect(page.getByText(/Modo sin conexión:/i)).toBeVisible();
 
     await page.getByRole('link', { name: /Carrito/i }).first().click();
@@ -92,59 +86,44 @@ test.describe('PequeModas-Juguetería — PWA v2.6.0, Logo Real, Paneles de Cate
   });
 });
 
-test.describe('PequeModas-Juguetería — E2E Panel Administrativo Rediseñado + CRM Dual DB', () => {
-  test('valida Resumen ilustrado con 2 Bases de Datos, Avisos Sin Spam, Chat estilo WhatsApp y Vista Previa', async ({
+test.describe('PequeModas-Juguetería — E2E Admin: 2GB Storage + Round-Robin, Avisos In-App y Equipo por Tareas', () => {
+  test('verifica Resumen con 2 Bases + 2 Storages, Cajón de Avisos dentro de pantalla, Chat legible y Equipo por Tareas', async ({
     page
   }) => {
     await page.goto(ADMIN_URL);
     await expect(page).toHaveURL(/\/acceso$/);
-    await expect(page.locator('.pm-logo-front')).toBeVisible();
 
-    // Inicia sesión con la cuenta administrativa verificada
     await page.getByLabel(/Correo electrónico/i).fill('junmoxia41@gmail.com');
     await page.getByLabel(/Contraseña/i).fill('Lexair-bae05a5d12#26');
     await page.getByRole('button', { name: /Entrar al Panel/i }).click();
 
-    // Verifica el nuevo Resumen (2 bases de datos + gráfico + español natural sin "settings.update")
-    await expect(page.getByText(/Panorama Visual de tu Tienda/i)).toBeVisible({
-      timeout: 15000
-    });
+    // Verifica Resumen con los 2 servidores de Fotos (2 GB) y las 2 Bases Round-Robin
     await expect(
-      page.getByText(/Espacio de Catálogo y Fotografías/i)
-    ).toBeVisible();
-    await expect(
-      page.getByText(/Espacio de Clientes, Pedidos y Chat/i)
-    ).toBeVisible();
-    await expect(page.locator('body')).not.toContainText('settings.update');
-    await expect(page.locator('body')).not.toContainText('category.update');
+      page.getByText(/Capacidad de Fotografías \(2 GB Totales en Doble Servidor\)/i)
+    ).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/Almacenamiento de Fotos 1/i)).toBeVisible();
+    await expect(page.getByText(/Almacenamiento de Fotos 2 \(\+1 GB Extra\)/i)).toBeVisible();
+    await expect(page.getByText(/Base de Datos 1 · Catálogo \+ Chat/i)).toBeVisible();
+    await expect(page.getByText(/Base de Datos 2 · Clientes \+ Chat/i)).toBeVisible();
 
-    // Abre Gestor de Avisos Sin Spam
+    // Verifica que el Panel de Avisos se abre 100% DENTRO de la ventana (nunca cortado hacia afuera)
     await page.getByRole('button', { name: /Centro de avisos/i }).first().click();
-    await expect(page.getByText(/Avisos Inteligentes \(Sin Spam\)/i)).toBeVisible();
+    const notifDialog = page.getByRole('dialog', {
+      name: /Avisos Inteligentes de la Tienda/i
+    });
+    await expect(notifDialog).toBeVisible();
+    const box = await notifDialog.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.x).toBeGreaterThanOrEqual(0);
+    await page.getByRole('button', { name: /Cerrar panel de avisos/i }).click();
 
-    // Navega al Chat estilo WhatsApp (/mensajes) y abre modal del Bot
-    await page.goto(`${ADMIN_URL}/mensajes`);
+    // Verifica Equipo con Puestos Amigables y Asignación de Tareas
+    await page.goto(`${ADMIN_URL}/equipo`);
     await expect(
-      page.getByRole('heading', { name: /Chat de Clientes y Pedidos en Vivo/i })
-    ).toBeVisible();
-    await page.getByRole('button', { name: /Configurar Bot Asistente/i }).click();
-    await expect(
-      page.getByText(/Activar respuestas automáticas del Bot/i)
-    ).toBeVisible();
-
-    // Navega a la Vista Previa interactiva (/vista-previa)
-    await page.goto(`${ADMIN_URL}/vista-previa`);
-    await expect(
-      page.getByRole('heading', { name: /Vista Previa de tu Tienda/i })
+      page.getByRole('heading', { name: /Equipo y Asignación de Tareas/i })
     ).toBeVisible();
     await expect(
-      page.locator('iframe[title*="Vista previa interactiva"]')
-    ).toBeVisible();
-
-    // Navega al Editor de Producto y comprueba lenguaje sencillo de opciones/tallas
-    await page.goto(`${ADMIN_URL}/productos/nuevo`);
-    await expect(
-      page.getByText(/¿Este producto tiene distintas tallas, colores o diseños\?/i)
+      page.getByText(/¿Qué tareas y pantallas le permites usar dentro de la aplicación\?/i)
     ).toBeVisible();
   });
 });

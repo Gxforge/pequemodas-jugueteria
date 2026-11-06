@@ -52,7 +52,8 @@ export function ChatContactsSidebar({
           </div>
         ) : (
           contacts.map((c) => {
-            const active = c.id === selectedId;
+            const active =
+              c.id === selectedId || c.raw_id === selectedId;
             return (
               <button
                 key={c.id}
@@ -63,17 +64,22 @@ export function ChatContactsSidebar({
                 }`}
               >
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between gap-1.5">
                     <span className="font-heading font-extrabold text-sm text-slate-900 truncate">
                       {c.full_name}
                     </span>
+                    <span className="text-[10px] font-bold text-slate-400 shrink-0">
+                      {c.shard === 'p1' ? 'Base 1' : 'Base 2'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-[11px] font-semibold text-sky-700">{c.phone}</p>
                     {c.unread_for_admin > 0 && (
                       <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1.5 text-[10px] font-extrabold text-white">
                         {c.unread_for_admin}
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px] font-semibold text-sky-700">{c.phone}</p>
                   <p className="text-xs text-slate-500 truncate mt-0.5">
                     {c.last_message_preview || 'Sin mensajes'}
                   </p>

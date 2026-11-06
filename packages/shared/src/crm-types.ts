@@ -1,5 +1,9 @@
+export type CrmShardId = 'p1' | 'p2';
+
 export interface CrmCustomerContact {
   id: string;
+  raw_id?: string;
+  shard?: CrmShardId;
   customer_token: string;
   full_name: string;
   phone: string;
@@ -45,6 +49,8 @@ export interface CrmDirectOrder {
   updated_at: string;
 }
 
+export type MessageDeliveryState = 'sending' | 'sent' | 'read' | 'failed';
+
 export interface CrmChatMessage {
   id: string;
   contact_id?: string;
@@ -52,11 +58,15 @@ export interface CrmChatMessage {
   sender_name: string | null;
   body: string;
   order_id: string | null;
+  read_at?: string | null;
   created_at: string;
+  delivery_state?: MessageDeliveryState;
 }
 
 export interface CrmAdminNotification {
   id: string;
+  raw_id?: string;
+  shard?: CrmShardId;
   kind: 'direct_order' | 'customer_message' | 'cart_activity';
   title: string;
   body: string;
@@ -93,10 +103,20 @@ export interface CrmBotConfig {
 export interface CrmStorageOverview {
   dbBytesUsed: number;
   dbQuotaBytes: number;
+  storageBytesUsed: number;
+  storageQuotaBytes: number;
   contactsCount: number;
   directOrdersCount: number;
   pendingOrdersCount: number;
   unreadChatsCount: number;
   unreadNotificationsCount: number;
   messagesCount: number;
+}
+
+export interface DualProjectOverview {
+  p1: CrmStorageOverview;
+  p2: CrmStorageOverview | null;
+  totalContactsCount: number;
+  totalDirectOrdersCount: number;
+  totalUnreadChatsCount: number;
 }

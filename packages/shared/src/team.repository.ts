@@ -1,11 +1,13 @@
 import { getClientEnv, getSupabaseClient } from './supabase-client';
-import type { ProfileRow } from './types';
+import type { ProfileRow, TeamPermissions, TeamRole } from './types';
 
 export interface AdminInvitationRow {
   id: string;
   store_id: string;
   intended_name: string;
-  role: 'owner' | 'admin';
+  role: TeamRole;
+  job_title?: string | null;
+  permissions?: Partial<TeamPermissions> | null;
   expires_at: string;
   used_at: string | null;
   created_at: string;
@@ -14,8 +16,95 @@ export interface AdminInvitationRow {
 export interface InvitationPreview {
   valid: boolean;
   intended_name?: string;
-  role?: 'owner' | 'admin';
+  role?: TeamRole;
+  job_title?: string | null;
+  permissions?: Partial<TeamPermissions> | null;
   expires_at?: string;
+}
+
+export const ROLE_PRESETS: Record<
+  TeamRole,
+  {
+    label: string;
+    description: string;
+    defaultPermissions: TeamPermissions;
+  }
+> = {
+  owner: {
+    label: 'Dueña Principal',
+    description: 'Control completo de productos, inventario, chat, equipo y ajustes.',
+    defaultPermissions: {
+      chat: true,
+      products: true,
+      categories: true,
+      inventory: true,
+      settings: true,
+      team: true
+    }
+  },
+  admin: {
+    label: 'Administrador General',
+    description: 'Apoyo integral en tienda, catálogo, atención y configuración.',
+    defaultPermissions: {
+      chat: true,
+      products: true,
+      categories: true,
+      inventory: true,
+      settings: true,
+      team: true
+    }
+  },
+  sales: {
+    label: 'Ventas y Atención al Cliente',
+    description: 'Responde chats de clientes, confirma pedidos y actualiza cantidades vendidas.',
+    defaultPermissions: {
+      chat: true,
+      products: false,
+      categories: false,
+      inventory: true,
+      settings: false,
+      team: false
+    }
+  },
+  catalog: {
+    label: 'Encargado de Catálogo y Fotos',
+    description: 'Sube ropa o juguetes, organiza fotos, precios, tallas y secciones.',
+    defaultPermissions: {
+      chat: false,
+      products: true,
+      categories: true,
+      inventory: true,
+      settings: false,
+      team: false
+    }
+  },
+  moderator: {
+    label: 'Moderador / Ayudante a Medida',
+    description: 'Tú decides exactamente qué pantallas y tareas puede realizar.',
+    defaultPermissions: {
+      chat: true,
+      products: true,
+      categories: false,
+      inventory: false,
+      settings: false,
+      team: false
+    }
+  }
+};
+
+export function resolveEffectivePermissions(profile: ProfileRow | null): TeamPermissions {
+  if (!profile) return ROLE_PRESETS.owner.defaultPermissions;
+  if (profile.role === 'owner') return ROLE_PRESETS.owner.defaultPermissions;
+  const preset = ROLE_PRESETS[profile.role]?.defaultPermissions ?? ROLE_PRESETS.admin.defaultPermissions;
+  const p = profile.permissions ?? {};
+  return {
+    chat: p.chat ?? preset.chat,
+    products: p.products ?? preset.products,
+    categories: p.categories ?? preset.categories,
+    inventory: p.inventory ?? preset.inventory,
+    settings: p.settings ?? preset.settings,
+    team: p.team ?? preset.team
+  };
 }
 
 async function sha256HexBrowser(input: string): Promise<string> {
@@ -61,7 +150,9 @@ export async function acceptAdminInvitation(params: {
 
   const payload = (await res.json().catch(() => ({}))) as { error?: string };
   if (!res.ok) {
-    throw new Error(payload.error ?? 'No se pudo completar el registro con esta invitación.');
+    throw new Error(
+      payload.error ?? 'No se pudo completar el registro con esta invitación.'
+    );
   }
 }
 
@@ -74,7 +165,9 @@ export async function fetchAdminTeam(): Promise<{
     supabase.from('profiles').select('*').order('created_at', { ascending: true }),
     supabase
       .from('admin_invitations')
-      .select('id, store_id, intended_name, role, expires_at, used_at, created_at')
+      .select(
+        'id, store_id, intended_name, role, job_title, permissions, expires_at, used_at, created_at'
+      )
       .order('created_at', { ascending: false })
       .limit(20)
   ]);
@@ -89,7 +182,9 @@ export async function fetchAdminTeam(): Promise<{
 export async function createAdminInviteLink(params: {
   storeId: string;
   intendedName: string;
-  role: 'owner' | 'admin';
+  role: TeamRole;
+  jobTitle?: string;
+  permissions: TeamPermissions;
   adminBaseUrl: string;
 }): Promise<string> {
   const supabase = getSupabaseClient();
@@ -100,7 +195,9 @@ export async function createAdminInviteLink(params: {
     store_id: params.storeId,
     token_hash: tokenHash,
     intended_name: params.intendedName.trim(),
-    role: params.role
+    role: params.role,
+    job_title: params.jobTitle?.trim() || ROLE_PRESETS[params.role].label,
+    permissions: params.permissions
   });
 
   if (error) {
@@ -111,8 +208,34 @@ export async function createAdminInviteLink(params: {
   return `${cleanBase}/invitacion?codigo=${rawToken}`;
 }
 
+export async function updateTeamMemberAccess(params: {
+  profileId: string;
+  role: TeamRole;
+  jobTitle: string;
+  permissions: TeamPermissions;
+  isActive: boolean;
+}): Promise<void> {
+  const supabase = getSupabaseClient();
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      role: params.role,
+      job_title: params.jobTitle.trim() || ROLE_PRESETS[params.role].label,
+      permissions: params.permissions,
+      is_active: params.isActive
+    })
+    .eq('id', params.profileId);
+
+  if (error) {
+    throw new Error(`No se pudieron guardar los permisos: ${error.message}`);
+  }
+}
+
 export async function revokeAdminInvitation(inviteId: string): Promise<void> {
   const supabase = getSupabaseClient();
-  const { error } = await supabase.from('admin_invitations').delete().eq('id', inviteId);
+  const { error } = await supabase
+    .from('admin_invitations')
+    .delete()
+    .eq('id', inviteId);
   if (error) throw new Error(error.message);
 }

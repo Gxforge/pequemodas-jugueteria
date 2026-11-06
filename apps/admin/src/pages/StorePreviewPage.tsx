@@ -18,7 +18,7 @@ function resolveStorefrontBaseUrl(): string {
   if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
     return 'http://localhost:5173';
   }
-  return 'https://pequemodas-jugueteria-tienda.vercel.app';
+  return 'https://pequemodas.vercel.app';
 }
 
 export function StorePreviewPage() {

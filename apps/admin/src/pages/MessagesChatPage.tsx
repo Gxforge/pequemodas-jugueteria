@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bot, Send } from 'lucide-react';
+import { Bot } from 'lucide-react';
 import {
   fetchCrmContacts,
   fetchCrmNotificationsAndBot,
@@ -10,10 +10,11 @@ import {
   sendCrmAdminReply,
   toggleCrmContactBot,
   updateCrmDirectOrderStatus,
+  type CrmChatMessage,
   type CrmDirectOrderStatus
 } from '@pequemodas/shared';
-import { Button, Card } from '@pequemodas/ui';
-import { formatDateTimeEs } from '@pequemodas/utils';
+import { Button } from '@pequemodas/ui';
+import { AdminChatMessagesPane } from '../components/AdminChatMessagesPane';
 import { BotConfigModal } from '../components/BotConfigModal';
 import { ChatContactsSidebar } from '../components/ChatContactsSidebar';
 import { ChatThreadHeader } from '../components/ChatThreadHeader';
@@ -25,9 +26,10 @@ export function MessagesChatPage() {
     searchParams.get('contacto')
   );
   const [filterText, setFilterText] = useState('');
-  const [replyText, setReplyText] = useState('');
+  const [pendingByThread, setPendingByThread] = useState<
+    Record<string, CrmChatMessage[]>
+  >({});
   const [botModalOpen, setBotModalOpen] = useState(false);
-  const bottomRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const paramId = searchParams.get('contacto');
@@ -37,7 +39,7 @@ export function MessagesChatPage() {
   const { data: contacts = [], isLoading } = useQuery({
     queryKey: ['admin-crm-contacts'],
     queryFn: fetchCrmContacts,
-    refetchInterval: 8000
+    refetchInterval: 4500
   });
 
   const { data: botBundle } = useQuery({
@@ -49,12 +51,23 @@ export function MessagesChatPage() {
     queryKey: ['admin-crm-thread', selectedId],
     queryFn: () => fetchCrmThreadDetail(selectedId!),
     enabled: Boolean(selectedId),
-    refetchInterval: selectedId ? 5000 : false
+    refetchInterval: selectedId ? 2500 : false
   });
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [thread?.messages.length, selectedId]);
+  const mergedMessages = useMemo(() => {
+    const serverMsgs = thread?.messages ?? [];
+    const localPending = (selectedId && pendingByThread[selectedId]) || [];
+    const serverBodies = new Set(
+      serverMsgs
+        .filter((m) => m.sender_role === 'admin')
+        .slice(-10)
+        .map((m) => m.body)
+    );
+    const stillPending = localPending.filter(
+      (p) => p.delivery_state === 'failed' || !serverBodies.has(p.body)
+    );
+    return [...serverMsgs, ...stillPending];
+  }, [thread?.messages, pendingByThread, selectedId]);
 
   const filteredContacts = useMemo(() => {
     const q = filterText.trim().toLowerCase();
@@ -65,14 +78,52 @@ export function MessagesChatPage() {
     );
   }, [contacts, filterText]);
 
-  const sendReplyMut = useMutation({
-    mutationFn: (body: string) => sendCrmAdminReply(selectedId!, body),
-    onSuccess: () => {
-      setReplyText('');
-      void queryClient.invalidateQueries({ queryKey: ['admin-crm-thread', selectedId] });
+  const sendFastReply = async (body: string, retryId?: string) => {
+    if (!selectedId) return;
+    const threadKey = selectedId;
+    const tempId = retryId ?? `adm_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    const optimistic: CrmChatMessage = {
+      id: tempId,
+      sender_role: 'admin',
+      sender_name: 'Tienda',
+      body,
+      order_id: null,
+      read_at: null,
+      created_at: new Date().toISOString(),
+      delivery_state: 'sending'
+    };
+
+    setPendingByThread((prev) => {
+      const list = prev[threadKey] ?? [];
+      const next = retryId
+        ? list.map((m) => (m.id === retryId ? { ...m, delivery_state: 'sending' as const } : m))
+        : [...list, optimistic];
+      return { ...prev, [threadKey]: next };
+    });
+
+    try {
+      await sendCrmAdminReply(threadKey, body);
+      setPendingByThread((prev) => ({
+        ...prev,
+        [threadKey]: (prev[threadKey] ?? []).map((m) =>
+          m.id === tempId ? { ...m, delivery_state: 'sent' as const } : m
+        )
+      }));
+      await queryClient.invalidateQueries({ queryKey: ['admin-crm-thread', threadKey] });
       void queryClient.invalidateQueries({ queryKey: ['admin-crm-contacts'] });
+      setPendingByThread((prev) => ({
+        ...prev,
+        [threadKey]: (prev[threadKey] ?? []).filter((m) => m.id !== tempId)
+      }));
+    } catch {
+      setPendingByThread((prev) => ({
+        ...prev,
+        [threadKey]: (prev[threadKey] ?? []).map((m) =>
+          m.id === tempId ? { ...m, delivery_state: 'failed' as const } : m
+        )
+      }));
     }
-  });
+  };
 
   const toggleBotMut = useMutation({
     mutationFn: (paused: boolean) => toggleCrmContactBot(selectedId!, paused),
@@ -84,7 +135,7 @@ export function MessagesChatPage() {
 
   const orderStatusMut = useMutation({
     mutationFn: ({ id, status }: { id: string; status: CrmDirectOrderStatus }) =>
-      updateCrmDirectOrderStatus(id, status),
+      updateCrmDirectOrderStatus(selectedId!, id, status),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin-crm-thread', selectedId] });
     }
@@ -98,7 +149,9 @@ export function MessagesChatPage() {
     }
   });
 
-  const activeContact = thread?.contact ?? contacts.find((c) => c.id === selectedId);
+  const activeContact =
+    thread?.contact ??
+    contacts.find((c) => c.id === selectedId || c.raw_id === selectedId);
 
   return (
     <div className="space-y-4">
@@ -108,7 +161,7 @@ export function MessagesChatPage() {
             Chat de Clientes y Pedidos en Vivo
           </h1>
           <p className="text-sm text-slate-600">
-            Toca cualquier contacto para abrir su conversación estilo WhatsApp y gestionar sus compras.
+            Envío instantáneo con confirmación de entrega (✓) y lectura (✓✓ azul) en sistema Round-Robin.
           </p>
         </div>
         <Button
@@ -135,7 +188,7 @@ export function MessagesChatPage() {
         />
 
         <div
-          className={`lg:col-span-8 flex flex-col bg-slate-50/70 ${
+          className={`lg:col-span-8 flex flex-col bg-[#efeae2]/55 ${
             selectedId ? 'flex' : 'hidden lg:flex'
           }`}
         >
@@ -146,7 +199,7 @@ export function MessagesChatPage() {
                 Selecciona un contacto a la izquierda
               </p>
               <p className="text-xs max-w-sm mt-1">
-                Podrás responderle al instante, ver sus pedidos directos en CUP y pausar o activar el Bot cuando desees.
+                Podrás responderle al instante como en WhatsApp, ver sus pedidos y pausar o activar el Bot.
               </p>
             </div>
           ) : (
@@ -163,62 +216,11 @@ export function MessagesChatPage() {
                   orderStatusMut.mutate({ id, status })
                 }
               />
-
-              <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
-                {(thread?.messages ?? []).map((m) => {
-                  const fromStore = m.sender_role !== 'customer';
-                  return (
-                    <div
-                      key={m.id}
-                      className={`flex ${fromStore ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <Card
-                        padding="sm"
-                        className={`max-w-[82%] shadow-sm ${
-                          m.sender_role === 'admin'
-                            ? 'bg-brand-600 text-white border-brand-600'
-                            : m.sender_role === 'bot'
-                              ? 'bg-sky-50 border-sky-200 text-slate-800'
-                              : 'bg-white border-slate-200 text-slate-900'
-                        }`}
-                      >
-                        <p className="text-[10px] font-bold opacity-80 mb-0.5">
-                          {m.sender_name || m.sender_role}
-                        </p>
-                        <p className="text-xs sm:text-sm whitespace-pre-wrap">{m.body}</p>
-                        <p className="text-[10px] opacity-70 text-right mt-1">
-                          {formatDateTimeEs(m.created_at)}
-                        </p>
-                      </Card>
-                    </div>
-                  );
-                })}
-                <div ref={bottomRef} />
-              </div>
-
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (replyText.trim()) sendReplyMut.mutate(replyText.trim());
-                }}
-                className="p-3 bg-white border-t border-slate-200 flex items-center gap-2"
-              >
-                <input
-                  type="text"
-                  value={replyText}
-                  onChange={(e) => setReplyText(e.target.value)}
-                  placeholder={`Responder a ${activeContact.full_name}...`}
-                  className="flex-1 rounded-full border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm focus:bg-white focus:border-brand-400 focus:outline-none"
-                />
-                <Button
-                  type="submit"
-                  size="sm"
-                  isLoading={sendReplyMut.isPending}
-                  leftIcon={<Send className="h-4 w-4" />}
-                >
-                  Enviar
-                </Button>
-              </form>
+              <AdminChatMessagesPane
+                contact={activeContact}
+                messages={mergedMessages}
+                onSendMessage={(body, retryId) => void sendFastReply(body, retryId)}
+              />
             </>
           )}
         </div>

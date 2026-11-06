@@ -2,10 +2,9 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Eye, MessageCircle, Plus } from 'lucide-react';
-import { fetchCrmStorageOverview, fetchDashboardStats } from '@pequemodas/shared';
+import { fetchDashboardStats, fetchDualProjectOverview } from '@pequemodas/shared';
 import { Alert, Button, Card, Skeleton } from '@pequemodas/ui';
 import { formatDateTimeEs, isValidWhatsAppPhone } from '@pequemodas/utils';
-import { DatabaseSpaceCard } from '../components/DatabaseSpaceCard';
 import {
   DashboardVisualChart,
   formatHumanAuditAction,
@@ -13,7 +12,12 @@ import {
   MetricSvgMini,
   MetricSvgShowcase
 } from '../components/DashboardIllustrations';
+import { InfrastructureDualPoolSection } from '../components/InfrastructureDualPoolSection';
 import { useAuth } from '../context/AuthContext';
+
+function bytesToMb(bytes: number): number {
+  return Math.round((bytes / (1024 * 1024)) * 100) / 100;
+}
 
 export function DashboardPage() {
   const { settings, profile } = useAuth();
@@ -22,29 +26,31 @@ export function DashboardPage() {
     queryFn: fetchDashboardStats
   });
 
-  const { data: crmOverview } = useQuery({
-    queryKey: ['admin-crm-overview'],
-    queryFn: fetchCrmStorageOverview
+  const { data: dualOverview } = useQuery({
+    queryKey: ['admin-dual-overview'],
+    queryFn: fetchDualProjectOverview
   });
 
   const stats = data?.stats;
   const recent = data?.recentActivity ?? [];
   const whatsappReady = isValidWhatsAppPhone(settings?.whatsapp_phone);
 
-  const db1UsedMb = stats
-    ? Math.round((stats.storageBytesUsed / (1024 * 1024)) * 100) / 100
-    : 0;
-  const db2UsedMb = crmOverview
-    ? Math.round((crmOverview.dbBytesUsed / (1024 * 1024)) * 100) / 100
-    : 0;
-  const db2QuotaMb = crmOverview
-    ? Math.round(crmOverview.dbQuotaBytes / (1024 * 1024))
-    : 500;
+  const db1UsedMb = dualOverview ? bytesToMb(dualOverview.p1.dbBytesUsed) : 0;
+  const db2UsedMb = dualOverview?.p2 ? bytesToMb(dualOverview.p2.dbBytesUsed) : 0;
 
-  const directOrdersTotal = crmOverview?.directOrdersCount ?? 0;
+  const storage1UsedMb = dualOverview
+    ? bytesToMb(dualOverview.p1.storageBytesUsed || stats?.storageBytesUsed || 0)
+    : stats
+      ? bytesToMb(stats.storageBytesUsed)
+      : 0;
+  const storage2UsedMb = dualOverview?.p2
+    ? bytesToMb(dualOverview.p2.storageBytesUsed)
+    : 0;
+
+  const directOrdersTotal = dualOverview?.totalDirectOrdersCount ?? 0;
   const combinedOrders = (stats?.orderRequestsCount ?? 0) + directOrdersTotal;
-  const unreadChats = crmOverview?.unreadChatsCount ?? 0;
-  const contactsCount = crmOverview?.contactsCount ?? 0;
+  const unreadChats = dualOverview?.totalUnreadChatsCount ?? 0;
+  const contactsCount = dualOverview?.totalContactsCount ?? 0;
 
   return (
     <div className="space-y-6">
@@ -54,7 +60,7 @@ export function DashboardPage() {
             Hola {profile?.full_name || 'Katia'}, bienvenida a tu tienda
           </h1>
           <p className="text-sm text-slate-600">
-            Aquí tienes un resumen claro de tus productos, pedidos y mensajes de clientes.
+            Resumen en vivo con doble servidor activo (2 GB para fotos + Round-Robin en chats y datos).
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -184,7 +190,6 @@ export function DashboardPage() {
                 </p>
               </div>
             </Card>
-
             <Card className="flex items-center gap-3">
               <MetricSvgMini variant="contacts" />
               <div>
@@ -194,7 +199,6 @@ export function DashboardPage() {
                 </p>
               </div>
             </Card>
-
             <Card className="flex items-center gap-3">
               <MetricSvgMini variant="drafts" />
               <div>
@@ -204,7 +208,6 @@ export function DashboardPage() {
                 </p>
               </div>
             </Card>
-
             <Card className="flex items-center gap-3">
               <MetricSvgMini variant="soldout" />
               <div>
@@ -218,24 +221,14 @@ export function DashboardPage() {
         </>
       )}
 
-      <div className="grid lg:grid-cols-2 gap-4">
-        <DatabaseSpaceCard
-          title="Espacio de Catálogo y Fotografías"
-          subtitle="Base principal · Fotos de productos, portadas y precios"
-          usedMb={db1UsedMb}
-          quotaMb={1024}
-          accentHex="#ec4899"
-          extraPill="Capacidad amplia"
-        />
-        <DatabaseSpaceCard
-          title="Espacio de Clientes, Pedidos y Chat"
-          subtitle="Segunda base dedicada · Contactos, mensajes y asistente"
-          usedMb={db2UsedMb}
-          quotaMb={db2QuotaMb}
-          accentHex="#0284c7"
-          extraPill={`${contactsCount} contactos`}
-        />
-      </div>
+      <InfrastructureDualPoolSection
+        storage1UsedMb={storage1UsedMb}
+        storage2UsedMb={storage2UsedMb}
+        db1UsedMb={db1UsedMb}
+        db2UsedMb={db2UsedMb}
+        contactsCount={contactsCount}
+        dualOverview={dualOverview}
+      />
 
       <Card className="space-y-3">
         <h2 className="font-heading text-base font-extrabold text-slate-900">

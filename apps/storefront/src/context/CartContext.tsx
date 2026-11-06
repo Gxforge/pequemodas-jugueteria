@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { notifyCartAdditionQuietly } from '@pequemodas/shared';
 import { roundMoney } from '@pequemodas/utils';
 
 export interface CartItem {
@@ -54,21 +55,34 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const key = `${incoming.productId}::${incoming.variantId ?? 'base'}`;
     setItems((prev) => {
       const existing = prev.find((i) => i.key === key);
+      let nextList: CartItem[];
       if (existing) {
         const nextQty = existing.quantity + incoming.quantity;
         const capped =
           incoming.maxQuantity !== null ? Math.min(nextQty, incoming.maxQuantity) : nextQty;
-        return prev.map((i) =>
+        nextList = prev.map((i) =>
           i.key === key
             ? { ...i, quantity: Math.max(1, capped), unitPriceCup: incoming.unitPriceCup }
             : i
         );
+      } else {
+        const capped =
+          incoming.maxQuantity !== null
+            ? Math.min(incoming.quantity, incoming.maxQuantity)
+            : incoming.quantity;
+        nextList = [...prev, { ...incoming, key, quantity: Math.max(1, capped) }];
       }
-      const capped =
-        incoming.maxQuantity !== null
-          ? Math.min(incoming.quantity, incoming.maxQuantity)
-          : incoming.quantity;
-      return [...prev, { ...incoming, key, quantity: Math.max(1, capped) }];
+      const nextCount = nextList.reduce((s, x) => s + x.quantity, 0);
+      const nextEst = nextList.reduce(
+        (s, x) => roundMoney(s + roundMoney(x.unitPriceCup * x.quantity)),
+        0
+      );
+      void notifyCartAdditionQuietly({
+        productName: incoming.productName,
+        cartCount: nextCount,
+        estimatedCup: nextEst
+      });
+      return nextList;
     });
   };
 

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Archive, ArrowDown, ArrowUp, Edit2, FolderPlus, Trash2 } from 'lucide-react';
+import { Archive, ArrowDown, ArrowUp, Edit2, FolderPlus, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { categoryFormSchema, type CategoryFormInput } from '@pequemodas/schemas';
 import {
   buildCategoryTree,
@@ -12,8 +12,8 @@ import {
   updateCategory,
   type CategoryRow
 } from '@pequemodas/shared';
-import { Alert, Badge, Button, Card, EmptyState, Input, Modal, Select, Textarea } from '@pequemodas/ui';
-import { slugify } from '@pequemodas/utils';
+import { Alert, Badge, Button, Card, EmptyState } from '@pequemodas/ui';
+import { CategoryFormModal } from '../components/CategoryFormModal';
 import { useAuth } from '../context/AuthContext';
 
 export function CategoriesPage() {
@@ -31,10 +31,10 @@ export function CategoriesPage() {
   const tree = buildCategoryTree(categories.filter((c) => !c.is_archived));
   const archived = categories.filter((c) => c.is_archived);
   const rootOptions = [
-    { value: '', label: 'Categoría principal (nivel superior)' },
+    { value: '', label: 'Sección principal (nivel superior)' },
     ...categories
       .filter((c) => c.parent_id === null && !c.is_archived && c.id !== editing?.id)
-      .map((c) => ({ value: c.id, label: `Subcategoría de: ${c.name}` }))
+      .map((c) => ({ value: c.id, label: `Dentro de: ${c.name}` }))
   ];
 
   const form = useForm<CategoryFormInput>({
@@ -43,6 +43,8 @@ export function CategoriesPage() {
       name: '',
       slug: '',
       description: '',
+      imageUrl: null,
+      imageStoragePath: null,
       parentId: null,
       sortOrder: 0,
       isActive: true,
@@ -56,6 +58,8 @@ export function CategoriesPage() {
       name: '',
       slug: '',
       description: '',
+      imageUrl: null,
+      imageStoragePath: null,
       parentId,
       sortOrder: categories.length,
       isActive: true,
@@ -70,6 +74,8 @@ export function CategoriesPage() {
       name: cat.name,
       slug: cat.slug,
       description: cat.description ?? '',
+      imageUrl: cat.image_url ?? null,
+      imageStoragePath: cat.image_storage_path ?? null,
       parentId: cat.parent_id,
       sortOrder: cat.sort_order,
       isActive: cat.is_active,
@@ -81,7 +87,11 @@ export function CategoriesPage() {
   const saveMutation = useMutation({
     mutationFn: async (values: CategoryFormInput) => {
       if (!store) throw new Error('Tienda no inicializada.');
-      const payload = { ...values, parentId: values.parentId || null };
+      const payload = {
+        ...values,
+        parentId: values.parentId || null,
+        imageUrl: values.imageUrl || null
+      };
       return editing
         ? updateCategory(editing.id, store.id, payload)
         : createCategory(store.id, payload);
@@ -92,7 +102,7 @@ export function CategoriesPage() {
       void queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
     },
     onError: (err) => {
-      setActionError(err instanceof Error ? err.message : 'Error al guardar categoría.');
+      setActionError(err instanceof Error ? err.message : 'Error al guardar sección.');
     }
   });
 
@@ -122,10 +132,10 @@ export function CategoriesPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="font-heading text-2xl font-extrabold text-slate-900">
-            Categorías y Subcategorías
+            Categorías y Portadas Visuales
           </h1>
           <p className="text-sm text-slate-600">
-            Organiza la tienda en secciones claras (ej. Juguetes, Ropa de Niña, Bebés).
+            Añade una foto de portada o deja que la tienda rote fotos reales de sus productos.
           </p>
         </div>
         <Button leftIcon={<FolderPlus className="h-4 w-4" />} onClick={() => openCreate(null)}>
@@ -138,23 +148,39 @@ export function CategoriesPage() {
       {!isLoading && tree.length === 0 ? (
         <EmptyState
           title="Aún no has creado categorías"
-          description="Crea categorías y subcategorías para que los padres encuentren rápido lo que buscan."
-          primaryAction={
-            <Button onClick={() => openCreate(null)}>Crear primera categoría</Button>
-          }
+          description="Crea secciones con imagen para que los padres encuentren rápido ropa y juguetes."
+          primaryAction={<Button onClick={() => openCreate(null)}>Crear primera categoría</Button>}
         />
       ) : (
         <div className="space-y-3">
           {tree.map((root, idx) => (
             <Card key={root.id} className="space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="font-heading text-base font-bold text-slate-900">
-                    {root.name}
-                  </span>
-                  <Badge tone={root.is_active ? 'success' : 'neutral'}>
-                    {root.is_active ? 'Visible' : 'Oculta'}
-                  </Badge>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  {root.image_url ? (
+                    <img
+                      src={root.image_url}
+                      alt={root.name}
+                      className="h-12 w-12 rounded-xl object-cover border border-brand-100 shrink-0"
+                    />
+                  ) : (
+                    <div className="h-12 w-12 rounded-xl bg-brand-50 text-brand-500 flex items-center justify-center shrink-0">
+                      <ImageIcon className="h-5 w-5" />
+                    </div>
+                  )}
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-heading text-base font-bold text-slate-900">
+                        {root.name}
+                      </span>
+                      <Badge tone={root.is_active ? 'success' : 'neutral'}>
+                        {root.is_active ? 'Visible' : 'Oculta'}
+                      </Badge>
+                    </div>
+                    {root.description && (
+                      <p className="text-xs text-slate-500 line-clamp-1">{root.description}</p>
+                    )}
+                  </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-1.5">
                   <Button
@@ -162,7 +188,9 @@ export function CategoriesPage() {
                     variant="ghost"
                     aria-label="Subir orden"
                     disabled={idx === 0}
-                    onClick={() => void quickPatch(root, { sortOrder: Math.max(0, root.sort_order - 1) })}
+                    onClick={() =>
+                      void quickPatch(root, { sortOrder: Math.max(0, root.sort_order - 1) })
+                    }
                   >
                     <ArrowUp className="h-4 w-4" />
                   </Button>
@@ -236,46 +264,16 @@ export function CategoriesPage() {
         </Card>
       )}
 
-      <Modal
+      <CategoryFormModal
         isOpen={modalOpen}
+        isEditing={Boolean(editing)}
+        isSaving={saveMutation.isPending}
+        storeId={store?.id ?? null}
+        rootOptions={rootOptions}
+        form={form}
         onClose={() => setModalOpen(false)}
-        title={editing ? 'Editar categoría' : 'Nueva categoría'}
-      >
-        <form onSubmit={form.handleSubmit((v) => saveMutation.mutate(v))} className="space-y-4">
-          <Input
-            label="Nombre"
-            requiredMark
-            error={form.formState.errors.name?.message}
-            {...form.register('name', {
-              onChange: (e) => {
-                if (!editing) {
-                  form.setValue('slug', slugify(e.target.value), { shouldValidate: true });
-                }
-              }
-            })}
-          />
-          <Input
-            label="Identificador URL (slug)"
-            requiredMark
-            error={form.formState.errors.slug?.message}
-            {...form.register('slug')}
-          />
-          <Select
-            label="Ubicación"
-            options={rootOptions}
-            value={form.watch('parentId') ?? ''}
-            onChange={(e) => form.setValue('parentId', e.target.value || null)}
-          />
-          <Textarea label="Descripción opcional" {...form.register('description')} />
-          <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
-            <input type="checkbox" className="h-4 w-4 rounded" {...form.register('isActive')} />
-            Visible en la tienda pública
-          </label>
-          <Button type="submit" fullWidth isLoading={saveMutation.isPending}>
-            {editing ? 'Guardar cambios' : 'Crear categoría'}
-          </Button>
-        </form>
-      </Modal>
+        onSubmit={(v) => saveMutation.mutate(v)}
+      />
     </div>
   );
 }

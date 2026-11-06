@@ -56,6 +56,8 @@ export interface CategoryRow {
   name: string;
   slug: string;
   description: string | null;
+  image_url?: string | null;
+  image_storage_path?: string | null;
   sort_order: number;
   is_active: boolean;
   is_archived: boolean;

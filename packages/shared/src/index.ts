@@ -1,5 +1,7 @@
 export * from './types';
+export * from './crm-types';
 export * from './supabase-client';
+export * from './chat-supabase-client';
 export * from './availability';
 export * from './settings.repository';
 export * from './categories.repository';
@@ -9,3 +11,5 @@ export * from './storage.repository';
 export * from './inventory.repository';
 export * from './orders.repository';
 export * from './team.repository';
+export * from './crm-customer.repository';
+export * from './crm-admin.repository';

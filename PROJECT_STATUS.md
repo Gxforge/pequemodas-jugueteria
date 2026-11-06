@@ -1,62 +1,52 @@
-# PROJECT STATUS — Informe Ejecutivo de Ejecución por Fases
+# Estado Oficial del Proyecto — PequeModas-Juguetería (`v2.6.0`)
 
-**Proyecto:** PequeModas-Juguetería  
-**Propietaria:** Katia  
-**Ingeniería responsable:** StudioLexair  
+**Desarrollado por:** StudioLexair  
+**Propietaria:** Katia (Cuba)  
+**Repositorio GitHub:** `https://github.com/Gxforge/pequemodas-jugueteria`  
 **Fecha de actualización:** 2026-11-06  
 
 ---
 
-## Resumen de Fases Ejecutadas
+## 1. Despliegues Verificados en Producción
 
-### FASE 1 — AUDITORÍA (Completada)
-- **Workspace inspeccionado:** Entorno limpio inicial con Node `v20.20.2`, Git y archivo `uploads/tokens.txt` fuera del repositorio.
-- **Cuentas auditadas en tiempo real:**
-  - **GitHub (`Gxforge`):** Token válido; se creó el repositorio oficial `https://github.com/Gxforge/pequemodas-jugueteria`.
-  - **Supabase (`vwunrdxbixibmldxjsvo`):** Plan gratuito verificado; se renombraron los proyectos a `pequemodas-jugueteria` (`vcohlillbvznsovswdng`) y `pequemodas-jugueteria-dev` (`ikwekjyeoqxwyyandyrr`) y se reactivó el proyecto principal verificando que las tablas previas tenían `0` filas y cero colisión de nombres. *(Nota: la API pública v1 de Supabase no expone `PATCH /v1/organizations/{slug}` con tokens PAT `sbp_`, por lo que el cambio visual del nombre de la organización debe hacerse desde el navegador en Dashboard Settings).*
-  - **Vercel (`junmoxia41`):** Cuenta verificada en plan `hobby`. Documentada la restricción contractual de uso no comercial de Vercel Hobby antes de salida comercial definitiva.
+- **Tienda Pública (PWA v2.6.0):** `https://pequemodas-jugueteria-tienda.vercel.app`
+- **Panel Administrativo:** `https://pequemodas-jugueteria-admin.vercel.app`
+- **Aviso sobre Vercel Hobby / Comercial:** Ambos proyectos operan actualmente en plan gratuito Hobby para validación técnica sin pagos ni tarjetas. Conforme a los Términos de Servicio de Vercel, para uso comercial permanente se debe contemplar el paso a Vercel Pro cuando el proyecto disponga de un medio de pago autorizado.
 
-### FASE 2 — FUNDACIÓN (Completada)
-- Monorepositorio `pnpm workspaces` configurado con 8 paquetes (`apps/storefront`, `apps/admin`, `packages/config`, `packages/schemas`, `packages/shared`, `packages/ui`, `packages/utils`).
-- Configuración estricta de TypeScript (`strict: true`, `noUncheckedIndexedAccess: true`), ESLint 9, Vitest 3, React Testing Library y Playwright.
-- Creado script automatizado `scripts/check-line-limit.mjs` integrado en `pnpm lint` y `pnpm check:lines`.
+---
 
-### FASE 3 — DISEÑO (Completada)
-- Definida identidad visual alegre, limpia y confiable para familias en `@pequemodas/config` y `@pequemodas/ui`.
-- Implementados todos los componentes base (`BrandLogo`, `Button`, `Input`, `Select`, `Textarea`, `Card`, `Badge`, `AvailabilityBadge`, `Modal`, `Alert`, `EmptyState`, `Skeleton`, `ProductCardSkeleton`) y la página interactiva de demostración `DesignSystemShowcase`.
+## 2. Arquitectura Dual de Bases de Datos en Supabase (Plan Gratuito)
 
-### FASE 4 — SUPABASE (Completada)
-- Creadas y aplicadas **8 migraciones SQL versionadas** y `seed.sql` limpio sobre PostgreSQL 17 real (`vcohlillbvznsovswdng`).
-- Creadas las 12 tablas relacionales (`stores`, `profiles`, `store_settings`, `categories`, `products`, `product_images`, `product_variants`, `inventory`, `inventory_movements`, `orders`, `order_items`, `audit_logs`) con índices, claves foráneas y políticas RLS estrictas.
-- Desactivado el registro público en Supabase Auth (`disable_signup = true`) y configurados los buckets `product-images` y `brand-assets`.
-- Creada Edge Function `supabase/functions/storage-health/index.ts` y repositorios compartidos en `@pequemodas/shared`.
+1. **Base de Datos 1 — Catálogo, Fotografías, Inventario y Acceso Admin (`vcohlillbvznsovswdng` · `pequemodas-jugueteria`):**
+   - Tablas de tienda, ajustes, categorías con portada (`image_url`), productos, variantes, fotos WebP en Storage (`product-images`, `brand-assets`), auditoría y equipo.
+2. **Base de Datos 2 — Clientes, Compras Directas, Chat estilo WhatsApp, Avisos Anti-Spam y Bot (`ikwekjyeoqxwyyandyrr` · `pequemodas-jugueteria-chat`):**
+   - `customer_contacts`, `direct_orders`, `chat_messages`, `admin_notifications` (con agrupación `dedupe_key` para nunca saturar de notificaciones) y `bot_config` extensible.
+   - Seguridad estricta: RLS activado en todas las tablas, funciones `SECURITY DEFINER` por `customer_token` para clientes y puente autenticado `crm-admin-gateway` (Edge Function) que valida la sesión administrativa de la Base 1 sin doble inicio de sesión.
 
-### FASE 5 — PANEL ADMINISTRATIVO (Completada)
-- Desarrollada `apps/admin` optimizada para Android y escritorio: Acceso seguro, recuperación de clave, Dashboard con métricas y monitor de Storage, CRUD de Productos, Editor de Variantes Flexibles ilimitadas, Gestor de Fotografías con compresión WebP y reordenación, Categorías/Subcategorías, Inventario Híbrido con confirmación de cambio de modalidad, Solicitudes WhatsApp y Configuración de Tienda.
+---
 
-### FASE 6 — TIENDA PÚBLICA (Completada)
-- Desarrollada `apps/storefront` con las 11 páginas obligatorias (Inicio, Catálogo, Categorías, Subcategorías, Resultados de búsqueda, Detalles del producto, Carrito, Información de la tienda, Contacto, Política de privacidad, Información de pedidos) más `/guia-visual`. Catálogo inicial 100 % vacío con estados vacíos atractivos.
+## 3. Mejoras Incorporadas en `v2.6.0`
 
-### FASE 7 — WHATSAPP (Completada)
-- Implementado flujo completo de resumen de carrito, selección de entrega o recogida, validación Zod, codificación `https://wa.me/...` y registro opcional de solicitud (`request_received`) sin descontar ni reservar inventario automáticamente.
+1. **Logo Oficial Permanente en Cabecera y Pie:** Eliminado por completo el antiguo icono geométrico `<svg>`; ahora siempre muestra el logo transparente oficial de PequeModas-Juguetería.
+2. **Paneles Visuales de Categorías con Rotación cada 6 Segundos:**
+   - Permite subir una foto de referencia al crear o editar cada categoría en el Admin.
+   - En la tienda (`/` y `/categorias`), cada categoría se presenta como un panel visual que rota suavemente fotos aleatorias de sus productos cada `6 segundos` únicamente mientras la sección está visible en pantalla.
+3. **Vista Previa Interactiva de la Tienda en el Admin (`/vista-previa`):** Simulador en vivo para Teléfono Android, Tablet y PC.
+4. **Resumen Administrativo Rediseñado (`/resumen`):**
+   - Movimientos traducidos a español humano claro (sin códigos como `settings.update` o `category.update`).
+   - SVGs propios por métrica, 2 tarjetas principales superiores, gráfico visual central y tarjetas secundarias debajo.
+   - Indicadores limpios de espacio ocupado/disponible para **ambas** bases de datos de Supabase sin jerga técnica.
+5. **Opciones y Tallas Simplificadas:** Selector directo entre *«Artículo único»* y *«Varias opciones (Tallas, Colores, Edades...)»* con botones rápidos (`+ Talla`, `+ Color`, `+ Edad`, `+ Diseño`).
+6. **Gestor de Avisos Inteligentes Sin Spam (`NotificationManagerBell`):** Agrupa actividad de carritos (ventana de 30 min por sesión) y mensajes no leídos por contacto para alertar sobre compras y actualización de stock sin saturar.
+7. **Compra Dual (En la App o por WhatsApp) + Chat estilo WhatsApp (`/mensajes`) + Bot Configurable:**
+   - El cliente elige en `/carrito` entre **Comprar aquí en la App** (guardando nombre, teléfono y dirección en la Base 2 y abriendo su chat en vivo) o **Por WhatsApp**.
+   - Panel `/mensajes` estilo WhatsApp con lista de contactos a la izquierda, hilo en vivo a la derecha, selector de estado de pedido, enlace a stock y configurador del Bot Asistente listo para personalizar reglas.
 
-### FASE 8 — PWA (Completada)
-- Implementados `manifest.webmanifest`, iconos `192x192`, `512x512` y SVG, botón de instalación en Android, aviso de actualización y Service Worker (`sw.js`) que nunca cachea datos dinámicos ni disponibilidad antigua de Supabase.
+---
 
-### FASE 9 — CALIDAD (Completada)
-- `pnpm check:lines`: **110 archivos de código analizados — 0 violaciones (> 300 líneas)**.
-- `pnpm typecheck` & `pnpm lint`: **0 errores y 0 advertencias**.
-- `pnpm test` (Vitest): **5 suites, 15 pruebas en verde**.
-- Integración en vivo contra Supabase PostgreSQL 17 + RLS + Storage: **9/9 verificaciones críticas superadas** y limpieza verificada (`0` productos en catálogo).
-- `pnpm test:e2e` (Playwright): **4/4 pruebas E2E superadas** en perfiles `Pixel 7` (Android) y `Desktop Chrome`.
+## 4. Calidad y Verificación
 
-### FASE 10 — ENTREGA (Completada)
-- Redactados los 15 documentos obligatorios en `docs/`, `README.md` y este `PROJECT_STATUS.md`.
-- Repositorio sincronizado en GitHub (`Gxforge/pequemodas-jugueteria`) sin ningún secreto expuesto, y proyectos en Vercel configurados y verificados (`https://pequemodas-jugueteria-tienda.vercel.app` y `https://pequemodas-jugueteria-admin.vercel.app`).
-
-### AMPLIACIÓN — EQUIPO MULTI-ADMINISTRADOR E INVITACIONES DE UN SOLO USO (Completada)
-- Añadida migración `20261106000900_admin_invitations.sql` (`public.admin_invitations` con hash SHA-256 + función `preview_admin_invitation`) manteniendo `disable_signup = true` para impedir registros no autorizados.
-- Desplegada en vivo la Edge Function `accept-admin-invite` (y `storage-health`) sobre Supabase `vcohlillbvznsovswdng`.
-- Añadido módulo `/equipo` en el Panel Administrativo y pantalla `/invitacion?codigo=...` para que Katia active su propia cuenta `owner` con su correo y contraseña personales, conviviendo con la cuenta `admin` de soporte técnico de StudioLexair.
-- Verificado límite de modularidad (`116/116` archivos `<= 300` líneas), pruebas unitarias/integración y despliegue actualizado en Vercel.
-
+- **Modularidad estricta (`<= 300` líneas por archivo):** `146/146` archivos aprobados (`pnpm check:lines`).
+- **TypeScript + ESLint:** `0` errores en los 7 paquetes del monorepo.
+- **Tests Unitarios (Vitest):** `17/17` aprobados.
+- **Tests End-to-End (Playwright Chromium Móvil + Escritorio):** `8/8` aprobados.

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, X } from 'lucide-react';
+import { CheckCircle2, Layers, Plus } from 'lucide-react';
 import type { InventoryMode, ProductVariantInput } from '@pequemodas/schemas';
-import { Badge, Button, Card, Input, Select } from '@pequemodas/ui';
+import { Button, Card } from '@pequemodas/ui';
+import { VariantOptionCard } from './VariantOptionCard';
 
 interface VariantsEditorSectionProps {
   inventoryMode: InventoryMode;
@@ -14,195 +15,149 @@ export function VariantsEditorSection({
   variants,
   onChange
 }: VariantsEditorSectionProps) {
-  const [attrDrafts, setAttrDrafts] = useState<Record<number, { key: string; value: string }>>({});
+  const [detailDrafts, setDetailDrafts] = useState<
+    Record<number, { key: string; value: string }>
+  >({});
 
-  const addVariant = () => {
-    onChange([
-      ...variants,
-      {
-        name: '',
-        sku: '',
-        attributes: {},
-        priceOverrideCup: null,
-        stockQuantity: 0,
-        manualAvailability: 'available',
-        isActive: true,
-        sortOrder: variants.length
-      }
-    ]);
+  const hasOptions = variants.length > 0;
+
+  const createBlankOption = (sortOrder: number): ProductVariantInput => ({
+    name: '',
+    sku: '',
+    attributes: {},
+    priceOverrideCup: null,
+    stockQuantity: 1,
+    manualAvailability: 'available',
+    isActive: true,
+    sortOrder
+  });
+
+  const switchToSingleModel = () => {
+    if (variants.length === 0) return;
+    if (
+      window.confirm(
+        '¿Cambiar a artículo único? Se quitarán las tallas o colores agregados aquí.'
+      )
+    ) {
+      onChange([]);
+    }
   };
 
-  const updateVariant = (idx: number, patch: Partial<ProductVariantInput>) => {
-    const next = variants.map((item, i) => (i === idx ? { ...item, ...patch } : item));
-    onChange(next);
+  const addOption = () => {
+    onChange([...variants, createBlankOption(variants.length)]);
   };
 
-  const removeVariant = (idx: number) => {
-    onChange(variants.filter((_, i) => i !== idx));
+  const updateOption = (idx: number, patch: Partial<ProductVariantInput>) => {
+    onChange(variants.map((item, i) => (i === idx ? { ...item, ...patch } : item)));
   };
 
-  const addAttribute = (idx: number) => {
-    const draft = attrDrafts[idx];
+  const saveDetail = (idx: number) => {
+    const draft = detailDrafts[idx];
     if (!draft?.key.trim() || !draft?.value.trim()) return;
     const current = variants[idx];
     if (!current) return;
-    updateVariant(idx, {
-      attributes: {
-        ...current.attributes,
-        [draft.key.trim()]: draft.value.trim()
-      }
-    });
-    setAttrDrafts((prev) => ({ ...prev, [idx]: { key: '', value: '' } }));
+    const nextAttrs = {
+      ...current.attributes,
+      [draft.key.trim()]: draft.value.trim()
+    };
+    const autoName =
+      current.name.trim() ||
+      Object.entries(nextAttrs)
+        .map(([k, v]) => `${k} ${v}`)
+        .join(' · ');
+    updateOption(idx, { attributes: nextAttrs, name: autoName });
+    setDetailDrafts((prev) => ({ ...prev, [idx]: { key: draft.key, value: '' } }));
   };
 
-  const removeAttribute = (idx: number, keyToRemove: string) => {
+  const removeDetail = (idx: number, keyToRemove: string) => {
     const current = variants[idx];
     if (!current) return;
     const copy = { ...current.attributes };
     delete copy[keyToRemove];
-    updateVariant(idx, { attributes: copy });
+    updateOption(idx, { attributes: copy });
   };
 
   return (
     <Card className="space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <div>
-          <h2 className="font-heading text-lg font-bold text-slate-900">
-            Variantes Flexibles (Tallas, Colores, Modelos, Edades...)
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-500">
-            Opcional: añade combinaciones con atributos libres y precio o stock propio.
-          </p>
-        </div>
-        <Button
-          size="sm"
-          variant="outline"
-          leftIcon={<Plus className="h-4 w-4" />}
-          onClick={addVariant}
-        >
-          Añadir variante
-        </Button>
+      <div>
+        <h2 className="font-heading text-lg font-bold text-slate-900">
+          ¿Este producto tiene distintas tallas, colores o diseños?
+        </h2>
+        <p className="text-xs sm:text-sm text-slate-500">
+          Elige cómo prefieres mostrarlo a tus clientes en la tienda:
+        </p>
       </div>
 
-      {variants.length === 0 ? (
-        <p className="text-xs text-slate-500 bg-slate-50 rounded-xl p-3">
-          Este producto se vende como modelo único. Pulsa «Añadir variante» si tiene tallas,
-          colores o diseños distintos.
-        </p>
-      ) : (
-        <div className="space-y-4">
-          {variants.map((variant, idx) => {
-            const draft = attrDrafts[idx] ?? { key: '', value: '' };
-            return (
-              <div
-                key={variant.id ?? `new-${idx}`}
-                className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 space-y-3"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-brand-700">
-                    Variante #{idx + 1}
-                  </span>
-                  <Button size="sm" variant="ghost" onClick={() => removeVariant(idx)}>
-                    <Trash2 className="h-4 w-4 text-rose-600" />
-                  </Button>
-                </div>
+      <div className="grid sm:grid-cols-2 gap-3">
+        <button
+          type="button"
+          onClick={switchToSingleModel}
+          className={`text-left rounded-2xl border p-3.5 transition-all ${
+            !hasOptions
+              ? 'border-brand-400 bg-brand-50/70 ring-2 ring-brand-200'
+              : 'border-slate-200 bg-white hover:bg-slate-50'
+          }`}
+        >
+          <div className="flex items-center gap-2 font-heading font-bold text-sm text-slate-900">
+            <CheckCircle2
+              className={`h-4 w-4 ${!hasOptions ? 'text-brand-600' : 'text-slate-400'}`}
+            />
+            Artículo único (sin tallas ni opciones)
+          </div>
+          <p className="mt-1 text-xs text-slate-600">
+            Ideal para un juguete o accesorio que viene en una sola presentación.
+          </p>
+        </button>
 
-                <div className="grid sm:grid-cols-3 gap-3">
-                  <Input
-                    label="Nombre de variante"
-                    placeholder="Ej. Talla 4 - Rosa"
-                    requiredMark
-                    value={variant.name}
-                    onChange={(e) => updateVariant(idx, { name: e.target.value })}
-                  />
-                  <Input
-                    label="Precio propio CUP (opcional)"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="Usa precio base si vacío"
-                    value={variant.priceOverrideCup ?? ''}
-                    onChange={(e) =>
-                      updateVariant(idx, {
-                        priceOverrideCup: e.target.value === '' ? null : Number(e.target.value)
-                      })
-                    }
-                  />
-                  {inventoryMode === 'quantity' ? (
-                    <Input
-                      label="Cantidad disponible"
-                      type="number"
-                      min="0"
-                      value={variant.stockQuantity}
-                      onChange={(e) =>
-                        updateVariant(idx, {
-                          stockQuantity: Math.max(0, parseInt(e.target.value || '0', 10))
-                        })
-                      }
-                    />
-                  ) : (
-                    <Select
-                      label="Disponibilidad manual"
-                      value={variant.manualAvailability}
-                      onChange={(e) =>
-                        updateVariant(idx, {
-                          manualAvailability: e.target.value as ProductVariantInput['manualAvailability']
-                        })
-                      }
-                      options={[
-                        { value: 'available', label: 'Disponible' },
-                        { value: 'inquire', label: 'Consultar disponibilidad' },
-                        { value: 'out_of_stock', label: 'Agotado' }
-                      ]}
-                    />
-                  )}
-                </div>
+        <button
+          type="button"
+          onClick={() => {
+            if (!hasOptions) addOption();
+          }}
+          className={`text-left rounded-2xl border p-3.5 transition-all ${
+            hasOptions
+              ? 'border-sky-400 bg-sky-50/70 ring-2 ring-sky-200'
+              : 'border-slate-200 bg-white hover:bg-slate-50'
+          }`}
+        >
+          <div className="flex items-center gap-2 font-heading font-bold text-sm text-slate-900">
+            <Layers
+              className={`h-4 w-4 ${hasOptions ? 'text-sky-600' : 'text-slate-400'}`}
+            />
+            Varias opciones (Tallas, Colores, Edades...)
+          </div>
+          <p className="mt-1 text-xs text-slate-600">
+            El cliente podrá escoger la talla, color o diseño antes de pedir.
+          </p>
+        </button>
+      </div>
 
-                {/* Atributos dinámicos ilimitados */}
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold text-slate-700">
-                    Atributos personalizados (Talla, Color, Edad, Material, etc.)
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {Object.entries(variant.attributes).map(([k, v]) => (
-                      <Badge key={k} tone="brand" className="pr-1">
-                        <span>
-                          {k}: {v}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => removeAttribute(idx, k)}
-                          aria-label={`Quitar atributo ${k}`}
-                          className="ml-1 rounded-full hover:bg-brand-200 p-0.5"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    <Input
-                      placeholder="Atributo (ej. Talla)"
-                      value={draft.key}
-                      onChange={(e) =>
-                        setAttrDrafts((p) => ({ ...p, [idx]: { ...draft, key: e.target.value } }))
-                      }
-                    />
-                    <Input
-                      placeholder="Valor (ej. 4 años)"
-                      value={draft.value}
-                      onChange={(e) =>
-                        setAttrDrafts((p) => ({ ...p, [idx]: { ...draft, value: e.target.value } }))
-                      }
-                    />
-                    <Button size="sm" variant="secondary" onClick={() => addAttribute(idx)}>
-                      Guardar atributo
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+      {hasOptions && (
+        <div className="space-y-4 pt-1">
+          {variants.map((variant, idx) => (
+            <VariantOptionCard
+              key={variant.id ?? `opt-${idx}`}
+              index={idx}
+              inventoryMode={inventoryMode}
+              variant={variant}
+              draft={detailDrafts[idx] ?? { key: 'Talla', value: '' }}
+              onUpdate={(patch) => updateOption(idx, patch)}
+              onRemove={() => onChange(variants.filter((_, i) => i !== idx))}
+              onDraftChange={(next) =>
+                setDetailDrafts((p) => ({ ...p, [idx]: next }))
+              }
+              onSaveDetail={() => saveDetail(idx)}
+              onRemoveDetail={(k) => removeDetail(idx, k)}
+            />
+          ))}
+
+          <Button
+            variant="outline"
+            leftIcon={<Plus className="h-4 w-4" />}
+            onClick={addOption}
+          >
+            Agregar otra talla, color o diseño
+          </Button>
         </div>
       )}
     </Card>

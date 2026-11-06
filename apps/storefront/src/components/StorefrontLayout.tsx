@@ -11,6 +11,7 @@ import { APP_RELEASE, BRAND_IDENTITY } from '@pequemodas/config';
 import { BrandLogo } from '@pequemodas/ui';
 import { useCart } from '../context/CartContext';
 import { useStorefront } from '../context/StorefrontContext';
+import { CustomerChatWidget } from './CustomerChatWidget';
 import { NetworkResilienceBar } from './NetworkResilienceBar';
 import { PwaAppCard } from './PwaAppCard';
 
@@ -35,6 +36,9 @@ export function StorefrontLayout() {
 
       {/* Cartel Flotante Elegante de Aplicación Web / Nueva Versión (sin franja roja superior) */}
       <PwaAppCard />
+
+      {/* Chat Directo en Vivo con la Tienda + Bot Asistente */}
+      <CustomerChatWidget />
 
       {/* Cabecera Principal */}
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-brand-100/80">

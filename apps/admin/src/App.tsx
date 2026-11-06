@@ -33,6 +33,12 @@ const InventoryPage = lazy(() =>
 const OrdersPage = lazy(() =>
   import('./pages/OrdersPage').then((m) => ({ default: m.OrdersPage }))
 );
+const MessagesChatPage = lazy(() =>
+  import('./pages/MessagesChatPage').then((m) => ({ default: m.MessagesChatPage }))
+);
+const StorePreviewPage = lazy(() =>
+  import('./pages/StorePreviewPage').then((m) => ({ default: m.StorePreviewPage }))
+);
 const SettingsPage = lazy(() =>
   import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage }))
 );
@@ -77,6 +83,8 @@ export function App() {
                 }
               >
                 <Route index element={<DashboardPage />} />
+                <Route path="mensajes" element={<MessagesChatPage />} />
+                <Route path="vista-previa" element={<StorePreviewPage />} />
                 <Route path="productos" element={<ProductsListPage />} />
                 <Route path="productos/nuevo" element={<ProductEditorPage />} />
                 <Route path="productos/:productId" element={<ProductEditorPage />} />

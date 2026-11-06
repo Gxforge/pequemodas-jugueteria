@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, FolderTree, MessageCircle, ShieldCheck, Sparkles, Truck } from 'lucide-react';
+import { ArrowRight, MessageCircle, ShieldCheck, Sparkles, Truck } from 'lucide-react';
 import { BRAND_IDENTITY } from '@pequemodas/config';
 import { fetchProductsPaginated } from '@pequemodas/shared';
 import {
@@ -13,6 +13,7 @@ import {
   ProductCardSkeleton
 } from '@pequemodas/ui';
 import { buildProductInquiryUrl, isValidWhatsAppPhone } from '@pequemodas/utils';
+import { CategoryShowcaseCard } from '../components/CategoryShowcaseCard';
 import { ProductCard } from '../components/ProductCard';
 import { useStorefront } from '../context/StorefrontContext';
 import { usePageMeta } from '../hooks/usePageMeta';
@@ -33,7 +34,7 @@ export function HomePage() {
         publicationStatus: 'published',
         sort: 'newest',
         page: 1,
-        pageSize: 8
+        pageSize: 24
       });
       writeOfflineSnapshotPatch({ catalogFirstPage: res });
       return res;
@@ -122,21 +123,14 @@ export function HomePage() {
               Ver todas
             </Link>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {categoryTree.slice(0, 8).map((cat) => (
-              <Link key={cat.id} to={`/categorias/${cat.slug}`}>
-                <Card interactive padding="md" className="text-center space-y-1.5">
-                  <FolderTree className="h-6 w-6 mx-auto text-sky-600" />
-                  <p className="font-heading font-bold text-slate-900 text-sm sm:text-base">
-                    {cat.name}
-                  </p>
-                  {cat.subcategories.length > 0 && (
-                    <p className="text-xs text-slate-500">
-                      {cat.subcategories.length} subcategorías
-                    </p>
-                  )}
-                </Card>
-              </Link>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {categoryTree.slice(0, 6).map((cat) => (
+              <CategoryShowcaseCard
+                key={cat.id}
+                category={cat}
+                products={productsData?.items ?? []}
+                compact
+              />
             ))}
           </div>
         </section>
@@ -187,7 +181,7 @@ export function HomePage() {
           />
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {productsData.items.map((product) => (
+            {productsData.items.slice(0, 8).map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>

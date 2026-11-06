@@ -1,4 +1,6 @@
+import { STORAGE_LIMITS } from '@pequemodas/config';
 import type { CategoryFormInput } from '@pequemodas/schemas';
+import { buildUniqueStoragePath, optimizeProductImage } from '@pequemodas/utils';
 import { getSupabaseClient } from './supabase-client';
 import type { CategoryRow } from './types';
 
@@ -41,6 +43,35 @@ export function buildCategoryTree(rows: CategoryRow[]): CategoryTreeNode[] {
   }));
 }
 
+export async function uploadCategoryCoverImage(
+  storeId: string,
+  file: File
+): Promise<{ publicUrl: string; storagePath: string }> {
+  const supabase = getSupabaseClient();
+  const optimized = await optimizeProductImage(file);
+  const storagePath = buildUniqueStoragePath(
+    `categories/${storeId}`,
+    optimized.extension
+  );
+
+  const { error } = await supabase.storage
+    .from(STORAGE_LIMITS.productBucket)
+    .upload(storagePath, optimized.thumbnailBlob, {
+      contentType: optimized.mimeType,
+      upsert: false
+    });
+
+  if (error) {
+    throw new Error(`No se pudo subir la imagen de categoría: ${error.message}`);
+  }
+
+  const { data } = supabase.storage
+    .from(STORAGE_LIMITS.productBucket)
+    .getPublicUrl(storagePath);
+
+  return { publicUrl: data.publicUrl, storagePath };
+}
+
 export async function createCategory(
   storeId: string,
   input: CategoryFormInput
@@ -53,6 +84,8 @@ export async function createCategory(
       name: input.name.trim(),
       slug: input.slug.trim(),
       description: input.description?.trim() || null,
+      image_url: input.imageUrl?.trim() || null,
+      image_storage_path: input.imageStoragePath || null,
       parent_id: input.parentId || null,
       sort_order: input.sortOrder,
       is_active: input.isActive,
@@ -85,7 +118,11 @@ export async function updateCategory(
   const patch: Record<string, unknown> = {};
   if (input.name !== undefined) patch.name = input.name.trim();
   if (input.slug !== undefined) patch.slug = input.slug.trim();
-  if (input.description !== undefined) patch.description = input.description.trim() || null;
+  if (input.description !== undefined)
+    patch.description = input.description.trim() || null;
+  if (input.imageUrl !== undefined) patch.image_url = input.imageUrl?.trim() || null;
+  if (input.imageStoragePath !== undefined)
+    patch.image_storage_path = input.imageStoragePath || null;
   if (input.parentId !== undefined) patch.parent_id = input.parentId || null;
   if (input.sortOrder !== undefined) patch.sort_order = input.sortOrder;
   if (input.isActive !== undefined) patch.is_active = input.isActive;
@@ -107,18 +144,22 @@ export async function updateCategory(
     action: 'category.update',
     entity_type: 'category',
     entity_id: categoryId,
-    metadata: patch
+    metadata: { name: data.name }
   });
 
   return data as CategoryRow;
 }
 
-export async function deleteCategory(categoryId: string, storeId: string): Promise<void> {
+export async function deleteCategory(
+  categoryId: string,
+  storeId: string
+): Promise<void> {
   const supabase = getSupabaseClient();
   const { error } = await supabase.from('categories').delete().eq('id', categoryId);
   if (error) {
     throw new Error(`No se pudo eliminar la categoría: ${error.message}`);
   }
+
   await supabase.from('audit_logs').insert({
     store_id: storeId,
     action: 'category.delete',

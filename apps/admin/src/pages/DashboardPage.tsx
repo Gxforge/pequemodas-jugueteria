@@ -1,60 +1,80 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import {
-  AlertTriangle,
-  Eye,
-  EyeOff,
-  FolderTree,
-  HardDrive,
-  MessageSquare,
-  Package,
-  Plus
-} from 'lucide-react';
-import { fetchDashboardStats } from '@pequemodas/shared';
-import { Alert, Badge, Button, Card, Skeleton } from '@pequemodas/ui';
+import { Eye, MessageCircle, Plus } from 'lucide-react';
+import { fetchCrmStorageOverview, fetchDashboardStats } from '@pequemodas/shared';
+import { Alert, Button, Card, Skeleton } from '@pequemodas/ui';
 import { formatDateTimeEs, isValidWhatsAppPhone } from '@pequemodas/utils';
+import { DatabaseSpaceCard } from '../components/DatabaseSpaceCard';
+import {
+  DashboardVisualChart,
+  formatHumanAuditAction,
+  MetricSvgChatOrders,
+  MetricSvgMini,
+  MetricSvgShowcase
+} from '../components/DashboardIllustrations';
 import { useAuth } from '../context/AuthContext';
 
 export function DashboardPage() {
-  const { settings } = useAuth();
+  const { settings, profile } = useAuth();
   const { data, isLoading, error } = useQuery({
     queryKey: ['admin-dashboard'],
     queryFn: fetchDashboardStats
   });
 
+  const { data: crmOverview } = useQuery({
+    queryKey: ['admin-crm-overview'],
+    queryFn: fetchCrmStorageOverview
+  });
+
   const stats = data?.stats;
   const recent = data?.recentActivity ?? [];
-  const freeQuotaMb = 1024;
-  const usedMb = stats ? Math.round((stats.storageBytesUsed / (1024 * 1024)) * 100) / 100 : 0;
   const whatsappReady = isValidWhatsAppPhone(settings?.whatsapp_phone);
+
+  const db1UsedMb = stats
+    ? Math.round((stats.storageBytesUsed / (1024 * 1024)) * 100) / 100
+    : 0;
+  const db2UsedMb = crmOverview
+    ? Math.round((crmOverview.dbBytesUsed / (1024 * 1024)) * 100) / 100
+    : 0;
+  const db2QuotaMb = crmOverview
+    ? Math.round(crmOverview.dbQuotaBytes / (1024 * 1024))
+    : 500;
+
+  const directOrdersTotal = crmOverview?.directOrdersCount ?? 0;
+  const combinedOrders = (stats?.orderRequestsCount ?? 0) + directOrdersTotal;
+  const unreadChats = crmOverview?.unreadChatsCount ?? 0;
+  const contactsCount = crmOverview?.contactsCount ?? 0;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="font-heading text-2xl font-extrabold text-slate-900">
-            Hola, bienvenida al Panel de tu Tienda
+            Hola {profile?.full_name || 'Katia'}, bienvenida a tu tienda
           </h1>
           <p className="text-sm text-slate-600">
-            Administra productos, fotografías, precios en CUP y disponibilidad desde tu teléfono.
+            Aquí tienes un resumen claro de tus productos, pedidos y mensajes de clientes.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link to="/equipo">
-            <Button variant="outline">Equipo / Invitar</Button>
+          <Link to="/vista-previa">
+            <Button variant="outline" leftIcon={<Eye className="h-4 w-4" />}>
+              Ver tienda
+            </Button>
           </Link>
           <Link to="/productos/nuevo">
-            <Button leftIcon={<Plus className="h-4 w-4" />}>Nuevo producto</Button>
+            <Button leftIcon={<Plus className="h-4 w-4" />}>Subir producto</Button>
           </Link>
         </div>
       </div>
 
       {!whatsappReady && (
-        <Alert variant="warning" title="Número de WhatsApp pendiente de configurar">
-          Para recibir pedidos de tus clientes por WhatsApp, configura tu número telefónico en{' '}
+        <Alert variant="warning" title="Falta tu número de WhatsApp">
+          Tus clientes ya pueden comprarte directo desde la aplicación, pero si deseas activar
+          también el botón de WhatsApp agrégale tu número en{' '}
           <Link to="/configuracion" className="font-bold underline">
-            Ajustes de la Tienda
+            Ajustes
           </Link>
           .
         </Alert>
@@ -62,129 +82,190 @@ export function DashboardPage() {
 
       {error && (
         <Alert variant="error">
-          {error instanceof Error ? error.message : 'Error al cargar métricas.'}
+          {error instanceof Error ? error.message : 'No se pudo cargar el resumen.'}
         </Alert>
       )}
 
       {isLoading || !stats ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-          {Array.from({ length: 6 }).map((_, idx) => (
-            <Skeleton key={idx} className="h-28 w-full" />
-          ))}
+        <div className="space-y-4">
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+          </div>
+          <Skeleton className="h-48 w-full" />
         </div>
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3.5">
-          <Card className="space-y-1">
-            <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
-              <span>Total Productos</span>
-              <Package className="h-4 w-4 text-brand-600" />
-            </div>
-            <p className="font-heading text-3xl font-extrabold text-slate-900">
-              {stats.totalProducts}
-            </p>
-          </Card>
+        <>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Card className="bg-gradient-to-br from-brand-50/80 via-white to-white border-brand-100 flex items-center justify-between gap-4">
+              <div className="space-y-1">
+                <p className="text-xs font-extrabold uppercase tracking-wider text-brand-700">
+                  Catálogo en Vitrina
+                </p>
+                <div className="flex items-baseline gap-2">
+                  <span className="font-heading text-4xl font-extrabold text-slate-900">
+                    {stats.publishedProducts}
+                  </span>
+                  <span className="text-xs font-semibold text-slate-500">
+                    de {stats.totalProducts} artículos creados
+                  </span>
+                </div>
+                <Link
+                  to="/productos"
+                  className="inline-block text-xs font-bold text-brand-600 hover:underline pt-1"
+                >
+                  Administrar artículos →
+                </Link>
+              </div>
+              <MetricSvgShowcase />
+            </Card>
 
-          <Card className="space-y-1">
-            <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
-              <span>Publicados</span>
-              <Eye className="h-4 w-4 text-emerald-600" />
-            </div>
-            <p className="font-heading text-3xl font-extrabold text-emerald-700">
-              {stats.publishedProducts}
-            </p>
-          </Card>
+            <Card className="bg-gradient-to-br from-sky-50/80 via-white to-white border-sky-100 flex items-center justify-between gap-4">
+              <div className="space-y-1">
+                <p className="text-xs font-extrabold uppercase tracking-wider text-sky-700">
+                  Pedidos y Conversaciones
+                </p>
+                <div className="flex items-baseline gap-2">
+                  <span className="font-heading text-4xl font-extrabold text-slate-900">
+                    {combinedOrders}
+                  </span>
+                  <span className="text-xs font-semibold text-slate-500">
+                    solicitudes · {unreadChats} chats sin leer
+                  </span>
+                </div>
+                <Link
+                  to="/mensajes"
+                  className="inline-flex items-center gap-1 text-xs font-bold text-sky-700 hover:underline pt-1"
+                >
+                  <MessageCircle className="h-3.5 w-3.5" />
+                  Abrir chat de clientes →
+                </Link>
+              </div>
+              <MetricSvgChatOrders />
+            </Card>
+          </div>
 
-          <Card className="space-y-1">
-            <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
-              <span>Ocultos / Borrador</span>
-              <EyeOff className="h-4 w-4 text-slate-500" />
-            </div>
-            <p className="font-heading text-3xl font-extrabold text-slate-700">
-              {stats.hiddenProducts}
-            </p>
-          </Card>
+          <DashboardVisualChart
+            rows={[
+              {
+                label: 'Productos publicados en tienda',
+                value: stats.publishedProducts,
+                colorHex: '#ec4899',
+                bgClass: 'bg-brand-500'
+              },
+              {
+                label: 'Secciones y categorías activas',
+                value: stats.categoriesCount,
+                colorHex: '#0284c7',
+                bgClass: 'bg-sky-600'
+              },
+              {
+                label: 'Compras directas en la App',
+                value: directOrdersTotal,
+                colorHex: '#10b981',
+                bgClass: 'bg-emerald-500'
+              },
+              {
+                label: 'Solicitudes enviadas a WhatsApp',
+                value: stats.orderRequestsCount,
+                colorHex: '#f59e0b',
+                bgClass: 'bg-amber-500'
+              }
+            ]}
+          />
 
-          <Card className="space-y-1">
-            <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
-              <span>Agotados</span>
-              <AlertTriangle className="h-4 w-4 text-rose-600" />
-            </div>
-            <p className="font-heading text-3xl font-extrabold text-rose-600">
-              {stats.outOfStockProducts}
-            </p>
-          </Card>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+            <Card className="flex items-center gap-3">
+              <MetricSvgMini variant="sections" />
+              <div>
+                <p className="text-xs font-semibold text-slate-500">Categorías</p>
+                <p className="font-heading text-2xl font-extrabold text-slate-900">
+                  {stats.categoriesCount}
+                </p>
+              </div>
+            </Card>
 
-          <Card className="space-y-1">
-            <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
-              <span>Categorías</span>
-              <FolderTree className="h-4 w-4 text-sky-600" />
-            </div>
-            <p className="font-heading text-3xl font-extrabold text-sky-700">
-              {stats.categoriesCount}
-            </p>
-          </Card>
+            <Card className="flex items-center gap-3">
+              <MetricSvgMini variant="contacts" />
+              <div>
+                <p className="text-xs font-semibold text-slate-500">Clientes en Chat</p>
+                <p className="font-heading text-2xl font-extrabold text-emerald-700">
+                  {contactsCount}
+                </p>
+              </div>
+            </Card>
 
-          <Card className="space-y-1">
-            <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
-              <span>Solicitudes WhatsApp</span>
-              <MessageSquare className="h-4 w-4 text-whatsapp-600" />
-            </div>
-            <div className="flex items-baseline gap-2">
-              <p className="font-heading text-3xl font-extrabold text-slate-900">
-                {stats.orderRequestsCount}
-              </p>
-              <span className="text-xs text-slate-500">
-                ({stats.confirmedOrdersCount} confirmados)
-              </span>
-            </div>
-          </Card>
-        </div>
+            <Card className="flex items-center gap-3">
+              <MetricSvgMini variant="drafts" />
+              <div>
+                <p className="text-xs font-semibold text-slate-500">En Borrador</p>
+                <p className="font-heading text-2xl font-extrabold text-slate-700">
+                  {stats.hiddenProducts}
+                </p>
+              </div>
+            </Card>
+
+            <Card className="flex items-center gap-3">
+              <MetricSvgMini variant="soldout" />
+              <div>
+                <p className="text-xs font-semibold text-slate-500">Agotados</p>
+                <p className="font-heading text-2xl font-extrabold text-rose-600">
+                  {stats.outOfStockProducts}
+                </p>
+              </div>
+            </Card>
+          </div>
+        </>
       )}
 
       <div className="grid lg:grid-cols-2 gap-4">
-        <Card className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="font-heading text-base font-bold text-slate-900 flex items-center gap-2">
-              <HardDrive className="h-4 w-4 text-sky-600" />
-              Uso de Almacenamiento (Supabase Storage)
-            </h2>
-            <Badge tone="sky">{usedMb} MB / 1024 MB</Badge>
-          </div>
-          <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-sky-500 rounded-full transition-all"
-              style={{ width: `${Math.min(100, (usedMb / freeQuotaMb) * 100)}%` }}
-            />
-          </div>
-          <p className="text-xs text-slate-500">
-            Todas las fotografías se comprimen automáticamente a formato WebP y generan
-            miniatura ligera antes de subirse para cuidar la cuota gratuita.
-          </p>
-        </Card>
-
-        <Card className="space-y-3">
-          <h2 className="font-heading text-base font-bold text-slate-900">
-            Actividad Reciente
-          </h2>
-          {recent.length === 0 ? (
-            <p className="text-sm text-slate-500 py-3">
-              Aún no hay movimientos registrados. Crea tu primera categoría o producto para
-              comenzar.
-            </p>
-          ) : (
-            <ul className="divide-y divide-slate-100 text-sm">
-              {recent.slice(0, 5).map((log) => (
-                <li key={log.id} className="py-2 flex items-center justify-between gap-2">
-                  <span className="font-medium text-slate-800">{log.action}</span>
-                  <span className="text-xs text-slate-500 shrink-0">
-                    {formatDateTimeEs(log.created_at)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
+        <DatabaseSpaceCard
+          title="Espacio de Catálogo y Fotografías"
+          subtitle="Base principal · Fotos de productos, portadas y precios"
+          usedMb={db1UsedMb}
+          quotaMb={1024}
+          accentHex="#ec4899"
+          extraPill="Capacidad amplia"
+        />
+        <DatabaseSpaceCard
+          title="Espacio de Clientes, Pedidos y Chat"
+          subtitle="Segunda base dedicada · Contactos, mensajes y asistente"
+          usedMb={db2UsedMb}
+          quotaMb={db2QuotaMb}
+          accentHex="#0284c7"
+          extraPill={`${contactsCount} contactos`}
+        />
       </div>
+
+      <Card className="space-y-3">
+        <h2 className="font-heading text-base font-extrabold text-slate-900">
+          Últimos Movimientos en tu Tienda
+        </h2>
+        {recent.length === 0 ? (
+          <p className="text-sm text-slate-500 py-2">
+            Todavía no hay movimientos recientes. Todo lo que actualices aparecerá aquí explicado de forma sencilla.
+          </p>
+        ) : (
+          <ul className="divide-y divide-slate-100 text-sm">
+            {recent.slice(0, 6).map((log) => (
+              <li
+                key={log.id}
+                className="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-1"
+              >
+                <span className="font-semibold text-slate-800">
+                  {formatHumanAuditAction(
+                    log.action,
+                    log.metadata as Record<string, unknown> | null
+                  )}
+                </span>
+                <span className="text-xs text-slate-500 shrink-0">
+                  {formatDateTimeEs(log.created_at)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
     </div>
   );
 }

@@ -2,27 +2,30 @@ import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import {
   Boxes,
+  Eye,
   FolderTree,
   LayoutDashboard,
   LogOut,
+  MessageCircle,
   MessageSquare,
   Package,
-  Palette,
   Settings,
   Users
 } from 'lucide-react';
 import { BrandLogo, Button } from '@pequemodas/ui';
 import { useAuth } from '../context/AuthContext';
+import { NotificationManagerBell } from './NotificationManagerBell';
 
 const NAV_ITEMS = [
   { to: '/', label: 'Resumen', icon: LayoutDashboard, end: true },
+  { to: '/mensajes', label: 'Chat Clientes', icon: MessageCircle },
   { to: '/productos', label: 'Productos', icon: Package },
   { to: '/categorias', label: 'Categorías', icon: FolderTree },
   { to: '/inventario', label: 'Inventario', icon: Boxes },
-  { to: '/pedidos', label: 'Solicitudes', icon: MessageSquare },
+  { to: '/pedidos', label: 'WhatsApp Ext.', icon: MessageSquare },
+  { to: '/vista-previa', label: 'Vista Previa', icon: Eye },
   { to: '/equipo', label: 'Equipo', icon: Users },
-  { to: '/configuracion', label: 'Ajustes', icon: Settings },
-  { to: '/sistema-diseno', label: 'Guía Visual', icon: Palette }
+  { to: '/configuracion', label: 'Ajustes', icon: Settings }
 ];
 
 export function AdminLayout() {
@@ -31,19 +34,25 @@ export function AdminLayout() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
       {/* Sidebar de Escritorio */}
-      <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 bg-white border-r border-slate-200">
-        <div className="px-5 py-5 border-b border-slate-100">
-          <BrandLogo
-            logoUrl={settings?.logo_url}
-            commercialName={settings?.commercial_name}
-            size="sm"
-          />
-          <p className="mt-2 text-xs font-semibold text-slate-500">
-            Panel Administrativo · {profile?.full_name || 'Katia'}
-          </p>
+      <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 bg-white border-r border-slate-200 z-30">
+        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <BrandLogo
+              logoUrl={settings?.logo_url}
+              commercialName={settings?.commercial_name}
+              size="sm"
+            />
+            <p className="mt-1.5 text-xs font-semibold text-slate-500 truncate">
+              Panel · {profile?.full_name || 'Katia'}
+            </p>
+          </div>
+          <NotificationManagerBell />
         </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto" aria-label="Menú principal">
+        <nav
+          className="flex-1 px-3 py-4 space-y-1 overflow-y-auto"
+          aria-label="Menú principal"
+        >
           {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
@@ -76,22 +85,25 @@ export function AdminLayout() {
         </div>
       </aside>
 
-      {/* Cabecera Móvil Android */}
-      <header className="lg:hidden sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200 px-4 py-3 flex items-center justify-between">
+      {/* Cabecera Móvil Android con Campana Anti-Spam */}
+      <header className="lg:hidden sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200 px-4 py-2.5 flex items-center justify-between gap-2">
         <BrandLogo
           logoUrl={settings?.logo_url}
           commercialName={settings?.commercial_name}
           size="sm"
         />
-        <Button
-          variant="ghost"
-          size="sm"
-          aria-label="Cerrar sesión"
-          leftIcon={<LogOut className="h-4 w-4" />}
-          onClick={() => void signOut()}
-        >
-          Salir
-        </Button>
+        <div className="flex items-center gap-1.5">
+          <NotificationManagerBell />
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-label="Cerrar sesión"
+            leftIcon={<LogOut className="h-4 w-4" />}
+            onClick={() => void signOut()}
+          >
+            Salir
+          </Button>
+        </div>
       </header>
 
       {/* Contenido Principal */}
@@ -106,7 +118,13 @@ export function AdminLayout() {
         aria-label="Navegación móvil"
         className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-slate-200 grid grid-cols-5 px-1 py-1.5 shadow-elevated"
       >
-        {[NAV_ITEMS[0]!, NAV_ITEMS[1]!, NAV_ITEMS[2]!, NAV_ITEMS[3]!, NAV_ITEMS[6]!].map(({ to, label, icon: Icon, end }) => (
+        {[
+          NAV_ITEMS[0]!,
+          NAV_ITEMS[1]!,
+          NAV_ITEMS[2]!,
+          NAV_ITEMS[4]!,
+          NAV_ITEMS[6]!
+        ].map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}
             to={to}

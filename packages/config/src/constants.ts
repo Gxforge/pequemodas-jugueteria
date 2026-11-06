@@ -8,10 +8,10 @@ export const BRAND_IDENTITY = {
 } as const;
 
 export const APP_RELEASE = {
-  version: '2.5.0',
+  version: '2.6.0',
   appLabel: 'Aplicación Web (PWA)',
   summary:
-    'Caché permanente por ID de imagen, galería en 2 etapas (miniatura nítida + HD al abrir) y logo oficial con nubes animadas.'
+    'Paneles visuales de categorías con rotación en vivo, compra directa en la App + chat integrado con la tienda y asistente inteligente.'
 } as const;
 
 export const STORAGE_LIMITS = {

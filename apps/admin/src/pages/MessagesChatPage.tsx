@@ -170,7 +170,7 @@ export function MessagesChatPage() {
           leftIcon={<Bot className="h-4 w-4 text-sky-600" />}
           onClick={() => setBotModalOpen(true)}
         >
-          Configurar Bot Asistente
+          Personalizar Robot y Colores
         </Button>
       </div>
 

@@ -1,5 +1,103 @@
 export type CrmShardId = 'p1' | 'p2';
 
+export interface CrmChatThemeConfig {
+  headerFrom: string;
+  headerTo: string;
+  botBubbleBg: string;
+  botBubbleText: string;
+  customerBubbleBg: string;
+  customerBubbleText: string;
+  adminBubbleBg: string;
+  adminBubbleText: string;
+  chatBg: string;
+}
+
+export const DEFAULT_CHAT_THEME: CrmChatThemeConfig = {
+  headerFrom: '#ec4899',
+  headerTo: '#0284c7',
+  botBubbleBg: '#e0f2fe',
+  botBubbleText: '#0f172a',
+  customerBubbleBg: '#dcf8c6',
+  customerBubbleText: '#0f172a',
+  adminBubbleBg: '#ffffff',
+  adminBubbleText: '#0f172a',
+  chatBg: '#f4efe6'
+};
+
+export interface ChatThemePreset {
+  id: string;
+  name: string;
+  theme: CrmChatThemeConfig;
+}
+
+export const CHAT_THEME_PRESETS: ChatThemePreset[] = [
+  {
+    id: 'pequemodas',
+    name: 'PequeModas (Rosa y Cielo)',
+    theme: DEFAULT_CHAT_THEME
+  },
+  {
+    id: 'whatsapp',
+    name: 'Estilo WhatsApp Clásico',
+    theme: {
+      headerFrom: '#059669',
+      headerTo: '#0d9488',
+      botBubbleBg: '#ecfdf5',
+      botBubbleText: '#064e3b',
+      customerBubbleBg: '#dcf8c6',
+      customerBubbleText: '#0f172a',
+      adminBubbleBg: '#ffffff',
+      adminBubbleText: '#0f172a',
+      chatBg: '#efeae2'
+    }
+  },
+  {
+    id: 'coral',
+    name: 'Dulce Coral Infantil',
+    theme: {
+      headerFrom: '#f43f5e',
+      headerTo: '#fb923c',
+      botBubbleBg: '#fff1f2',
+      botBubbleText: '#881337',
+      customerBubbleBg: '#ffe4e6',
+      customerBubbleText: '#4c0519',
+      adminBubbleBg: '#ffffff',
+      adminBubbleText: '#1e293b',
+      chatBg: '#fff7ed'
+    }
+  },
+  {
+    id: 'lavender',
+    name: 'Lavanda Mágica',
+    theme: {
+      headerFrom: '#8b5cf6',
+      headerTo: '#ec4899',
+      botBubbleBg: '#f3e8ff',
+      botBubbleText: '#3b0764',
+      customerBubbleBg: '#ede9fe',
+      customerBubbleText: '#1e1b4b',
+      adminBubbleBg: '#ffffff',
+      adminBubbleText: '#0f172a',
+      chatBg: '#faf5ff'
+    }
+  },
+  {
+    id: 'ocean',
+    name: 'Azul Algodón',
+    theme: {
+      headerFrom: '#0284c7',
+      headerTo: '#38bdf8',
+      botBubbleBg: '#e0f2fe',
+      botBubbleText: '#0c4a6e',
+      customerBubbleBg: '#bae6fd',
+      customerBubbleText: '#082f49',
+      adminBubbleBg: '#ffffff',
+      adminBubbleText: '#0f172a',
+      chatBg: '#f0f9ff'
+    }
+  }
+];
+
 export interface CrmCustomerContact {
   id: string;
   raw_id?: string;
@@ -90,6 +188,9 @@ export interface CrmBotConfig {
   id: number;
   is_enabled: boolean;
   bot_name: string;
+  header_title?: string;
+  header_subtitle?: string;
+  theme_config?: CrmChatThemeConfig;
   welcome_message: string;
   order_received_message: string;
   offline_or_wait_message: string;
@@ -98,6 +199,15 @@ export interface CrmBotConfig {
   notify_on_chat: boolean;
   cart_cooldown_minutes: number;
   updated_at: string;
+}
+
+export interface PublicBotAppearance {
+  is_enabled: boolean;
+  bot_name: string;
+  header_title: string;
+  header_subtitle: string;
+  welcome_message: string;
+  theme_config: CrmChatThemeConfig;
 }
 
 export interface CrmStorageOverview {

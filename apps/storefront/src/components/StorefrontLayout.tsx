@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
+  BookOpen,
   FolderTree,
   Home,
-  Search,
+  Phone,
   ShoppingBag,
   Sparkles
 } from 'lucide-react';
@@ -14,6 +15,7 @@ import { useStorefront } from '../context/StorefrontContext';
 import { CustomerChatWidget } from './CustomerChatWidget';
 import { NetworkResilienceBar } from './NetworkResilienceBar';
 import { PwaAppCard } from './PwaAppCard';
+import { SmartSearchBox } from './SmartSearchBox';
 
 export function StorefrontLayout() {
   const { settings } = useStorefront();
@@ -23,53 +25,32 @@ export function StorefrontLayout() {
 
   const storeName = settings?.commercial_name || BRAND_IDENTITY.commercialName;
 
-  const handleQuickSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const q = quickQuery.trim();
-    navigate(q ? `/buscar?q=${encodeURIComponent(q)}` : '/buscar');
+  const handleQuickSearch = (term: string) => {
+    const q = term.trim();
+    navigate(q ? `/buscar?q=${encodeURIComponent(q)}` : '/catalogo');
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-cream">
-      {/* Estado de Red / Modo Offline-First / Ahorro de Datos */}
       <NetworkResilienceBar />
-
-      {/* Cartel Flotante Elegante de Aplicación Web / Nueva Versión (sin franja roja superior) */}
       <PwaAppCard />
-
-      {/* Chat Directo en Vivo con la Tienda + Bot Asistente */}
       <CustomerChatWidget />
 
-      {/* Cabecera Principal */}
+      {/* Cabecera Principal con Buscador Inteligente y Accesos Directos en Móvil */}
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-brand-100/80">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-          <Link to="/" aria-label={`Ir al inicio de ${storeName}`}>
+        <div className="max-w-6xl mx-auto px-4 py-2.5 flex items-center justify-between gap-3">
+          <Link to="/" aria-label={`Ir al inicio de ${storeName}`} className="shrink-0">
             <BrandLogo logoUrl={settings?.logo_url} commercialName={storeName} size="md" />
           </Link>
 
-          <form
-            onSubmit={handleQuickSearch}
-            role="search"
-            className="hidden md:flex flex-1 max-w-md mx-4"
-          >
-            <div className="relative w-full">
-              <input
-                type="search"
-                value={quickQuery}
-                onChange={(e) => setQuickQuery(e.target.value)}
-                placeholder="Buscar juguetes, ropa, accesorios..."
-                aria-label="Buscar productos"
-                className="w-full rounded-full border border-slate-200 bg-slate-50 pl-4 pr-10 py-2 text-sm focus:bg-white focus:border-brand-400 focus:outline-none"
-              />
-              <button
-                type="submit"
-                aria-label="Ejecutar búsqueda"
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-500 hover:text-brand-600"
-              >
-                <Search className="h-4 w-4" />
-              </button>
-            </div>
-          </form>
+          <div className="hidden md:block flex-1 max-w-md mx-4">
+            <SmartSearchBox
+              value={quickQuery}
+              onChange={setQuickQuery}
+              onSubmitSearch={handleQuickSearch}
+              compact
+            />
+          </div>
 
           <nav className="hidden lg:flex items-center gap-5 text-sm font-semibold text-slate-700">
             <NavLink to="/catalogo" className="hover:text-brand-600">
@@ -89,7 +70,7 @@ export function StorefrontLayout() {
           <Link
             to="/carrito"
             aria-label={`Carrito con ${totalQuantity} artículos`}
-            className="relative inline-flex items-center gap-2 rounded-2xl bg-brand-50 hover:bg-brand-100 text-brand-700 px-3.5 py-2.5 text-sm font-bold transition-colors"
+            className="relative inline-flex items-center gap-2 rounded-2xl bg-brand-50 hover:bg-brand-100 text-brand-700 px-3.5 py-2 text-sm font-bold transition-colors shrink-0"
           >
             <ShoppingBag className="h-5 w-5" />
             <span className="hidden sm:inline">Carrito</span>
@@ -99,6 +80,41 @@ export function StorefrontLayout() {
               </span>
             )}
           </Link>
+        </div>
+
+        {/* Barra Móvil Directa: Buscador Inteligente + Botones sin esconder nada */}
+        <div className="md:hidden px-3 pb-2.5 space-y-2 border-t border-slate-100/80 pt-2">
+          <SmartSearchBox
+            value={quickQuery}
+            onChange={setQuickQuery}
+            onSubmitSearch={handleQuickSearch}
+            compact
+          />
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+            {[
+              { to: '/', label: 'Inicio', icon: Home, end: true },
+              { to: '/catalogo', label: 'Catálogo', icon: Sparkles },
+              { to: '/categorias', label: 'Categorías', icon: FolderTree },
+              { to: '/informacion-pedidos', label: 'Cómo pedir', icon: BookOpen },
+              { to: '/contacto', label: 'Contacto', icon: Phone }
+            ].map(({ to, label, icon: Icon, end }) => (
+              <NavLink
+                key={to}
+                to={to}
+                end={end}
+                className={({ isActive }) =>
+                  `inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold whitespace-nowrap border transition-colors ${
+                    isActive
+                      ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
+                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-brand-50'
+                  }`
+                }
+              >
+                <Icon className="h-3.5 w-3.5 shrink-0" />
+                <span>{label}</span>
+              </NavLink>
+            ))}
+          </div>
         </div>
       </header>
 
@@ -131,13 +147,13 @@ export function StorefrontLayout() {
                 </Link>
               </li>
               <li>
-                <Link to="/tienda" className="hover:text-brand-600">
-                  Información de la tienda
+                <Link to="/informacion-pedidos" className="hover:text-brand-600">
+                  Cómo pedir paso a paso
                 </Link>
               </li>
               <li>
-                <Link to="/informacion-pedidos" className="hover:text-brand-600">
-                  Información de pedidos
+                <Link to="/tienda" className="hover:text-brand-600">
+                  Información de la tienda
                 </Link>
               </li>
             </ul>
@@ -169,7 +185,7 @@ export function StorefrontLayout() {
         </div>
       </footer>
 
-      {/* Navegación Inferior Móvil Android */}
+      {/* Navegación Inferior Móvil con Cómo Pedir visible */}
       <nav
         aria-label="Navegación rápida móvil"
         className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-slate-200 grid grid-cols-5 px-1 py-1.5 shadow-elevated"
@@ -178,21 +194,25 @@ export function StorefrontLayout() {
           { to: '/', label: 'Inicio', icon: Home, end: true },
           { to: '/catalogo', label: 'Catálogo', icon: Sparkles },
           { to: '/categorias', label: 'Categorías', icon: FolderTree },
-          { to: '/buscar', label: 'Buscar', icon: Search },
-          { to: '/carrito', label: `Carrito${totalQuantity ? ` (${totalQuantity})` : ''}`, icon: ShoppingBag }
+          { to: '/informacion-pedidos', label: 'Cómo pedir', icon: BookOpen },
+          {
+            to: '/carrito',
+            label: `Carrito${totalQuantity ? ` (${totalQuantity})` : ''}`,
+            icon: ShoppingBag
+          }
         ].map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}
             to={to}
             end={end}
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center py-1.5 rounded-xl text-[11px] font-semibold ${
+              `flex flex-col items-center justify-center py-1.5 rounded-xl text-[10.5px] font-bold ${
                 isActive ? 'text-brand-600 bg-brand-50/80' : 'text-slate-500'
               }`
             }
           >
             <Icon className="h-5 w-5 mb-0.5" />
-            <span className="truncate max-w-[68px]">{label}</span>
+            <span className="truncate max-w-[70px]">{label}</span>
           </NavLink>
         ))}
       </nav>

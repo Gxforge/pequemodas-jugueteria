@@ -1,22 +1,16 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, Sparkles } from 'lucide-react';
 import { BRAND_IDENTITY } from '@pequemodas/config';
 import {
   fetchProductsPaginated,
   resolveProductAvailability,
   type ProductSortOption
 } from '@pequemodas/shared';
-import {
-  Button,
-  Card,
-  EmptyState,
-  Input,
-  ProductCardSkeleton,
-  Select
-} from '@pequemodas/ui';
+import { Button, EmptyState, ProductCardSkeleton } from '@pequemodas/ui';
 import { buildProductInquiryUrl, isValidWhatsAppPhone } from '@pequemodas/utils';
+import { CatalogCompactToolbar } from '../components/CatalogCompactToolbar';
 import { ProductCard } from '../components/ProductCard';
 import { useStorefront } from '../context/StorefrontContext';
 import { usePageMeta } from '../hooks/usePageMeta';
@@ -77,71 +71,38 @@ export function CatalogPage() {
       : null;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8 space-y-6">
-      <div>
-        <h1 className="font-heading text-2xl sm:text-3xl font-extrabold text-slate-900">
-          Catálogo de Productos
-        </h1>
-        <p className="text-sm text-slate-600 mt-1">
-          Filtra por categoría, ordena por precio en CUP y revisa disponibilidad actualizada.
-        </p>
-      </div>
+    <div className="max-w-6xl mx-auto px-4 py-5 sm:py-7 space-y-5">
+      <CatalogCompactToolbar
+        search={search}
+        categoryId={categoryId}
+        subcategoryId={subcategoryId}
+        onlyAvailable={onlyAvailable}
+        sort={sort}
+        rootCategories={rootCategories}
+        subcategories={subcategories}
+        onSearchChange={(val) => {
+          setSearch(val);
+          setPage(1);
+        }}
+        onCategoryChange={(val) => {
+          setCategoryId(val);
+          setSubcategoryId('');
+          setPage(1);
+        }}
+        onSubcategoryChange={(val) => {
+          setSubcategoryId(val);
+          setPage(1);
+        }}
+        onOnlyAvailableChange={setOnlyAvailable}
+        onSortChange={setSort}
+      />
 
-      <Card className="space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-          <Input
-            placeholder="Buscar juguete o prenda..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-          />
-          <Select
-            value={categoryId}
-            onChange={(e) => {
-              setCategoryId(e.target.value);
-              setSubcategoryId('');
-              setPage(1);
-            }}
-            options={[
-              { value: '', label: 'Todas las categorías' },
-              ...rootCategories.map((c) => ({ value: c.id, label: c.name }))
-            ]}
-          />
-          <Select
-            value={subcategoryId}
-            disabled={subcategories.length === 0}
-            onChange={(e) => {
-              setSubcategoryId(e.target.value);
-              setPage(1);
-            }}
-            options={[
-              { value: '', label: 'Todas las subcategorías' },
-              ...subcategories.map((s) => ({ value: s.id, label: s.name }))
-            ]}
-          />
-          <Select
-            value={sort}
-            onChange={(e) => setSort(e.target.value as ProductSortOption)}
-            options={[
-              { value: 'newest', label: 'Más recientes' },
-              { value: 'price_asc', label: 'Precio: menor a mayor' },
-              { value: 'price_desc', label: 'Precio: mayor a menor' },
-              { value: 'name_asc', label: 'Nombre: A - Z' }
-            ]}
-          />
+      {data?.didYouMean && search.trim() && (
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-xs font-bold text-amber-950">
+          <Sparkles className="h-3.5 w-3.5 text-amber-600" />
+          <span>Mostrando coincidencias para «{data.didYouMean}»</span>
         </div>
-        <label className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-700">
-          <input
-            type="checkbox"
-            checked={onlyAvailable}
-            onChange={(e) => setOnlyAvailable(e.target.checked)}
-            className="h-4 w-4 rounded"
-          />
-          Mostrar únicamente productos disponibles para añadir al carrito
-        </label>
-      </Card>
+      )}
 
       {isLoading ? (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -151,8 +112,8 @@ export function CatalogPage() {
         </div>
       ) : visibleItems.length === 0 ? (
         <EmptyState
-          title="No encontramos productos para mostrar"
-          description="El catálogo puede estar actualizándose o no hay coincidencias con los filtros elegidos. Visita nuestras categorías o consúltanos directamente por WhatsApp."
+          title="Todavía no hay artículos en esta vista"
+          description="Explora nuestras colecciones o escríbenos en el chat para ayudarte al momento."
           primaryAction={
             whatsappHref ? (
               <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
@@ -177,7 +138,7 @@ export function CatalogPage() {
                   setOnlyAvailable(false);
                 }}
               >
-                Limpiar filtros
+                Ver todo
               </Button>
             )
           }
@@ -201,7 +162,7 @@ export function CatalogPage() {
             Anterior
           </Button>
           <span className="text-sm font-semibold text-slate-700">
-            Página {data.page} de {data.totalPages}
+            {data.page} / {data.totalPages}
           </span>
           <Button
             size="sm"

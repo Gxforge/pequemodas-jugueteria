@@ -3,11 +3,13 @@ import {
   getChatSupabaseClient,
   isChatSupabaseConfigured
 } from './chat-supabase-client';
-import type {
-  CrmChatMessage,
-  CrmDirectOrder,
-  CrmDirectOrderLine,
-  CrmShardId
+import {
+  DEFAULT_CHAT_THEME,
+  type CrmChatMessage,
+  type CrmDirectOrder,
+  type CrmDirectOrderLine,
+  type CrmShardId,
+  type PublicBotAppearance
 } from './crm-types';
 import { getSupabaseClient, isSupabaseConfigured } from './supabase-client';
 
@@ -131,7 +133,12 @@ export async function openOrResumeCustomerChat(input: {
 }
 
 export async function fetchCustomerChatThread(): Promise<{
-  contact: { id: string; full_name: string; phone: string } | null;
+  contact: {
+    id: string;
+    full_name: string;
+    phone: string;
+    unread_for_customer?: number;
+  } | null;
   messages: CrmChatMessage[];
   orders: Array<
     Pick<
@@ -239,5 +246,32 @@ export async function notifyCartAdditionQuietly(input: {
     });
   } catch {
     // Silencioso para no afectar experiencia de compra
+  }
+}
+
+export async function fetchPublicBotAppearance(): Promise<PublicBotAppearance> {
+  const fallback: PublicBotAppearance = {
+    is_enabled: true,
+    bot_name: 'Asistente PequeModas',
+    header_title: 'Atención PequeModas',
+    header_subtitle: 'Katia + Asistente en línea',
+    welcome_message: '',
+    theme_config: DEFAULT_CHAT_THEME
+  };
+  try {
+    const client = getShardClient('p1');
+    const { data, error } = await client.rpc('get_public_bot_appearance');
+    if (error || !data) return fallback;
+    const raw = data as Partial<PublicBotAppearance>;
+    return {
+      ...fallback,
+      ...raw,
+      theme_config: {
+        ...DEFAULT_CHAT_THEME,
+        ...(raw.theme_config ?? {})
+      }
+    };
+  } catch {
+    return fallback;
   }
 }

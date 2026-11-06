@@ -207,9 +207,9 @@ Deno.serve(async (req) => {
       const patch = (payload.patch ?? {}) as Record<string, unknown>;
       const allowed: Record<string, unknown> = { updated_at: new Date().toISOString() };
       for (const k of [
-        'is_enabled', 'bot_name', 'welcome_message', 'order_received_message',
-        'offline_or_wait_message', 'keyword_rules', 'notify_on_cart_add',
-        'notify_on_chat', 'cart_cooldown_minutes'
+        'is_enabled', 'bot_name', 'header_title', 'header_subtitle', 'theme_config',
+        'welcome_message', 'order_received_message', 'offline_or_wait_message',
+        'keyword_rules', 'notify_on_cart_add', 'notify_on_chat', 'cart_cooldown_minutes'
       ]) {
         if (k in patch) allowed[k] = patch[k];
       }

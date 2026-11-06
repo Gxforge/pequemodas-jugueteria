@@ -1,4 +1,4 @@
-# Estado Oficial del Proyecto — PequeModas-Juguetería (`v2.7.0`)
+# Estado Oficial del Proyecto — PequeModas-Juguetería (`v2.8.0`)
 
 **Desarrollado por:** StudioLexair  
 **Propietaria:** Katia (Cuba)  
@@ -9,7 +9,7 @@
 
 ## 1. Dominios Oficiales Verificados en Producción
 
-- **Tienda Pública (PWA v2.7.1):** `https://pequemodas.vercel.app` *(dominios antiguos retirados definitivamente — HTTP 404)*
+- **Tienda Pública (PWA v2.8.0):** `https://pequemodas.vercel.app` *(dominios antiguos retirados definitivamente — HTTP 404)*
 - **Panel Administrativo:** `https://pequemodas-admin.vercel.app` *(dominios antiguos retirados definitivamente — HTTP 404)*
 - **Aviso sobre Vercel Hobby / Comercial:** Ambos proyectos operan actualmente en plan gratuito Hobby para validación técnica sin pagos ni tarjetas. Conforme a los Términos de Servicio de Vercel, para uso comercial permanente se debe contemplar el paso a Vercel Pro cuando el proyecto disponga de un medio de pago autorizado.
 

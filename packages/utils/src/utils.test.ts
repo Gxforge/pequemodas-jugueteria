@@ -3,9 +3,12 @@ import {
   buildProductInquiryUrl,
   buildWhatsAppOrderMessage,
   buildWhatsAppUrl,
+  detectStoreSearchIntent,
   formatCup,
   isValidWhatsAppPhone,
+  scoreSmartTextMatch,
   slugify,
+  suggestDidYouMean,
   validateImageFile
 } from './index';
 
@@ -72,5 +75,15 @@ describe('@pequemodas/utils', () => {
     expect(
       validateImageFile({ name: 'pesada.jpg', type: 'image/jpeg', size: 9 * 1024 * 1024 }).valid
     ).toBe(false);
+  });
+
+  it('corrige faltas de ortografía en español y entiende la intención del carrito', () => {
+    expect(scoreSmartTextMatch('jugete', ['Juguete didáctico'])).toBeGreaterThan(0);
+    expect(scoreSmartTextMatch('muneka', ['Muñeca articulada'])).toBeGreaterThan(0);
+    expect(scoreSmartTextMatch('bestido', ['Vestido de niña'])).toBeGreaterThan(0);
+    expect(scoreSmartTextMatch('sapato', ['Zapatos infantiles'])).toBeGreaterThan(0);
+    expect(suggestDidYouMean('muneka')).toBe('muñeca');
+    expect(detectStoreSearchIntent('mi carito')?.kind).toBe('cart');
+    expect(detectStoreSearchIntent('como pedir')?.kind).toBe('order_guide');
   });
 });

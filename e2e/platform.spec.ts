@@ -54,8 +54,8 @@ test.describe('PequeModas-Juguetería — PWA, Open Graph, Capas Animadas y Offl
   }) => {
     await page.goto(STOREFRONT_URL);
     await expect(page.getByRole('heading', { level: 1 })).toContainText('PequeModas');
-    // Permite completar el pre-calentamiento en segundo plano (250ms) antes del corte de señal
-    await page.waitForTimeout(450);
+    // Espera a que termine la pantalla de precarga inicial y el pre-calentamiento de rutas
+    await page.waitForTimeout(850);
 
     // Simular corte total de datos móviles
     await context.setOffline(true);

@@ -10,15 +10,16 @@ export const acceptAdminInviteSchema = z
     email: z
       .string()
       .trim()
+      .toLowerCase()
       .min(1, 'Ingresa tu correo electrónico.')
-      .email('Ingresa un correo electrónico válido.'),
+      .email('Escribe un correo válido completo (ejemplo: katia@gmail.com).'),
     password: z
       .string()
-      .min(8, 'La contraseña debe tener al menos 8 caracteres.'),
+      .min(8, 'La contraseña debe tener al menos 8 letras o números.'),
     confirmPassword: z.string()
   })
   .refine((v) => v.password === v.confirmPassword, {
-    message: 'Las contraseñas no coinciden.',
+    message: 'Las dos contraseñas no coinciden. Toca «Ver» para compararlas.',
     path: ['confirmPassword']
   });
 

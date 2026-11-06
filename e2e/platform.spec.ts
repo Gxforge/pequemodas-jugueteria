@@ -16,11 +16,11 @@ test.describe('PequeModas-Juguetería — PWA v2.7.0, Vista Previa WhatsApp y Ch
     await expect(page.locator('header a[aria-label*="Ir al inicio"] img')).toBeVisible();
     await expect(page.locator('footer img').first()).toBeVisible();
 
-    // Verifica versión v2.7.0
-    await expect(page.getByText(/Aplicación Web \(PWA\) v2\.7\.0/i)).toBeVisible();
+    // Verifica versión v2.7.1
+    await expect(page.getByText(/Aplicación Web \(PWA\) v2\.7\.1/i)).toBeVisible();
     const verRes = await request.get(`${STOREFRONT_URL}/version.json`);
     expect(verRes.status()).toBe(200);
-    expect((await verRes.json()).version).toBe('2.7.0');
+    expect((await verRes.json()).version).toBe('2.7.1');
 
     // Verifica favicon.ico real y nuevo banner Open Graph limpio para WhatsApp
     const icoRes = await request.get(`${STOREFRONT_URL}/favicon.ico`);
@@ -93,8 +93,16 @@ test.describe('PequeModas-Juguetería — E2E Admin: 2GB Storage + Round-Robin, 
     await page.goto(ADMIN_URL);
     await expect(page).toHaveURL(/\/acceso$/);
 
+    // Verifica que el botón «Ver / Ocultar» muestra la contraseña en claro
+    const pwdInput = page.locator('input[name="password"]');
+    await pwdInput.fill('Lexair-bae05a5d12#26');
+    await expect(pwdInput).toHaveAttribute('type', 'password');
+    await page.getByRole('button', { name: /Ver contraseña/i }).click();
+    await expect(pwdInput).toHaveAttribute('type', 'text');
+    await page.getByRole('button', { name: /Ocultar contraseña/i }).click();
+    await expect(pwdInput).toHaveAttribute('type', 'password');
+
     await page.getByLabel(/Correo electrónico/i).fill('junmoxia41@gmail.com');
-    await page.getByLabel(/Contraseña/i).fill('Lexair-bae05a5d12#26');
     await page.getByRole('button', { name: /Entrar al Panel/i }).click();
 
     // Verifica Resumen con los 2 servidores de Fotos (2 GB) y las 2 Bases Round-Robin

@@ -91,7 +91,11 @@ export function LoginPage() {
             label="Correo electrónico"
             type="email"
             autoComplete="email"
-            placeholder="correo@ejemplo.com"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            placeholder="ejemplo@gmail.com"
+            hint="Usa el correo electrónico con el que activaste tu invitación."
             requiredMark
             error={loginForm.formState.errors.email?.message}
             {...loginForm.register('email')}
@@ -100,7 +104,10 @@ export function LoginPage() {
             label="Contraseña"
             type="password"
             autoComplete="current-password"
-            placeholder="••••••••"
+            autoCapitalize="none"
+            autoCorrect="off"
+            placeholder="Escribe tu contraseña"
+            hint="Puedes tocar «Ver» a la derecha para comprobar lo que escribes."
             requiredMark
             error={loginForm.formState.errors.password?.message}
             {...loginForm.register('password')}

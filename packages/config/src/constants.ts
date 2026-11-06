@@ -8,10 +8,10 @@ export const BRAND_IDENTITY = {
 } as const;
 
 export const APP_RELEASE = {
-  version: '2.7.0',
+  version: '2.7.1',
   appLabel: 'Aplicación Web (PWA)',
   summary:
-    'Dominio oficial pequemodas.vercel.app, chat instantáneo con reloj y palomitas (✓ / ✓✓), doble almacenamiento 2 GB + Round-Robin y roles por tareas.'
+    'Dominio oficial pequemodas.vercel.app, registro con vista de contraseña, chat instantáneo (✓ / ✓✓) y doble almacenamiento 2 GB + Round-Robin.'
 } as const;
 
 export const STORAGE_LIMITS = {

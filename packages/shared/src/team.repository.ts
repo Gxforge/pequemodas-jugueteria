@@ -143,9 +143,14 @@ export async function acceptAdminInvitation(params: {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      apikey: env.VITE_SUPABASE_ANON_KEY
+      apikey: env.VITE_SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${env.VITE_SUPABASE_ANON_KEY}`
     },
-    body: JSON.stringify(params)
+    body: JSON.stringify({
+      ...params,
+      fullName: params.fullName.trim(),
+      email: params.email.trim().toLowerCase()
+    })
   });
 
   const payload = (await res.json().catch(() => ({}))) as { error?: string };

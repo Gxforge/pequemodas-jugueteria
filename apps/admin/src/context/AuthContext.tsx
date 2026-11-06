@@ -94,12 +94,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     setAuthError(null);
+    const cleanEmail = email.trim().toLowerCase();
     const supabase = getSupabaseClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email: cleanEmail,
+      password
+    });
     if (error) {
       throw new Error(
         error.message.includes('Invalid login')
-          ? 'Correo o contraseña incorrectos.'
+          ? 'Correo o contraseña incorrectos. Toca «Ver» para revisar la contraseña o abre primero tu enlace de invitación si aún no has creado tu cuenta.'
           : error.message
       );
     }
@@ -108,7 +112,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const sendPasswordRecovery = async (email: string) => {
     const supabase = getSupabaseClient();
     const redirectTo = `${window.location.origin}/actualizar-clave`;
-    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+    const { error } = await supabase.auth.resetPasswordForEmail(
+      email.trim().toLowerCase(),
+      { redirectTo }
+    );
     if (error) throw new Error(error.message);
   };
 

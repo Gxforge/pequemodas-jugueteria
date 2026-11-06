@@ -113,19 +113,21 @@ export function resolveProductAvailability(product: ProductDetailDto): ResolvedA
 }
 
 export function getPrimaryProductImage(product: Pick<ProductDetailDto, 'images'>): {
+  imageId: string | null;
   fullUrl: string | null;
   thumbUrl: string | null;
 } {
   if (!product.images || product.images.length === 0) {
-    return { fullUrl: null, thumbUrl: null };
+    return { imageId: null, fullUrl: null, thumbUrl: null };
   }
   const sorted = [...product.images].sort((a, b) => {
     if (a.is_primary !== b.is_primary) return a.is_primary ? -1 : 1;
     return a.sort_order - b.sort_order;
   });
   const first = sorted[0];
-  if (!first) return { fullUrl: null, thumbUrl: null };
+  if (!first) return { imageId: null, fullUrl: null, thumbUrl: null };
   return {
+    imageId: first.id,
     fullUrl: first.public_url,
     thumbUrl: first.thumbnail_url ?? first.public_url
   };

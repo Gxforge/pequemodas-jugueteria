@@ -12,10 +12,17 @@ test.describe('PequeModas-Juguetería — PWA, Open Graph, Capas Animadas y Offl
     await expect(page.getByRole('heading', { level: 1 })).toContainText('PequeModas');
 
     // Verifica que el logo sin fondo y sus 3 capas de nubes separadas están presentes
-    await expect(page.locator('.pm-logo-front')).toBeVisible();
-    await expect(page.locator('.pm-cloud-center')).toBeVisible();
-    await expect(page.locator('.pm-cloud-left')).toBeVisible();
-    await expect(page.locator('.pm-cloud-right')).toBeVisible();
+    await expect(page.locator('.pm-logo-front').first()).toBeVisible();
+    await expect(page.locator('.pm-cloud-center').first()).toBeVisible();
+    await expect(page.locator('.pm-cloud-left').first()).toBeVisible();
+    await expect(page.locator('.pm-cloud-right').first()).toBeVisible();
+
+    // Verifica versión de la Aplicación Web y archivo version.json sin caché
+    await expect(page.getByText(/Aplicación Web \(PWA\) v2\.5\.0/i)).toBeVisible();
+    const verRes = await request.get(`${STOREFRONT_URL}/version.json`);
+    expect(verRes.status()).toBe(200);
+    const verJson = await verRes.json();
+    expect(verJson.version).toBe('2.5.0');
 
     // Verifica metadatos Open Graph para vista previa en WhatsApp
     const ogImage = await page

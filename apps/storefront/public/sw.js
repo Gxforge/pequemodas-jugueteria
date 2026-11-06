@@ -1,7 +1,8 @@
-const SHELL_CACHE = 'pequemodas-shell-v2';
-const IMMUTABLE_CACHE = 'pequemodas-immutable-v2';
-const MEDIA_CACHE = 'pequemodas-media-v2';
-const MAX_MEDIA_ENTRIES = 80;
+const SHELL_CACHE = 'pequemodas-shell-v3';
+const IMMUTABLE_CACHE = 'pequemodas-immutable-v3';
+const MEDIA_CACHE = 'pequemodas-media-v3';
+const IMAGE_ID_CACHE = 'pequemodas-img-by-id-v1';
+const MAX_MEDIA_ENTRIES = 160;
 
 const APP_SHELL = [
   '/',
@@ -14,7 +15,7 @@ const APP_SHELL = [
   '/brand/cloud-side.webp'
 ];
 
-const ACTIVE_CACHES = [SHELL_CACHE, IMMUTABLE_CACHE, MEDIA_CACHE];
+const ACTIVE_CACHES = [SHELL_CACHE, IMMUTABLE_CACHE, MEDIA_CACHE, IMAGE_ID_CACHE];
 
 async function trimCache(cacheName, maxItems) {
   const cache = await caches.open(cacheName);
@@ -78,8 +79,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2. REGLA SAGRADA: Jamás cachear en Service Worker consultas dinámicas de stock, precios, RPC o Auth
+  // 2. REGLA SAGRADA: Jamás cachear consultas dinámicas de stock, precios, version.json, RPC o Auth
   if (
+    url.pathname === '/version.json' ||
     url.hostname.includes('supabase.co') ||
     url.pathname.startsWith('/rest/') ||
     url.pathname.startsWith('/auth/') ||

@@ -117,3 +117,18 @@ export async function uploadStoreLogo(
 
   return { publicUrl: urlData.publicUrl, storagePath };
 }
+
+export async function restoreOfficialStoreLogo(storeId: string): Promise<string> {
+  const supabase = getSupabaseClient();
+  const officialPath = 'official/logo-foreground.webp';
+  const { data } = supabase.storage
+    .from(STORAGE_LIMITS.brandBucket)
+    .getPublicUrl(officialPath);
+
+  await supabase
+    .from('store_settings')
+    .update({ logo_url: data.publicUrl, logo_storage_path: officialPath })
+    .eq('store_id', storeId);
+
+  return data.publicUrl;
+}

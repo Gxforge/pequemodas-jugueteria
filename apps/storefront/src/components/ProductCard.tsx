@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { Sparkles } from 'lucide-react';
 import {
   getPrimaryProductImage,
   resolveProductAvailability,
@@ -8,12 +7,11 @@ import {
 } from '@pequemodas/shared';
 import { AvailabilityBadge, Badge, Card } from '@pequemodas/ui';
 import { formatCup } from '@pequemodas/utils';
+import { SmartProductImage } from './SmartProductImage';
 
 export function ProductCard({ product }: { product: ProductDetailDto }) {
   const avail = resolveProductAvailability(product);
-  const { thumbUrl } = getPrimaryProductImage(product);
-  const [loaded, setLoaded] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const { imageId, thumbUrl, fullUrl } = getPrimaryProductImage(product);
 
   return (
     <Link to={`/producto/${product.slug}`} className="block group focus:outline-none">
@@ -24,35 +22,14 @@ export function ProductCard({ product }: { product: ProductDetailDto }) {
       >
         <div className="space-y-2.5">
           <div className="aspect-square rounded-xl bg-gradient-to-br from-brand-50 to-sky-50 overflow-hidden relative">
-            {thumbUrl && !failed ? (
-              <>
-                {!loaded && (
-                  <div
-                    aria-hidden="true"
-                    className="absolute inset-0 animate-pulse bg-gradient-to-r from-brand-50 via-white to-sky-50"
-                  />
-                )}
-                <img
-                  src={thumbUrl}
-                  alt={product.name}
-                  loading="lazy"
-                  decoding="async"
-                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                  onLoad={() => setLoaded(true)}
-                  onError={() => setFailed(true)}
-                  className={`h-full w-full object-cover transition-all duration-300 group-hover:scale-105 ${
-                    loaded ? 'opacity-100' : 'opacity-0'
-                  }`}
-                />
-              </>
-            ) : (
-              <div className="h-full w-full flex flex-col items-center justify-center text-brand-300 gap-1">
-                <Sparkles className="h-8 w-8" />
-                <span className="text-xs font-semibold text-slate-400">
-                  {failed ? 'Imagen sin señal' : 'Imagen pendiente'}
-                </span>
-              </div>
-            )}
+            <SmartProductImage
+              imageId={imageId}
+              thumbUrl={thumbUrl}
+              fullUrl={fullUrl}
+              alt={product.name}
+              mode="thumb"
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
             {product.is_featured && (
               <div className="absolute top-2 left-2">
                 <Badge tone="sunny">Destacado</Badge>

@@ -12,6 +12,10 @@ import {
   readOfflineSnapshot,
   writeOfflineSnapshotPatch
 } from './pwa/offlineSnapshot';
+import {
+  peekCachedImageInRam,
+  resolveImageById
+} from './pwa/imageIdCache';
 
 function CartHarness() {
   const { items, totalQuantity, estimatedTotalCup, addItem, updateQuantity } = useCart();
@@ -93,5 +97,50 @@ describe('Storefront UI & Carrito persistente', () => {
     expect(container.querySelector('.pm-cloud-center')).toBeTruthy();
     expect(container.querySelector('.pm-cloud-left')).toBeTruthy();
     expect(container.querySelector('.pm-cloud-right')).toBeTruthy();
+  });
+
+  it('no vuelve a descargar una imagen si su ID no ha cambiado (caché por imageId)', async () => {
+    let networkHits = 0;
+    const fakeBlob = new Blob(['webp-binary'], { type: 'image/webp' });
+    const origFetch = globalThis.fetch;
+    const origCaches = window.caches;
+
+    const fakeStore = new Map<string, Response>();
+    Object.defineProperty(window, 'caches', {
+      configurable: true,
+      value: {
+        open: async () => ({
+          match: async (k: string) => fakeStore.get(k)?.clone(),
+          put: async (k: string, r: Response) => {
+            fakeStore.set(k, r.clone());
+          },
+          keys: async () => [],
+          delete: async () => true
+        })
+      }
+    });
+    globalThis.fetch = (async () => {
+      networkHits += 1;
+      return new Response(fakeBlob, { status: 200 });
+    }) as typeof fetch;
+
+    try {
+      const firstUrl = await resolveImageById(
+        'img-uuid-001',
+        'thumb',
+        'https://example.com/thumb1.webp'
+      );
+      const secondUrl = await resolveImageById(
+        'img-uuid-001',
+        'thumb',
+        'https://example.com/thumb1.webp'
+      );
+      expect(firstUrl).toBe(secondUrl);
+      expect(networkHits).toBe(1);
+      expect(peekCachedImageInRam('img-uuid-001', 'thumb')).toBe(firstUrl);
+    } finally {
+      globalThis.fetch = origFetch;
+      Object.defineProperty(window, 'caches', { configurable: true, value: origCaches });
+    }
   });
 });

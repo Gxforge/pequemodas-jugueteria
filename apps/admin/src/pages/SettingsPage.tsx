@@ -3,7 +3,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ImagePlus, Save } from 'lucide-react';
 import { storeSettingsFormSchema, type StoreSettingsFormInput } from '@pequemodas/schemas';
-import { updateStoreSettings, uploadStoreLogo } from '@pequemodas/shared';
+import {
+  restoreOfficialStoreLogo,
+  updateStoreSettings,
+  uploadStoreLogo
+} from '@pequemodas/shared';
 import { Alert, BrandLogo, Button, Card, Input, Textarea } from '@pequemodas/ui';
 import { useAuth } from '../context/AuthContext';
 
@@ -125,15 +129,31 @@ export function SettingsPage() {
                 className="hidden"
                 onChange={(e) => void handleLogoUpload(e)}
               />
-              <Button
-                size="sm"
-                variant="outline"
-                isLoading={uploadingLogo}
-                leftIcon={<ImagePlus className="h-4 w-4" />}
-                onClick={() => logoInputRef.current?.click()}
-              >
-                Cambiar logotipo
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  isLoading={uploadingLogo}
+                  leftIcon={<ImagePlus className="h-4 w-4" />}
+                  onClick={() => logoInputRef.current?.click()}
+                >
+                  Cambiar logotipo
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    if (!store) return;
+                    void restoreOfficialStoreLogo(store.id).then(async (url) => {
+                      form.setValue('logoUrl', url);
+                      await refreshStoreContext();
+                      setSavedMsg('Logo oficial sin fondo restaurado.');
+                    });
+                  }}
+                >
+                  Usar oficial sin fondo
+                </Button>
+              </div>
             </div>
           </div>
 

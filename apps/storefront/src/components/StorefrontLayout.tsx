@@ -1,25 +1,22 @@
 import React, { useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
-  Download,
   FolderTree,
   Home,
-  RefreshCw,
   Search,
   ShoppingBag,
   Sparkles
 } from 'lucide-react';
-import { BRAND_IDENTITY } from '@pequemodas/config';
-import { BrandLogo, Button } from '@pequemodas/ui';
+import { APP_RELEASE, BRAND_IDENTITY } from '@pequemodas/config';
+import { BrandLogo } from '@pequemodas/ui';
 import { useCart } from '../context/CartContext';
 import { useStorefront } from '../context/StorefrontContext';
-import { usePwaInstall } from '../pwa/usePwaInstall';
 import { NetworkResilienceBar } from './NetworkResilienceBar';
+import { PwaAppCard } from './PwaAppCard';
 
 export function StorefrontLayout() {
   const { settings } = useStorefront();
   const { totalQuantity } = useCart();
-  const { canInstall, hasUpdate, promptInstall, applyUpdate } = usePwaInstall();
   const [quickQuery, setQuickQuery] = useState('');
   const navigate = useNavigate();
 
@@ -36,38 +33,8 @@ export function StorefrontLayout() {
       {/* Estado de Red / Modo Offline-First / Ahorro de Datos */}
       <NetworkResilienceBar />
 
-      {/* Avisos PWA de Instalación o Nueva Versión */}
-      {(canInstall || hasUpdate) && (
-        <div className="bg-brand-600 text-white px-4 py-2 text-xs sm:text-sm">
-          <div className="max-w-6xl mx-auto flex items-center justify-between gap-3">
-            {hasUpdate ? (
-              <>
-                <span>Hay una nueva versión disponible de la tienda.</span>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  leftIcon={<RefreshCw className="h-3.5 w-3.5" />}
-                  onClick={applyUpdate}
-                >
-                  Actualizar
-                </Button>
-              </>
-            ) : (
-              <>
-                <span>Instala {storeName} en tu Android para acceso rápido.</span>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  leftIcon={<Download className="h-3.5 w-3.5" />}
-                  onClick={() => void promptInstall()}
-                >
-                  Instalar App
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Cartel Flotante Elegante de Aplicación Web / Nueva Versión (sin franja roja superior) */}
+      <PwaAppCard />
 
       {/* Cabecera Principal */}
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-brand-100/80">
@@ -191,7 +158,8 @@ export function StorefrontLayout() {
               </li>
             </ul>
             <p className="pt-2 text-xs text-slate-400">
-              © {new Date().getFullYear()} {storeName} · Desarrollado por StudioLexair
+              © {new Date().getFullYear()} {storeName} · {APP_RELEASE.appLabel} v
+              {APP_RELEASE.version} · StudioLexair
             </p>
           </div>
         </div>

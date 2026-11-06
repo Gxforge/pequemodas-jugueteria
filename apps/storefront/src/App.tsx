@@ -1,6 +1,7 @@
 import React, { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AppBootSplash } from './components/AppBootSplash';
 import { StorefrontLayout } from './components/StorefrontLayout';
 import { CartProvider } from './context/CartContext';
 import { StorefrontProvider } from './context/StorefrontContext';
@@ -93,6 +94,7 @@ export function App() {
     <QueryClientProvider client={queryClient}>
       <StorefrontProvider>
         <CartProvider>
+          <AppBootSplash />
           <BrowserRouter>
             <Suspense fallback={<PageFallback />}>
               <Routes>

@@ -9,7 +9,7 @@ export interface OptimizedImagePair {
   fullBlob: Blob;
   thumbnailBlob: Blob;
   mimeType: string;
-  extension: 'webp' | 'jpg';
+  extension: 'webp' | 'jpg' | 'png';
   width: number;
   height: number;
 }
@@ -65,37 +65,66 @@ function computeTargetSize(
   return { width: Math.max(1, Math.round(maxDim * ratio)), height: maxDim };
 }
 
-function renderCanvasToBlob(
+function renderHighFidelityWebp(
   img: HTMLImageElement,
   maxDim: number,
-  quality: number
-): Promise<{ blob: Blob; mimeType: string; extension: 'webp' | 'jpg'; width: number; height: number }> {
-  const { width, height } = computeTargetSize(img.naturalWidth || img.width, img.naturalHeight || img.height, maxDim);
+  quality: number,
+  preserveAlphaFallback: boolean
+): Promise<{
+  blob: Blob;
+  mimeType: string;
+  extension: 'webp' | 'jpg' | 'png';
+  width: number;
+  height: number;
+}> {
+  const { width, height } = computeTargetSize(
+    img.naturalWidth || img.width,
+    img.naturalHeight || img.height,
+    maxDim
+  );
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { alpha: true });
   if (!ctx) {
     throw new Error('No se pudo inicializar el procesador gráfico en el navegador.');
   }
+  // Preserva canal alfa (sin rellenar de blanco) y aplica interpolación bicúbica alta
+  ctx.clearRect(0, 0, width, height);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(img, 0, 0, width, height);
 
   return new Promise((resolve, reject) => {
     canvas.toBlob(
       (webpBlob) => {
         if (webpBlob && webpBlob.type === 'image/webp') {
-          resolve({ blob: webpBlob, mimeType: 'image/webp', extension: 'webp', width, height });
+          resolve({
+            blob: webpBlob,
+            mimeType: 'image/webp',
+            extension: 'webp',
+            width,
+            height
+          });
           return;
         }
+        const fallbackMime = preserveAlphaFallback ? 'image/png' : 'image/jpeg';
+        const fallbackExt = preserveAlphaFallback ? 'png' : 'jpg';
         canvas.toBlob(
-          (jpegBlob) => {
-            if (!jpegBlob) {
-              reject(new Error('Error al comprimir la imagen seleccionada.'));
+          (fbBlob) => {
+            if (!fbBlob) {
+              reject(new Error('Error al procesar la imagen seleccionada.'));
               return;
             }
-            resolve({ blob: jpegBlob, mimeType: 'image/jpeg', extension: 'jpg', width, height });
+            resolve({
+              blob: fbBlob,
+              mimeType: fallbackMime,
+              extension: fallbackExt,
+              width,
+              height
+            });
           },
-          'image/jpeg',
+          fallbackMime,
           quality
         );
       },
@@ -110,6 +139,7 @@ export async function optimizeProductImage(file: File): Promise<OptimizedImagePa
   if (!validation.valid) {
     throw new Error(validation.error);
   }
+  const hasAlphaSource = file.type === 'image/png' || file.type === 'image/webp';
   const objectUrl = URL.createObjectURL(file);
   try {
     const img = await new Promise<HTMLImageElement>((resolve, reject) => {
@@ -119,15 +149,19 @@ export async function optimizeProductImage(file: File): Promise<OptimizedImagePa
       el.src = objectUrl;
     });
 
-    const full = await renderCanvasToBlob(
+    // Etapa 2 (Detalle HD): hasta 1800px con calidad 0.93 casi sin pérdida visual
+    const full = await renderHighFidelityWebp(
       img,
       STORAGE_LIMITS.fullImageMaxDimension,
-      STORAGE_LIMITS.webpQuality
+      STORAGE_LIMITS.webpQuality,
+      hasAlphaSource
     );
-    const thumb = await renderCanvasToBlob(
+    // Etapa 1 (Catálogo Retina): hasta 640px con calidad 0.90 nítida y rápida
+    const thumb = await renderHighFidelityWebp(
       img,
       STORAGE_LIMITS.thumbnailMaxDimension,
-      0.78
+      STORAGE_LIMITS.thumbnailQuality,
+      hasAlphaSource
     );
 
     return {

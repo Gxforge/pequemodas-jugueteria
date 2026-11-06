@@ -8,3 +8,4 @@ export * from './products-write.repository';
 export * from './storage.repository';
 export * from './inventory.repository';
 export * from './orders.repository';
+export * from './team.repository';

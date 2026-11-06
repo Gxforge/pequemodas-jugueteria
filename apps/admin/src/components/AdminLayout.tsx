@@ -8,7 +8,8 @@ import {
   MessageSquare,
   Package,
   Palette,
-  Settings
+  Settings,
+  Users
 } from 'lucide-react';
 import { BrandLogo, Button } from '@pequemodas/ui';
 import { useAuth } from '../context/AuthContext';
@@ -19,6 +20,7 @@ const NAV_ITEMS = [
   { to: '/categorias', label: 'Categorías', icon: FolderTree },
   { to: '/inventario', label: 'Inventario', icon: Boxes },
   { to: '/pedidos', label: 'Solicitudes', icon: MessageSquare },
+  { to: '/equipo', label: 'Equipo', icon: Users },
   { to: '/configuracion', label: 'Ajustes', icon: Settings },
   { to: '/sistema-diseno', label: 'Guía Visual', icon: Palette }
 ];
@@ -104,7 +106,7 @@ export function AdminLayout() {
         aria-label="Navegación móvil"
         className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-slate-200 grid grid-cols-5 px-1 py-1.5 shadow-elevated"
       >
-        {NAV_ITEMS.slice(0, 4).concat(NAV_ITEMS[5]!).map(({ to, label, icon: Icon, end }) => (
+        {[NAV_ITEMS[0]!, NAV_ITEMS[1]!, NAV_ITEMS[2]!, NAV_ITEMS[3]!, NAV_ITEMS[6]!].map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}
             to={to}

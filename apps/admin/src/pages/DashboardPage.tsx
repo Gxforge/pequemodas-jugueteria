@@ -40,9 +40,14 @@ export function DashboardPage() {
             Administra productos, fotografías, precios en CUP y disponibilidad desde tu teléfono.
           </p>
         </div>
-        <Link to="/productos/nuevo">
-          <Button leftIcon={<Plus className="h-4 w-4" />}>Nuevo producto</Button>
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link to="/equipo">
+            <Button variant="outline">Equipo / Invitar</Button>
+          </Link>
+          <Link to="/productos/nuevo">
+            <Button leftIcon={<Plus className="h-4 w-4" />}>Nuevo producto</Button>
+          </Link>
+        </div>
       </div>
 
       {!whatsappReady && (

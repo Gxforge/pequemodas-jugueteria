@@ -52,4 +52,11 @@
 
 ### FASE 10 — ENTREGA (Completada)
 - Redactados los 15 documentos obligatorios en `docs/`, `README.md` y este `PROJECT_STATUS.md`.
-- Repositorio sincronizado en GitHub (`Gxforge/pequemodas-jugueteria`) sin ningún secreto expuesto, y proyectos en Vercel configurados y verificados en modo Preview técnico.
+- Repositorio sincronizado en GitHub (`Gxforge/pequemodas-jugueteria`) sin ningún secreto expuesto, y proyectos en Vercel configurados y verificados (`https://pequemodas-jugueteria-tienda.vercel.app` y `https://pequemodas-jugueteria-admin.vercel.app`).
+
+### AMPLIACIÓN — EQUIPO MULTI-ADMINISTRADOR E INVITACIONES DE UN SOLO USO (Completada)
+- Añadida migración `20261106000900_admin_invitations.sql` (`public.admin_invitations` con hash SHA-256 + función `preview_admin_invitation`) manteniendo `disable_signup = true` para impedir registros no autorizados.
+- Desplegada en vivo la Edge Function `accept-admin-invite` (y `storage-health`) sobre Supabase `vcohlillbvznsovswdng`.
+- Añadido módulo `/equipo` en el Panel Administrativo y pantalla `/invitacion?codigo=...` para que Katia active su propia cuenta `owner` con su correo y contraseña personales, conviviendo con la cuenta `admin` de soporte técnico de StudioLexair.
+- Verificado límite de modularidad (`116/116` archivos `<= 300` líneas), pruebas unitarias/integración y despliegue actualizado en Vercel.
+

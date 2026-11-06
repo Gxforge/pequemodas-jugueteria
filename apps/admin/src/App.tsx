@@ -9,6 +9,12 @@ import { LoginPage } from './pages/LoginPage';
 const UpdatePasswordPage = lazy(() =>
   import('./pages/UpdatePasswordPage').then((m) => ({ default: m.UpdatePasswordPage }))
 );
+const AcceptInvitePage = lazy(() =>
+  import('./pages/AcceptInvitePage').then((m) => ({ default: m.AcceptInvitePage }))
+);
+const TeamPage = lazy(() =>
+  import('./pages/TeamPage').then((m) => ({ default: m.TeamPage }))
+);
 const DashboardPage = lazy(() =>
   import('./pages/DashboardPage').then((m) => ({ default: m.DashboardPage }))
 );
@@ -60,6 +66,7 @@ export function App() {
           <Suspense fallback={<RouteLoader />}>
             <Routes>
               <Route path="/acceso" element={<LoginPage />} />
+              <Route path="/invitacion" element={<AcceptInvitePage />} />
               <Route path="/actualizar-clave" element={<UpdatePasswordPage />} />
               <Route
                 path="/"
@@ -76,6 +83,7 @@ export function App() {
                 <Route path="categorias" element={<CategoriesPage />} />
                 <Route path="inventario" element={<InventoryPage />} />
                 <Route path="pedidos" element={<OrdersPage />} />
+                <Route path="equipo" element={<TeamPage />} />
                 <Route path="configuracion" element={<SettingsPage />} />
                 <Route path="sistema-diseno" element={<DesignSystemPage />} />
               </Route>

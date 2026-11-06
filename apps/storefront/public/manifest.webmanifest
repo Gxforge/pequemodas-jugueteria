@@ -1,31 +1,48 @@
 {
+  "id": "/",
   "name": "PequeModas-Juguetería",
   "short_name": "PequeModas",
-  "description": "Tienda infantil de juguetes, ropa y accesorios para niños. Solicita tus pedidos fácilmente por WhatsApp.",
+  "description": "Tienda infantil de juguetes, ropa y accesorios para niños. Explora el catálogo incluso con señal débil y solicita tus pedidos por WhatsApp.",
   "lang": "es",
-  "start_url": "/",
+  "start_url": "/?utm_source=pwa",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#FFFDF9",
   "theme_color": "#D4385B",
+  "categories": ["shopping", "kids", "lifestyle"],
   "icons": [
     {
       "src": "/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "/icons/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml"
+      "src": "/icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Ver Catálogo",
+      "short_name": "Catálogo",
+      "url": "/catalogo",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Mi Carrito",
+      "short_name": "Carrito",
+      "url": "/carrito",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }

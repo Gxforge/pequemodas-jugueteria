@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
 import {
@@ -12,6 +12,8 @@ import { formatCup } from '@pequemodas/utils';
 export function ProductCard({ product }: { product: ProductDetailDto }) {
   const avail = resolveProductAvailability(product);
   const { thumbUrl } = getPrimaryProductImage(product);
+  const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   return (
     <Link to={`/producto/${product.slug}`} className="block group focus:outline-none">
@@ -22,17 +24,33 @@ export function ProductCard({ product }: { product: ProductDetailDto }) {
       >
         <div className="space-y-2.5">
           <div className="aspect-square rounded-xl bg-gradient-to-br from-brand-50 to-sky-50 overflow-hidden relative">
-            {thumbUrl ? (
-              <img
-                src={thumbUrl}
-                alt={product.name}
-                loading="lazy"
-                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-              />
+            {thumbUrl && !failed ? (
+              <>
+                {!loaded && (
+                  <div
+                    aria-hidden="true"
+                    className="absolute inset-0 animate-pulse bg-gradient-to-r from-brand-50 via-white to-sky-50"
+                  />
+                )}
+                <img
+                  src={thumbUrl}
+                  alt={product.name}
+                  loading="lazy"
+                  decoding="async"
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  onLoad={() => setLoaded(true)}
+                  onError={() => setFailed(true)}
+                  className={`h-full w-full object-cover transition-all duration-300 group-hover:scale-105 ${
+                    loaded ? 'opacity-100' : 'opacity-0'
+                  }`}
+                />
+              </>
             ) : (
               <div className="h-full w-full flex flex-col items-center justify-center text-brand-300 gap-1">
                 <Sparkles className="h-8 w-8" />
-                <span className="text-xs font-semibold text-slate-400">Imagen pendiente</span>
+                <span className="text-xs font-semibold text-slate-400">
+                  {failed ? 'Imagen sin señal' : 'Imagen pendiente'}
+                </span>
               </div>
             )}
             {product.is_featured && (

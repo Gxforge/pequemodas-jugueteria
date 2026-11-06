@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   buildCategoryTree,
@@ -10,6 +10,10 @@ import {
   type StoreRow,
   type StoreSettingsRow
 } from '@pequemodas/shared';
+import {
+  readOfflineSnapshot,
+  writeOfflineSnapshotPatch
+} from '../pwa/offlineSnapshot';
 
 interface StorefrontContextValue {
   configured: boolean;
@@ -24,18 +28,33 @@ const StorefrontContext = createContext<StorefrontContextValue | null>(null);
 
 export function StorefrontProvider({ children }: { children: React.ReactNode }) {
   const configured = isSupabaseConfigured();
+  const cachedSnap = readOfflineSnapshot();
 
   const storeQuery = useQuery({
     queryKey: ['public-store-settings'],
     queryFn: fetchActiveStoreAndSettings,
+    initialData: cachedSnap?.storeBundle,
     enabled: configured
   });
 
   const categoriesQuery = useQuery({
     queryKey: ['public-categories'],
     queryFn: () => fetchCategories({ includeArchived: false, onlyActive: true }),
+    initialData: cachedSnap?.categories,
     enabled: configured
   });
+
+  useEffect(() => {
+    if (storeQuery.data && !storeQuery.isStale) {
+      writeOfflineSnapshotPatch({ storeBundle: storeQuery.data });
+    }
+  }, [storeQuery.data, storeQuery.isStale]);
+
+  useEffect(() => {
+    if (categoriesQuery.data && !categoriesQuery.isStale) {
+      writeOfflineSnapshotPatch({ categories: categoriesQuery.data });
+    }
+  }, [categoriesQuery.data, categoriesQuery.isStale]);
 
   const categories = categoriesQuery.data ?? [];
   const categoryTree = buildCategoryTree(categories);

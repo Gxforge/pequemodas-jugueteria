@@ -14,6 +14,7 @@ import { BrandLogo, Button } from '@pequemodas/ui';
 import { useCart } from '../context/CartContext';
 import { useStorefront } from '../context/StorefrontContext';
 import { usePwaInstall } from '../pwa/usePwaInstall';
+import { NetworkResilienceBar } from './NetworkResilienceBar';
 
 export function StorefrontLayout() {
   const { settings } = useStorefront();
@@ -32,6 +33,9 @@ export function StorefrontLayout() {
 
   return (
     <div className="min-h-screen flex flex-col bg-cream">
+      {/* Estado de Red / Modo Offline-First / Ahorro de Datos */}
+      <NetworkResilienceBar />
+
       {/* Avisos PWA de Instalación o Nueva Versión */}
       {(canInstall || hasUpdate) && (
         <div className="bg-brand-600 text-white px-4 py-2 text-xs sm:text-sm">

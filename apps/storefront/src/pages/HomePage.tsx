@@ -16,6 +16,10 @@ import { buildProductInquiryUrl, isValidWhatsAppPhone } from '@pequemodas/utils'
 import { ProductCard } from '../components/ProductCard';
 import { useStorefront } from '../context/StorefrontContext';
 import { usePageMeta } from '../hooks/usePageMeta';
+import {
+  readOfflineSnapshot,
+  writeOfflineSnapshotPatch
+} from '../pwa/offlineSnapshot';
 
 export function HomePage() {
   const { configured, settings, categoryTree } = useStorefront();
@@ -24,13 +28,17 @@ export function HomePage() {
 
   const { data: productsData, isLoading } = useQuery({
     queryKey: ['public-home-products'],
-    queryFn: () =>
-      fetchProductsPaginated({
+    queryFn: async () => {
+      const res = await fetchProductsPaginated({
         publicationStatus: 'published',
         sort: 'newest',
         page: 1,
         pageSize: 8
-      }),
+      });
+      writeOfflineSnapshotPatch({ catalogFirstPage: res });
+      return res;
+    },
+    placeholderData: () => readOfflineSnapshot()?.catalogFirstPage,
     enabled: configured
   });
 

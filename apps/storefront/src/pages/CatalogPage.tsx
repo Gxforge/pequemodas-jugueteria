@@ -20,6 +20,10 @@ import { buildProductInquiryUrl, isValidWhatsAppPhone } from '@pequemodas/utils'
 import { ProductCard } from '../components/ProductCard';
 import { useStorefront } from '../context/StorefrontContext';
 import { usePageMeta } from '../hooks/usePageMeta';
+import {
+  readOfflineSnapshot,
+  writeOfflineSnapshotPatch
+} from '../pwa/offlineSnapshot';
 
 export function CatalogPage() {
   usePageMeta('Catálogo', 'Explora todo el catálogo de juguetes y ropa infantil en CUP.');
@@ -37,10 +41,13 @@ export function CatalogPage() {
     (c) => categoryId && c.parent_id === categoryId
   );
 
+  const isDefaultView =
+    !search && !categoryId && !subcategoryId && sort === 'newest' && page === 1;
+
   const { data, isLoading } = useQuery({
     queryKey: ['public-catalog', { search, categoryId, subcategoryId, sort, page }],
-    queryFn: () =>
-      fetchProductsPaginated({
+    queryFn: async () => {
+      const res = await fetchProductsPaginated({
         publicationStatus: 'published',
         search,
         categoryId: categoryId || undefined,
@@ -48,7 +55,14 @@ export function CatalogPage() {
         sort,
         page,
         pageSize: 12
-      }),
+      });
+      if (isDefaultView) {
+        writeOfflineSnapshotPatch({ catalogFirstPage: res });
+      }
+      return res;
+    },
+    placeholderData: () =>
+      isDefaultView ? readOfflineSnapshot()?.catalogFirstPage : undefined,
     enabled: configured
   });
 

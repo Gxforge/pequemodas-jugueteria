@@ -2,8 +2,16 @@ import React from 'react';
 import { describe, expect, it, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { BrandLogo, DesignSystemShowcase } from '@pequemodas/ui';
+import {
+  AnimatedBrandCloudsLogo,
+  BrandLogo,
+  DesignSystemShowcase
+} from '@pequemodas/ui';
 import { CartProvider, useCart } from './context/CartContext';
+import {
+  readOfflineSnapshot,
+  writeOfflineSnapshotPatch
+} from './pwa/offlineSnapshot';
 
 function CartHarness() {
   const { items, totalQuantity, estimatedTotalCup, addItem, updateQuantity } = useCart();
@@ -70,5 +78,20 @@ describe('Storefront UI & Carrito persistente', () => {
     await user.click(screen.getByText('OverMax'));
     expect(screen.getByTestId('qty')).toHaveTextContent('3');
     expect(screen.getByTestId('total')).toHaveTextContent('4500');
+  });
+
+  it('persiste instantánea offline-first y renderiza capas separadas de logo y nubes', () => {
+    writeOfflineSnapshotPatch({
+      catalogFirstPage: { items: [], total: 0, page: 1, pageSize: 8, totalPages: 0 }
+    });
+    const snap = readOfflineSnapshot();
+    expect(snap).not.toBeNull();
+    expect(snap?.catalogFirstPage?.total).toBe(0);
+
+    const { container } = render(<AnimatedBrandCloudsLogo />);
+    expect(container.querySelector('.pm-logo-front')).toBeTruthy();
+    expect(container.querySelector('.pm-cloud-center')).toBeTruthy();
+    expect(container.querySelector('.pm-cloud-left')).toBeTruthy();
+    expect(container.querySelector('.pm-cloud-right')).toBeTruthy();
   });
 });

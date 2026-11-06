@@ -59,7 +59,6 @@ export function AnimatedBrandCloudsLogo({
         src={frontSrc}
         alt={name}
         onError={() => setCustomFailed(true)}
-        fetchPriority="high"
         decoding="async"
         className="pm-logo-front pointer-events-none absolute left-[3.7%] top-[4.8%] w-[92.55%] h-auto z-10 drop-shadow-[0_10px_18px_rgba(212,56,91,0.14)]"
       />

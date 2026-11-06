@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StorefrontLayout } from './components/StorefrontLayout';
@@ -6,24 +6,33 @@ import { CartProvider } from './context/CartContext';
 import { StorefrontProvider } from './context/StorefrontContext';
 import { HomePage } from './pages/HomePage';
 
-const CatalogPage = lazy(() =>
-  import('./pages/CatalogPage').then((m) => ({ default: m.CatalogPage }))
-);
-const CategoriesIndexPage = lazy(() =>
-  import('./pages/CategoriesIndexPage').then((m) => ({ default: m.CategoriesIndexPage }))
-);
-const CategoryDetailPage = lazy(() =>
-  import('./pages/CategoryDetailPage').then((m) => ({ default: m.CategoryDetailPage }))
-);
-const SearchResultsPage = lazy(() =>
-  import('./pages/SearchResultsPage').then((m) => ({ default: m.SearchResultsPage }))
-);
-const ProductDetailPage = lazy(() =>
-  import('./pages/ProductDetailPage').then((m) => ({ default: m.ProductDetailPage }))
-);
-const CartPage = lazy(() =>
-  import('./pages/CartPage').then((m) => ({ default: m.CartPage }))
-);
+const loadCatalog = () =>
+  import('./pages/CatalogPage').then((m) => ({ default: m.CatalogPage }));
+const loadCategories = () =>
+  import('./pages/CategoriesIndexPage').then((m) => ({
+    default: m.CategoriesIndexPage
+  }));
+const loadCategoryDetail = () =>
+  import('./pages/CategoryDetailPage').then((m) => ({
+    default: m.CategoryDetailPage
+  }));
+const loadSearch = () =>
+  import('./pages/SearchResultsPage').then((m) => ({
+    default: m.SearchResultsPage
+  }));
+const loadProductDetail = () =>
+  import('./pages/ProductDetailPage').then((m) => ({
+    default: m.ProductDetailPage
+  }));
+const loadCart = () =>
+  import('./pages/CartPage').then((m) => ({ default: m.CartPage }));
+
+const CatalogPage = lazy(loadCatalog);
+const CategoriesIndexPage = lazy(loadCategories);
+const CategoryDetailPage = lazy(loadCategoryDetail);
+const SearchResultsPage = lazy(loadSearch);
+const ProductDetailPage = lazy(loadProductDetail);
+const CartPage = lazy(loadCart);
 const StoreInfoPage = lazy(() =>
   import('./pages/StoreInfoPage').then((m) => ({ default: m.StoreInfoPage }))
 );
@@ -43,9 +52,13 @@ const DesignSystemPage = lazy(() =>
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 10_000,
+      staleTime: 25_000,
+      gcTime: 1000 * 60 * 30,
+      networkMode: 'offlineFirst',
       refetchOnWindowFocus: true,
-      retry: 1
+      refetchOnReconnect: true,
+      retry: 2,
+      retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 6000)
     }
   }
 });
@@ -59,6 +72,23 @@ function PageFallback() {
 }
 
 export function App() {
+  useEffect(() => {
+    // Pre-calienta los módulos esenciales de compra tras el primer pintado para soporte Offline-First real
+    const timer = window.setTimeout(() => {
+      if (navigator.onLine) {
+        void Promise.allSettled([
+          loadCatalog(),
+          loadCart(),
+          loadProductDetail(),
+          loadCategories(),
+          loadCategoryDetail(),
+          loadSearch()
+        ]);
+      }
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <StorefrontProvider>

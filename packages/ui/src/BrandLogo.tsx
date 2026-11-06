@@ -10,9 +10,9 @@ export interface BrandLogoProps {
 }
 
 const SIZE_MAP = {
-  sm: { box: 'h-9 w-9', title: 'text-base', sub: 'text-[10px]' },
-  md: { box: 'h-11 w-11', title: 'text-lg sm:text-xl', sub: 'text-[11px]' },
-  lg: { box: 'h-14 w-14', title: 'text-2xl', sub: 'text-xs' }
+  sm: { box: 'h-9 w-9', img: 'h-9 w-auto max-w-[82px]', title: 'text-base', sub: 'text-[10px]' },
+  md: { box: 'h-11 w-11', img: 'h-11 w-auto max-w-[100px]', title: 'text-lg sm:text-xl', sub: 'text-[11px]' },
+  lg: { box: 'h-14 w-14', img: 'h-14 w-auto max-w-[128px]', title: 'text-2xl', sub: 'text-xs' }
 } as const;
 
 export function BrandLogo({
@@ -24,6 +24,7 @@ export function BrandLogo({
 }: BrandLogoProps) {
   const [imgFailed, setImgFailed] = useState(false);
   const name = commercialName?.trim() || BRAND_IDENTITY.commercialName;
+  const resolvedLogo = logoUrl || '/brand/logo-foreground.webp';
   const [mainWord, subWord] = name.includes('-')
     ? (name.split('-', 2) as [string, string])
     : [name, 'Juguetería'];
@@ -31,12 +32,12 @@ export function BrandLogo({
 
   return (
     <div className={`inline-flex items-center gap-2.5 select-none ${className}`}>
-      {logoUrl && !imgFailed ? (
+      {resolvedLogo && !imgFailed ? (
         <img
-          src={logoUrl}
+          src={resolvedLogo}
           alt={name}
           onError={() => setImgFailed(true)}
-          className={`${dims.box} rounded-2xl object-contain bg-white border border-brand-100 p-0.5 shadow-sm`}
+          className={`${dims.img} object-contain shrink-0 drop-shadow-sm`}
         />
       ) : (
         <div

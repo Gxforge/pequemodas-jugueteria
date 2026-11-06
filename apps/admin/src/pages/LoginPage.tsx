@@ -9,7 +9,14 @@ import {
   type LoginInput,
   type PasswordRecoveryInput
 } from '@pequemodas/schemas';
-import { Alert, BrandLogo, Button, Card, Input, Modal } from '@pequemodas/ui';
+import {
+  Alert,
+  AnimatedBrandCloudsLogo,
+  Button,
+  Card,
+  Input,
+  Modal
+} from '@pequemodas/ui';
 import { useAuth } from '../context/AuthContext';
 
 export function LoginPage() {
@@ -59,8 +66,8 @@ export function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-sky-50 flex items-center justify-center p-4">
       <Card padding="lg" className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
-          <BrandLogo size="lg" className="justify-center" />
-          <h1 className="font-heading text-xl font-extrabold text-slate-900 pt-2">
+          <AnimatedBrandCloudsLogo className="max-w-[290px] mx-auto" />
+          <h1 className="font-heading text-xl font-extrabold text-slate-900 pt-1">
             Panel Privado de Administración
           </h1>
           <p className="text-sm text-slate-500">

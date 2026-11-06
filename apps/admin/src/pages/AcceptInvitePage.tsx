@@ -12,7 +12,13 @@ import {
   previewAdminInvitation,
   type InvitationPreview
 } from '@pequemodas/shared';
-import { Alert, BrandLogo, Button, Card, Input } from '@pequemodas/ui';
+import {
+  Alert,
+  AnimatedBrandCloudsLogo,
+  Button,
+  Card,
+  Input
+} from '@pequemodas/ui';
 import { useAuth } from '../context/AuthContext';
 
 export function AcceptInvitePage() {
@@ -72,8 +78,8 @@ export function AcceptInvitePage() {
     <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-sky-50 flex items-center justify-center p-4">
       <Card padding="lg" className="w-full max-w-md space-y-5">
         <div className="text-center space-y-2">
-          <BrandLogo size="lg" className="justify-center" />
-          <h1 className="font-heading text-xl font-extrabold text-slate-900 pt-2">
+          <AnimatedBrandCloudsLogo className="max-w-[290px] mx-auto" />
+          <h1 className="font-heading text-xl font-extrabold text-slate-900 pt-1">
             Activación de Cuenta Administrativa
           </h1>
         </div>

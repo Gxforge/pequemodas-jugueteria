@@ -4,7 +4,14 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, FolderTree, MessageCircle, ShieldCheck, Sparkles, Truck } from 'lucide-react';
 import { BRAND_IDENTITY } from '@pequemodas/config';
 import { fetchProductsPaginated } from '@pequemodas/shared';
-import { Badge, Button, Card, EmptyState, ProductCardSkeleton } from '@pequemodas/ui';
+import {
+  AnimatedBrandCloudsLogo,
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  ProductCardSkeleton
+} from '@pequemodas/ui';
 import { buildProductInquiryUrl, isValidWhatsAppPhone } from '@pequemodas/utils';
 import { ProductCard } from '../components/ProductCard';
 import { useStorefront } from '../context/StorefrontContext';
@@ -35,29 +42,39 @@ export function HomePage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 sm:py-10 space-y-10">
-      {/* Hero Comercial Alegre y Confiable */}
-      <section className="rounded-3xl bg-gradient-to-br from-brand-50 via-white to-sky-50 border border-brand-100 p-6 sm:p-10 shadow-card">
-        <div className="max-w-2xl space-y-4">
-          <Badge tone="brand">Catálogo Infantil Actualizado en CUP</Badge>
-          <h1 className="font-heading text-3xl sm:text-4xl font-extrabold text-slate-900 leading-tight">
-            Todo para consentir y vestir a tus pequeños en{' '}
-            <span className="text-brand-600">{storeName}</span>
-          </h1>
-          <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-            {settings?.description ||
-              'Explora juguetes, conjuntos infantiles y accesorios seleccionados. Elige tus variantes favoritas en el carrito y coordina tu pedido directamente por WhatsApp.'}
-          </p>
-          <div className="flex flex-wrap gap-3 pt-2">
-            <Link to="/catalogo">
-              <Button size="lg" rightIcon={<ArrowRight className="h-4 w-4" />}>
-                Ver catálogo
-              </Button>
-            </Link>
-            <Link to="/informacion-pedidos">
-              <Button size="lg" variant="outline">
-                ¿Cómo hacer un pedido?
-              </Button>
-            </Link>
+      {/* Hero Comercial Alegre y Confiable con Logo + Nubes Animadas por Detrás */}
+      <section className="rounded-3xl bg-gradient-to-br from-brand-50 via-white to-sky-50 border border-brand-100 p-6 sm:p-10 shadow-card overflow-hidden">
+        <div className="grid lg:grid-cols-12 gap-6 lg:gap-8 items-center">
+          <div className="lg:col-span-6 order-2 lg:order-1 space-y-4">
+            <Badge tone="brand">Catálogo Infantil Actualizado en CUP</Badge>
+            <h1 className="font-heading text-3xl sm:text-4xl font-extrabold text-slate-900 leading-tight">
+              Todo para consentir y vestir a tus pequeños en{' '}
+              <span className="text-brand-600">{storeName}</span>
+            </h1>
+            <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
+              {settings?.description ||
+                'Explora juguetes, conjuntos infantiles y accesorios seleccionados. Elige tus variantes favoritas en el carrito y coordina tu pedido directamente por WhatsApp.'}
+            </p>
+            <div className="flex flex-wrap gap-3 pt-2">
+              <Link to="/catalogo">
+                <Button size="lg" rightIcon={<ArrowRight className="h-4 w-4" />}>
+                  Ver catálogo
+                </Button>
+              </Link>
+              <Link to="/informacion-pedidos">
+                <Button size="lg" variant="outline">
+                  ¿Cómo hacer un pedido?
+                </Button>
+              </Link>
+            </div>
+          </div>
+
+          <div className="lg:col-span-6 order-1 lg:order-2">
+            <AnimatedBrandCloudsLogo
+              logoUrl={settings?.logo_url}
+              commercialName={storeName}
+              className="max-w-lg mx-auto"
+            />
           </div>
         </div>
 

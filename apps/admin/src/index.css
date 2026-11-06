@@ -7,3 +7,72 @@
     -webkit-tap-highlight-color: transparent;
   }
 }
+
+@keyframes pmFloatCloudCenter {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(0, 7px, 0) scale(1.02);
+  }
+}
+
+@keyframes pmFloatCloudLeft {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(-8px, -6px, 0) rotate(-1deg);
+  }
+}
+
+@keyframes pmFloatCloudRight {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(8px, -7px, 0) rotate(1deg);
+  }
+}
+
+@keyframes pmFloatLogoFront {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -3px, 0);
+  }
+}
+
+.pm-cloud-center {
+  will-change: transform;
+  animation: pmFloatCloudCenter 6.6s ease-in-out infinite;
+}
+
+.pm-cloud-left {
+  will-change: transform;
+  animation: pmFloatCloudLeft 5.2s ease-in-out infinite;
+}
+
+.pm-cloud-right {
+  will-change: transform;
+  animation: pmFloatCloudRight 5.9s ease-in-out infinite;
+}
+
+.pm-logo-front {
+  will-change: transform;
+  animation: pmFloatLogoFront 5.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pm-cloud-center,
+  .pm-cloud-left,
+  .pm-cloud-right,
+  .pm-logo-front {
+    animation: none;
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "name": "pequemodas-jugueteria",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Plataforma integral de comercio electrónico para PequeModas-Juguetería — Desarrollada por StudioLexair",
+  "author": "StudioLexair",
+  "license": "UNLICENSED",
+  "packageManager": "pnpm@12.18.0",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev:storefront": "pnpm --filter @pequemodas/storefront dev",
+    "dev:admin": "pnpm --filter @pequemodas/admin dev",
+    "build": "pnpm -r build",
+    "build:storefront": "pnpm --filter @pequemodas/storefront build",
+    "build:admin": "pnpm --filter @pequemodas/admin build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "eslint . && node scripts/check-line-limit.mjs",
+    "check:lines": "node scripts/check-line-limit.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.21.0",
+    "@playwright/test": "^1.51.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^22.13.5",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9.21.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "jsdom": "^26.0.0",
+    "postcss": "^8.5.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.25.0",
+    "vite": "^6.2.0",
+    "vitest": "^3.0.7"
+  }
+}

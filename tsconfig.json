@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@pequemodas/config": ["./packages/config/src/index.ts"],
+      "@pequemodas/schemas": ["./packages/schemas/src/index.ts"],
+      "@pequemodas/shared": ["./packages/shared/src/index.ts"],
+      "@pequemodas/ui": ["./packages/ui/src/index.ts"],
+      "@pequemodas/utils": ["./packages/utils/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "dist", "build", "coverage"]
+}

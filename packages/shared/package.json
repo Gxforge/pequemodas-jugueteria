@@ -1,0 +1,18 @@
+{
+  "name": "@pequemodas/shared",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@pequemodas/config": "workspace:*",
+    "@pequemodas/schemas": "workspace:*",
+    "@pequemodas/utils": "workspace:*",
+    "@supabase/supabase-js": "^2.49.1"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit"
+  }
+}

@@ -1,0 +1,21 @@
+project_id = "pequemodas-jugueteria"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 17
+
+[auth]
+enabled = true
+enable_signup = false
+minimum_password_length = 8
+
+[storage]
+enabled = true
+file_size_limit = "5MiB"

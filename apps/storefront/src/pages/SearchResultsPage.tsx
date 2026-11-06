@@ -1,15 +1,27 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, MessageCircle, Search, ShoppingBag, Sparkles } from 'lucide-react';
+import {
+  ArrowRight,
+  BookOpen,
+  FolderTree,
+  MessageCircle,
+  Search,
+  ShoppingBag,
+  Sparkles
+} from 'lucide-react';
 import { BRAND_IDENTITY } from '@pequemodas/config';
-import { fetchProductsPaginated } from '@pequemodas/shared';
+import {
+  fetchProductsPaginated,
+  type PaginatedProductsResult
+} from '@pequemodas/shared';
 import { Button, Card, EmptyState, ProductCardSkeleton } from '@pequemodas/ui';
 import {
   buildProductInquiryUrl,
   detectStoreSearchIntent,
   formatCup,
-  isValidWhatsAppPhone
+  isValidWhatsAppPhone,
+  scoreSmartTextMatch
 } from '@pequemodas/utils';
 import { ProductCard } from '../components/ProductCard';
 import { SmartSearchBox } from '../components/SmartSearchBox';
@@ -21,7 +33,7 @@ export function SearchResultsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQ = searchParams.get('q') ?? '';
   const [term, setTerm] = useState(initialQ);
-  const { configured, settings } = useStorefront();
+  const { configured, settings, categoryTree, catalogItems } = useStorefront();
   const { totalQuantity, estimatedTotalCup } = useCart();
 
   useEffect(() => {
@@ -32,6 +44,25 @@ export function SearchResultsPage() {
 
   const intent = useMemo(() => detectStoreSearchIntent(initialQ), [initialQ]);
 
+  const instantSearchSeed = useMemo<PaginatedProductsResult | undefined>(() => {
+    if (!initialQ.trim() || catalogItems.length === 0) return undefined;
+    const matched = catalogItems.filter(
+      (p) =>
+        scoreSmartTextMatch(initialQ, [
+          p.name,
+          p.description ?? '',
+          p.category?.name ?? ''
+        ]) > 0
+    );
+    return {
+      items: matched.slice(0, 20),
+      total: matched.length,
+      page: 1,
+      pageSize: 20,
+      totalPages: 1
+    };
+  }, [initialQ, catalogItems]);
+
   const { data, isLoading } = useQuery({
     queryKey: ['public-search', initialQ],
     queryFn: () =>
@@ -41,6 +72,7 @@ export function SearchResultsPage() {
         page: 1,
         pageSize: 20
       }),
+    placeholderData: instantSearchSeed,
     enabled: configured && initialQ.trim().length > 0
   });
 
@@ -52,13 +84,51 @@ export function SearchResultsPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8 space-y-5">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-2xl mx-auto space-y-3">
         <SmartSearchBox
           value={term}
           onChange={setTerm}
           onSubmitSearch={(val) => setSearchParams(val.trim() ? { q: val.trim() } : {})}
           placeholder="Escribe prenda, juguete (aunque tenga faltas) o 'mi carrito'..."
+          autoFocusInput={!initialQ}
         />
+
+        {/* Accesos rápidos de 1 toque desde el buscador móvil */}
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <Link
+            to="/catalogo"
+            className="inline-flex items-center gap-1 rounded-full bg-white border border-brand-200 px-3 py-1.5 font-bold text-brand-700 hover:bg-brand-50"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>Todo el catálogo</span>
+          </Link>
+          <Link
+            to="/carrito"
+            className="inline-flex items-center gap-1 rounded-full bg-white border border-slate-200 px-3 py-1.5 font-bold text-slate-700 hover:border-brand-300"
+          >
+            <ShoppingBag className="h-3.5 w-3.5 text-brand-600" />
+            <span>
+              Mi carrito{totalQuantity > 0 ? ` (${totalQuantity})` : ''}
+            </span>
+          </Link>
+          <Link
+            to="/informacion-pedidos"
+            className="inline-flex items-center gap-1 rounded-full bg-white border border-slate-200 px-3 py-1.5 font-bold text-slate-700 hover:border-sky-300"
+          >
+            <BookOpen className="h-3.5 w-3.5 text-sky-600" />
+            <span>Cómo pedir</span>
+          </Link>
+          {categoryTree.slice(0, 4).map((cat) => (
+            <Link
+              key={cat.id}
+              to={`/categorias/${cat.slug}`}
+              className="inline-flex items-center gap-1 rounded-full bg-sky-50/90 border border-sky-200 px-3 py-1.5 font-bold text-sky-800 hover:bg-sky-100"
+            >
+              <FolderTree className="h-3.5 w-3.5" />
+              <span>{cat.name}</span>
+            </Link>
+          ))}
+        </div>
       </div>
 
       {intent && (
@@ -112,17 +182,30 @@ export function SearchResultsPage() {
       )}
 
       {!initialQ.trim() ? (
-        <EmptyState
-          icon={<Search className="h-8 w-8" />}
-          title="Buscador Inteligente PequeModas"
-          description="Puedes escribir aunque falte alguna tilde o letra, o escribir 'mi carrito' o 'cómo pedir'."
-          primaryAction={
-            <Link to="/catalogo">
-              <Button variant="outline">Ver catálogo completo</Button>
-            </Link>
-          }
-        />
-      ) : isLoading ? (
+        catalogItems.length > 0 ? (
+          <div className="space-y-4">
+            <p className="text-sm font-bold text-slate-700">
+              Artículos recientes listos para explorar
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {catalogItems.slice(0, 8).map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <EmptyState
+            icon={<Search className="h-8 w-8" />}
+            title="Buscador Inteligente PequeModas"
+            description="Puedes escribir aunque falte alguna tilde o letra, o escribir 'mi carrito' o 'cómo pedir'."
+            primaryAction={
+              <Link to="/catalogo">
+                <Button variant="outline">Ver catálogo completo</Button>
+              </Link>
+            }
+          />
+        )
+      ) : isLoading && !data ? (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <ProductCardSkeleton key={i} />

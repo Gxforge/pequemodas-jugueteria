@@ -3,8 +3,8 @@ import { expect, test } from '@playwright/test';
 const STOREFRONT_URL = process.env.E2E_STOREFRONT_URL || 'http://localhost:5173';
 const ADMIN_URL = process.env.E2E_ADMIN_URL || 'http://localhost:5174';
 
-test.describe('PequeModas-Juguetería — PWA v2.8.0: Chat Personalizable/Movible, Catálogo Compacto (?) y Guía Visual', () => {
-  test('verifica chat auto-contraíble + paleta de colores, catálogo con ayuda (?) y guía visual anotada', async ({
+test.describe('PequeModas-Juguetería — PWA v2.9.0: Aviso Rápido de Versión, Barra Inferior con Buscar y Catálogo Rápido', () => {
+  test('detecta nueva versión sin recargar la página y verifica chat, catálogo compacto (?) y guía visual', async ({
     page,
     request
   }) => {
@@ -12,11 +12,30 @@ test.describe('PequeModas-Juguetería — PWA v2.8.0: Chat Personalizable/Movibl
     await expect(page.getByRole('heading', { level: 1 })).toContainText('PequeModas');
     await page.waitForTimeout(850);
 
-    // Verifica versión v2.8.0
-    await expect(page.getByText(/Aplicación Web \(PWA\) v2\.8\.0/i)).toBeVisible();
+    // Verifica versión v2.9.0
+    await expect(page.getByText(/Aplicación Web \(PWA\) v2\.9\.0/i)).toBeVisible();
     const verRes = await request.get(`${STOREFRONT_URL}/version.json`);
     expect(verRes.status()).toBe(200);
-    expect((await verRes.json()).version).toBe('2.8.0');
+    expect((await verRes.json()).version).toBe('2.9.0');
+
+    // Simula un nuevo despliegue en vivo SIN recargar la pestaña y verifica que aparece la tarjeta flotante
+    await page.route('**/version.json*', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          version: '2.9.9',
+          summary: 'Mejoras instantáneas en vivo verificadas.'
+        })
+      });
+    });
+    await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+    await expect(page.getByText(/¡Nueva versión de la tienda lista!/i)).toBeVisible({
+      timeout: 5000
+    });
+    await expect(page.getByRole('button', { name: /Actualizar a v2\.9\.9/i })).toBeVisible();
+    await page.getByRole('button', { name: /Más tarde/i }).click();
+    await page.unroute('**/version.json*');
 
     // Abre el Chat Directo y verifica personalizador de colores del cliente
     const chatBtn = page.getByRole('button', { name: /Abrir chat directo con la tienda/i });
@@ -29,7 +48,7 @@ test.describe('PequeModas-Juguetería — PWA v2.8.0: Chat Personalizable/Movibl
     await expect(page.getByText(/Personaliza los colores de tu chat/i)).toBeVisible();
     await page.getByRole('button', { name: /Cerrar chat/i }).click();
 
-    // Verifica Catálogo compacto con botón (?) Ayuda y sin el subtítulo viejo
+    // Verifica Catálogo compacto con botón (?) Ayuda
     await page.goto(`${STOREFRONT_URL}/catalogo`);
     const helpBtn = page.getByRole('button', { name: /Ayuda rápida sobre cómo usar el catálogo/i });
     await expect(helpBtn).toBeVisible();
@@ -63,13 +82,32 @@ test.describe('PequeModas-Juguetería — PWA v2.8.0: Chat Personalizable/Movibl
     await expect(page.getByText(/Modo sin conexión:/i)).toBeHidden();
   });
 
-  test('cumple diseño responsive sin desbordamiento horizontal y muestra Cómo pedir en móvil', async ({
+  test('en móvil mantiene cabecera limpia (sin panel superior de búsqueda) y 5 botones abajo con Buscar (sin repetir Carrito)', async ({
     page
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(STOREFRONT_URL);
     await page.waitForTimeout(850);
-    await expect(page.getByRole('link', { name: /Cómo pedir/i }).first()).toBeVisible();
+
+    // En móvil el buscador del header está oculto (solo Carrito arriba)
+    await expect(page.locator('header input[type="search"]')).toBeHidden();
+    await expect(page.locator('header').getByRole('link', { name: /Carrito/i })).toBeVisible();
+
+    // La barra inferior móvil tiene exactamente los 5 botones: Inicio, Catálogo, Categorías, Cómo pedir y Buscar
+    const bottomNav = page.getByRole('navigation', { name: /Navegación rápida móvil/i });
+    await expect(bottomNav).toBeVisible();
+    await expect(bottomNav.getByRole('link')).toHaveCount(5);
+    await expect(bottomNav.getByRole('link', { name: 'Inicio' })).toBeVisible();
+    await expect(bottomNav.getByRole('link', { name: 'Catálogo' })).toBeVisible();
+    await expect(bottomNav.getByRole('link', { name: 'Categorías' })).toBeVisible();
+    await expect(bottomNav.getByRole('link', { name: 'Cómo pedir' })).toBeVisible();
+    await expect(bottomNav.getByRole('link', { name: 'Buscar' })).toBeVisible();
+    await expect(bottomNav.getByRole('link', { name: /Carrito/i })).toHaveCount(0);
+
+    // Al tocar Buscar en la barra inferior abre el buscador inteligente
+    await bottomNav.getByRole('link', { name: 'Buscar' }).click();
+    await expect(page).toHaveURL(/\/buscar$/);
+    await expect(page.locator('main input[type="search"]')).toBeVisible();
 
     const viewports = [
       { label: 'Android Gama Entrada (360x800)', width: 360, height: 800 },
@@ -80,7 +118,7 @@ test.describe('PequeModas-Juguetería — PWA v2.8.0: Chat Personalizable/Movibl
 
     for (const vp of viewports) {
       await page.setViewportSize({ width: vp.width, height: vp.height });
-      for (const route of ['/', '/catalogo', '/informacion-pedidos', '/carrito']) {
+      for (const route of ['/', '/catalogo', '/buscar', '/informacion-pedidos', '/carrito']) {
         await page.goto(`${STOREFRONT_URL}${route}`);
         await expect(page.locator('main')).toBeVisible();
         const hasOverflow = await page.evaluate(

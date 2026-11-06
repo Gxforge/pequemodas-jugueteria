@@ -4,9 +4,12 @@ import {
   buildCategoryTree,
   fetchActiveStoreAndSettings,
   fetchCategories,
+  fetchProductsPaginated,
   isSupabaseConfigured,
   type CategoryRow,
   type CategoryTreeNode,
+  type PaginatedProductsResult,
+  type ProductDetailDto,
   type StoreRow,
   type StoreSettingsRow
 } from '@pequemodas/shared';
@@ -22,6 +25,9 @@ interface StorefrontContextValue {
   settings: StoreSettingsRow | null;
   categories: CategoryRow[];
   categoryTree: CategoryTreeNode[];
+  catalogPreview: PaginatedProductsResult | undefined;
+  catalogItems: ProductDetailDto[];
+  isCatalogInitialLoading: boolean;
 }
 
 const StorefrontContext = createContext<StorefrontContextValue | null>(null);
@@ -41,6 +47,24 @@ export function StorefrontProvider({ children }: { children: React.ReactNode }) 
     queryKey: ['public-categories'],
     queryFn: () => fetchCategories({ includeArchived: false, onlyActive: true }),
     initialData: cachedSnap?.categories,
+    enabled: configured
+  });
+
+  // Precarga el texto/precios del catálogo en un solo paquete ligero (~pocos KB)
+  // para que Inicio, Catálogo, Categorías y Buscador pinten tarjetas de texto en 0 ms
+  const catalogBootQuery = useQuery({
+    queryKey: ['public-catalog-seed'],
+    queryFn: async () => {
+      const res = await fetchProductsPaginated({
+        publicationStatus: 'published',
+        sort: 'newest',
+        page: 1,
+        pageSize: 24
+      });
+      writeOfflineSnapshotPatch({ catalogFirstPage: res });
+      return res;
+    },
+    initialData: cachedSnap?.catalogFirstPage,
     enabled: configured
   });
 
@@ -67,7 +91,11 @@ export function StorefrontProvider({ children }: { children: React.ReactNode }) 
         store: storeQuery.data?.store ?? null,
         settings: storeQuery.data?.settings ?? null,
         categories,
-        categoryTree
+        categoryTree,
+        catalogPreview: catalogBootQuery.data,
+        catalogItems: catalogBootQuery.data?.items ?? [],
+        isCatalogInitialLoading:
+          catalogBootQuery.isLoading && !catalogBootQuery.data
       }}
     >
       {children}

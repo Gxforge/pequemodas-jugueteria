@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronRight } from 'lucide-react';
-import { fetchProductsPaginated } from '@pequemodas/shared';
+import {
+  fetchProductsPaginated,
+  type PaginatedProductsResult
+} from '@pequemodas/shared';
 import { Badge, Button, EmptyState, ProductCardSkeleton } from '@pequemodas/ui';
 import { ProductCard } from '../components/ProductCard';
 import { useStorefront } from '../context/StorefrontContext';
@@ -13,7 +16,7 @@ export function CategoryDetailPage() {
     categorySlug: string;
     subcategorySlug?: string;
   }>();
-  const { configured, categoryTree } = useStorefront();
+  const { configured, categoryTree, catalogItems } = useStorefront();
   const [page, setPage] = useState(1);
 
   const currentCategory = categoryTree.find((c) => c.slug === categorySlug) ?? null;
@@ -25,6 +28,30 @@ export function CategoryDetailPage() {
       ? `${currentSubcategory.name} — ${currentCategory?.name ?? ''}`
       : currentCategory?.name ?? 'Categoría'
   );
+
+  const instantCategorySeed = useMemo<PaginatedProductsResult | undefined>(() => {
+    if (!currentCategory || page !== 1 || catalogItems.length === 0) return undefined;
+    const subIds = new Set([
+      currentCategory.id,
+      ...currentCategory.subcategories.map((s) => s.id)
+    ]);
+    const filtered = catalogItems.filter((p) => {
+      if (currentSubcategory) {
+        return p.subcategory_id === currentSubcategory.id;
+      }
+      return (
+        (p.category_id && subIds.has(p.category_id)) ||
+        (p.subcategory_id && subIds.has(p.subcategory_id))
+      );
+    });
+    return {
+      items: filtered.slice(0, 12),
+      total: filtered.length,
+      page: 1,
+      pageSize: 12,
+      totalPages: Math.max(1, Math.ceil(filtered.length / 12))
+    };
+  }, [currentCategory, currentSubcategory, page, catalogItems]);
 
   const { data, isLoading } = useQuery({
     queryKey: [
@@ -41,6 +68,7 @@ export function CategoryDetailPage() {
         page,
         pageSize: 12
       }),
+    placeholderData: instantCategorySeed,
     enabled: configured && Boolean(currentCategory)
   });
 
@@ -104,7 +132,7 @@ export function CategoryDetailPage() {
         </div>
       )}
 
-      {isLoading ? (
+      {isLoading && !data ? (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <ProductCardSkeleton key={i} />
@@ -129,12 +157,17 @@ export function CategoryDetailPage() {
       )}
 
       {data && data.totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3 pt-4">
-          <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+        <div className="flex justify-center gap-3 pt-4">
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={page <= 1}
+            onClick={() => setPage((p) => p - 1)}
+          >
             Anterior
           </Button>
-          <span className="text-sm font-semibold text-slate-700">
-            Página {data.page} de {data.totalPages}
+          <span className="text-sm font-semibold self-center">
+            {data.page} / {data.totalPages}
           </span>
           <Button
             size="sm"

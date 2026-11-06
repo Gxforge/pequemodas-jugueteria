@@ -4,7 +4,7 @@ import {
   BookOpen,
   FolderTree,
   Home,
-  Phone,
+  Search,
   ShoppingBag,
   Sparkles
 } from 'lucide-react';
@@ -36,7 +36,7 @@ export function StorefrontLayout() {
       <PwaAppCard />
       <CustomerChatWidget />
 
-      {/* Cabecera Principal con Buscador Inteligente y Accesos Directos en Móvil */}
+      {/* Cabecera Superior Limpia: Logo + Carrito en móvil; Buscador y enlaces en escritorio */}
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-brand-100/80">
         <div className="max-w-6xl mx-auto px-4 py-2.5 flex items-center justify-between gap-3">
           <Link to="/" aria-label={`Ir al inicio de ${storeName}`} className="shrink-0">
@@ -80,41 +80,6 @@ export function StorefrontLayout() {
               </span>
             )}
           </Link>
-        </div>
-
-        {/* Barra Móvil Directa: Buscador Inteligente + Botones sin esconder nada */}
-        <div className="md:hidden px-3 pb-2.5 space-y-2 border-t border-slate-100/80 pt-2">
-          <SmartSearchBox
-            value={quickQuery}
-            onChange={setQuickQuery}
-            onSubmitSearch={handleQuickSearch}
-            compact
-          />
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
-            {[
-              { to: '/', label: 'Inicio', icon: Home, end: true },
-              { to: '/catalogo', label: 'Catálogo', icon: Sparkles },
-              { to: '/categorias', label: 'Categorías', icon: FolderTree },
-              { to: '/informacion-pedidos', label: 'Cómo pedir', icon: BookOpen },
-              { to: '/contacto', label: 'Contacto', icon: Phone }
-            ].map(({ to, label, icon: Icon, end }) => (
-              <NavLink
-                key={to}
-                to={to}
-                end={end}
-                className={({ isActive }) =>
-                  `inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold whitespace-nowrap border transition-colors ${
-                    isActive
-                      ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
-                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-brand-50'
-                  }`
-                }
-              >
-                <Icon className="h-3.5 w-3.5 shrink-0" />
-                <span>{label}</span>
-              </NavLink>
-            ))}
-          </div>
         </div>
       </header>
 
@@ -185,7 +150,7 @@ export function StorefrontLayout() {
         </div>
       </footer>
 
-      {/* Navegación Inferior Móvil con Cómo Pedir visible */}
+      {/* Barra Inferior Móvil de 5 Botones: Inicio, Catálogo, Categorías, Cómo pedir y Buscar */}
       <nav
         aria-label="Navegación rápida móvil"
         className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-slate-200 grid grid-cols-5 px-1 py-1.5 shadow-elevated"
@@ -195,19 +160,15 @@ export function StorefrontLayout() {
           { to: '/catalogo', label: 'Catálogo', icon: Sparkles },
           { to: '/categorias', label: 'Categorías', icon: FolderTree },
           { to: '/informacion-pedidos', label: 'Cómo pedir', icon: BookOpen },
-          {
-            to: '/carrito',
-            label: `Carrito${totalQuantity ? ` (${totalQuantity})` : ''}`,
-            icon: ShoppingBag
-          }
+          { to: '/buscar', label: 'Buscar', icon: Search }
         ].map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}
             to={to}
             end={end}
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center py-1.5 rounded-xl text-[10.5px] font-bold ${
-                isActive ? 'text-brand-600 bg-brand-50/80' : 'text-slate-500'
+              `flex flex-col items-center justify-center py-1.5 rounded-xl text-[10.5px] font-bold transition-colors ${
+                isActive ? 'text-brand-600 bg-brand-50/80' : 'text-slate-500 hover:text-brand-600'
               }`
             }
           >

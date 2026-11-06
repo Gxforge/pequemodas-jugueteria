@@ -4,14 +4,15 @@ export const BRAND_IDENTITY = {
   developerName: 'StudioLexair',
   currencyCode: 'CUP',
   currencySymbol: 'CUP',
+  organisms: 'Storefront + Admin',
   locale: 'es-CU'
 } as const;
 
 export const APP_RELEASE = {
-  version: '2.8.0',
+  version: '2.9.0',
   appLabel: 'Aplicación Web (PWA)',
   summary:
-    'Chat personalizable y movible, buscador inteligente con corrección ortográfica y carrito, catálogo compacto con ayuda (?) y guía visual anotada.'
+    'Aviso rápido de nueva versión en vivo, barra inferior móvil con Buscador limpio y tarjetas de catálogo con texto instantáneo + indicador de carga de foto para conexiones lentas.'
 } as const;
 
 export const STORAGE_LIMITS = {

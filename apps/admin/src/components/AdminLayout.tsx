@@ -19,6 +19,7 @@ import {
 } from '@pequemodas/shared';
 import { BrandLogo, Button } from '@pequemodas/ui';
 import { useAuth } from '../context/AuthContext';
+import { AdminLiveUpdateCard } from './AdminLiveUpdateCard';
 import { NotificationManagerBell } from './NotificationManagerBell';
 
 interface NavEntry {
@@ -61,6 +62,7 @@ export function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
+      <AdminLiveUpdateCard />
       <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 bg-white border-r border-slate-200 z-30">
         <div className="px-4 py-4 border-b border-slate-100 flex items-center justify-between gap-2">
           <div className="min-w-0">

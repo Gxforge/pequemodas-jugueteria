@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { MessageCircle, Sparkles } from 'lucide-react';
@@ -6,22 +6,25 @@ import { BRAND_IDENTITY } from '@pequemodas/config';
 import {
   fetchProductsPaginated,
   resolveProductAvailability,
+  type PaginatedProductsResult,
   type ProductSortOption
 } from '@pequemodas/shared';
 import { Button, EmptyState, ProductCardSkeleton } from '@pequemodas/ui';
-import { buildProductInquiryUrl, isValidWhatsAppPhone } from '@pequemodas/utils';
+import {
+  buildProductInquiryUrl,
+  isValidWhatsAppPhone,
+  scoreSmartTextMatch
+} from '@pequemodas/utils';
 import { CatalogCompactToolbar } from '../components/CatalogCompactToolbar';
 import { ProductCard } from '../components/ProductCard';
 import { useStorefront } from '../context/StorefrontContext';
 import { usePageMeta } from '../hooks/usePageMeta';
-import {
-  readOfflineSnapshot,
-  writeOfflineSnapshotPatch
-} from '../pwa/offlineSnapshot';
+import { writeOfflineSnapshotPatch } from '../pwa/offlineSnapshot';
 
 export function CatalogPage() {
   usePageMeta('Catálogo', 'Explora todo el catálogo de juguetes y ropa infantil en CUP.');
-  const { configured, categories, settings } = useStorefront();
+  const { configured, categories, settings, catalogPreview, catalogItems } =
+    useStorefront();
 
   const [search, setSearch] = useState('');
   const [categoryId, setCategoryId] = useState('');
@@ -37,6 +40,47 @@ export function CatalogPage() {
 
   const isDefaultView =
     !search && !categoryId && !subcategoryId && sort === 'newest' && page === 1;
+
+  // Respaldo instantáneo (0 ms) con tarjetas de texto desde memoria mientras llega la red lenta
+  const instantSeed = useMemo<PaginatedProductsResult | undefined>(() => {
+    if (isDefaultView && catalogPreview) return catalogPreview;
+    if (page !== 1 || catalogItems.length === 0) return undefined;
+
+    let list = [...catalogItems];
+    if (categoryId) {
+      list = list.filter(
+        (p) => p.category_id === categoryId || p.subcategory_id === categoryId
+      );
+    }
+    if (subcategoryId) {
+      list = list.filter((p) => p.subcategory_id === subcategoryId);
+    }
+    if (search.trim()) {
+      list = list.filter(
+        (p) =>
+          scoreSmartTextMatch(search, [
+            p.name,
+            p.description ?? '',
+            p.category?.name ?? ''
+          ]) > 0
+      );
+    }
+    if (sort === 'price_asc') {
+      list.sort((a, b) => a.base_price_cup - b.base_price_cup);
+    } else if (sort === 'price_desc') {
+      list.sort((a, b) => b.base_price_cup - a.base_price_cup);
+    } else if (sort === 'name_asc') {
+      list.sort((a, b) => a.name.localeCompare(b.name, 'es'));
+    }
+
+    return {
+      items: list.slice(0, 12),
+      total: list.length,
+      page: 1,
+      pageSize: 12,
+      totalPages: Math.max(1, Math.ceil(list.length / 12))
+    };
+  }, [isDefaultView, catalogPreview, page, catalogItems, categoryId, subcategoryId, search, sort]);
 
   const { data, isLoading } = useQuery({
     queryKey: ['public-catalog', { search, categoryId, subcategoryId, sort, page }],
@@ -55,8 +99,7 @@ export function CatalogPage() {
       }
       return res;
     },
-    placeholderData: () =>
-      isDefaultView ? readOfflineSnapshot()?.catalogFirstPage : undefined,
+    placeholderData: instantSeed,
     enabled: configured
   });
 
@@ -104,7 +147,7 @@ export function CatalogPage() {
         </div>
       )}
 
-      {isLoading ? (
+      {isLoading && !data ? (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <ProductCardSkeleton key={i} />

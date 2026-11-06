@@ -69,11 +69,33 @@
   animation: pmFloatLogoFront 5.8s ease-in-out infinite;
 }
 
+@keyframes pmImageShimmer {
+  0% {
+    background-position: 180% 0;
+  }
+  100% {
+    background-position: -40% 0;
+  }
+}
+
+.pm-img-shimmer {
+  background: linear-gradient(
+    110deg,
+    #fdf2f8 10%,
+    #ffffff 38%,
+    #e0f2fe 56%,
+    #fdf2f8 82%
+  );
+  background-size: 220% 100%;
+  animation: pmImageShimmer 1.55s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .pm-cloud-center,
   .pm-cloud-left,
   .pm-cloud-right,
-  .pm-logo-front {
+  .pm-logo-front,
+  .pm-img-shimmer {
     animation: none;
   }
 }

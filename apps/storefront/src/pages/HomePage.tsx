@@ -1,9 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, MessageCircle, ShieldCheck, Sparkles, Truck } from 'lucide-react';
 import { BRAND_IDENTITY } from '@pequemodas/config';
-import { fetchProductsPaginated } from '@pequemodas/shared';
 import {
   AnimatedBrandCloudsLogo,
   Badge,
@@ -17,31 +15,12 @@ import { CategoryShowcaseCard } from '../components/CategoryShowcaseCard';
 import { ProductCard } from '../components/ProductCard';
 import { useStorefront } from '../context/StorefrontContext';
 import { usePageMeta } from '../hooks/usePageMeta';
-import {
-  readOfflineSnapshot,
-  writeOfflineSnapshotPatch
-} from '../pwa/offlineSnapshot';
 
 export function HomePage() {
-  const { configured, settings, categoryTree } = useStorefront();
+  const { settings, categoryTree, catalogItems, isCatalogInitialLoading } =
+    useStorefront();
   const storeName = settings?.commercial_name || BRAND_IDENTITY.commercialName;
   usePageMeta('Inicio', `Descubre ropa infantil, juguetes y accesorios en ${storeName}.`);
-
-  const { data: productsData, isLoading } = useQuery({
-    queryKey: ['public-home-products'],
-    queryFn: async () => {
-      const res = await fetchProductsPaginated({
-        publicationStatus: 'published',
-        sort: 'newest',
-        page: 1,
-        pageSize: 24
-      });
-      writeOfflineSnapshotPatch({ catalogFirstPage: res });
-      return res;
-    },
-    placeholderData: () => readOfflineSnapshot()?.catalogFirstPage,
-    enabled: configured
-  });
 
   const hasWhatsApp = isValidWhatsAppPhone(settings?.whatsapp_phone);
   const inquiryHref =
@@ -128,7 +107,7 @@ export function HomePage() {
               <CategoryShowcaseCard
                 key={cat.id}
                 category={cat}
-                products={productsData?.items ?? []}
+                products={catalogItems}
                 compact
               />
             ))}
@@ -136,7 +115,7 @@ export function HomePage() {
         </section>
       )}
 
-      {/* Novedades del Catálogo o Estado Vacío Atractivo */}
+      {/* Novedades del Catálogo con Texto Instantáneo y Fotos Progresivas */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="font-heading text-xl sm:text-2xl font-extrabold text-slate-900">
@@ -147,13 +126,13 @@ export function HomePage() {
           </Link>
         </div>
 
-        {isLoading ? (
+        {isCatalogInitialLoading ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <ProductCardSkeleton key={i} />
             ))}
           </div>
-        ) : !productsData || productsData.items.length === 0 ? (
+        ) : catalogItems.length === 0 ? (
           <EmptyState
             title="¡Estamos preparando nuevas sorpresas para tus peques!"
             description="En este momento el catálogo público aún no tiene artículos publicados. Visita la sección de información de pedidos o escríbenos por WhatsApp para consultar novedades disponibles."
@@ -181,7 +160,7 @@ export function HomePage() {
           />
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {productsData.items.slice(0, 8).map((product) => (
+            {catalogItems.slice(0, 8).map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>

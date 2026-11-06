@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight, Loader2, Sparkles } from 'lucide-react';
 import type { CategoryTreeNode, ProductDetailDto } from '@pequemodas/shared';
 import { Badge } from '@pequemodas/ui';
 import { resolveImageById } from '../pwa/imageIdCache';
@@ -49,6 +49,7 @@ export function CategoryShowcaseCard({
   const [inView, setInView] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [cachedUrls, setCachedUrls] = useState<Record<string, string>>({});
+  const [decodedKeys, setDecodedKeys] = useState<Record<string, boolean>>({});
 
   const subIds = useMemo(
     () => new Set([category.id, ...category.subcategories.map((s) => s.id)]),
@@ -157,6 +158,14 @@ export function CategoryShowcaseCard({
       >
         {currentSlide ? (
           <>
+            {!decodedKeys[currentSlide.key] && (
+              <div className="absolute inset-0 pm-img-shimmer flex items-center justify-center">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1 text-[10.5px] font-bold text-slate-600 shadow-sm">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-brand-600" />
+                  <span>Cargando foto...</span>
+                </span>
+              </div>
+            )}
             {slides.map((slide, idx) => {
               const visible = idx === activeIndex % slides.length;
               const src = cachedUrls[slide.key] || slide.url;
@@ -167,8 +176,15 @@ export function CategoryShowcaseCard({
                   alt={slide.caption || category.name}
                   loading="lazy"
                   decoding="async"
+                  onLoad={() =>
+                    setDecodedKeys((prev) =>
+                      prev[slide.key] ? prev : { ...prev, [slide.key]: true }
+                    )
+                  }
                   className={`absolute inset-0 h-full w-full object-cover transition-all duration-700 ease-out group-hover:scale-105 ${
-                    visible ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'
+                    visible && decodedKeys[slide.key]
+                      ? 'opacity-100 scale-100'
+                      : 'opacity-0 scale-105 pointer-events-none'
                   }`}
                 />
               );

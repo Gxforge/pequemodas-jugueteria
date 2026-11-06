@@ -25,6 +25,7 @@ interface SmartSearchBoxProps {
   onSubmitSearch?: (val: string) => void;
   placeholder?: string;
   compact?: boolean;
+  autoFocusInput?: boolean;
 }
 
 export function SmartSearchBox({
@@ -32,13 +33,21 @@ export function SmartSearchBox({
   onChange,
   onSubmitSearch,
   placeholder = 'Busca ropa, juguetes o escribe "carrito"...',
-  compact = false
+  compact = false,
+  autoFocusInput = false
 }: SmartSearchBoxProps) {
   const navigate = useNavigate();
   const { categories } = useStorefront();
   const { items: cartItems, totalQuantity, estimatedTotalCup } = useCart();
   const [focused, setFocused] = useState(false);
   const boxRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (autoFocusInput) {
+      inputRef.current?.focus();
+    }
+  }, [autoFocusInput]);
 
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
@@ -101,6 +110,7 @@ export function SmartSearchBox({
       >
         <Search className="h-4 w-4 text-slate-400 absolute left-3.5 pointer-events-none" />
         <input
+          ref={inputRef}
           type="search"
           value={value}
           onFocus={() => setFocused(true)}
@@ -241,7 +251,7 @@ export function SmartSearchBox({
                   type="button"
                   onClick={() => {
                     setFocused(false);
-                    navigate(`/categoria/${cat.slug}`);
+                    navigate(`/categorias/${cat.slug}`);
                   }}
                   className="inline-flex items-center gap-1 rounded-full bg-slate-100 hover:bg-brand-50 px-2.5 py-1 font-bold text-slate-700 hover:text-brand-700"
                 >

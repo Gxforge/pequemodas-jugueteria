@@ -1,42 +1,24 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 import { FolderTree, MessageCircle } from 'lucide-react';
 import { BRAND_IDENTITY } from '@pequemodas/config';
-import { fetchProductsPaginated } from '@pequemodas/shared';
 import { Button, EmptyState } from '@pequemodas/ui';
 import { buildProductInquiryUrl, isValidWhatsAppPhone } from '@pequemodas/utils';
 import { CategoryShowcaseCard } from '../components/CategoryShowcaseCard';
 import { useStorefront } from '../context/StorefrontContext';
 import { usePageMeta } from '../hooks/usePageMeta';
-import { readOfflineSnapshot } from '../pwa/offlineSnapshot';
 
 export function CategoriesIndexPage() {
   usePageMeta(
     'Categorías',
     'Explora las secciones visuales de ropa infantil, calzado y juguetes en PequeModas-Juguetería.'
   );
-  const { categoryTree, settings, configured } = useStorefront();
+  const { categoryTree, settings, catalogItems } = useStorefront();
   const storeName = settings?.commercial_name || BRAND_IDENTITY.commercialName;
   const whatsappHref =
     isValidWhatsAppPhone(settings?.whatsapp_phone) && settings?.whatsapp_phone
       ? buildProductInquiryUrl(settings.whatsapp_phone, storeName)
       : null;
-
-  const { data: sampleProducts } = useQuery({
-    queryKey: ['public-categories-showcase-products'],
-    queryFn: () =>
-      fetchProductsPaginated({
-        publicationStatus: 'published',
-        sort: 'newest',
-        page: 1,
-        pageSize: 36
-      }),
-    placeholderData: () => readOfflineSnapshot()?.catalogFirstPage,
-    enabled: configured
-  });
-
-  const allProducts = sampleProducts?.items ?? [];
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8 space-y-6">
@@ -75,7 +57,7 @@ export function CategoriesIndexPage() {
             <CategoryShowcaseCard
               key={cat.id}
               category={cat}
-              products={allProducts}
+              products={catalogItems}
             />
           ))}
         </div>

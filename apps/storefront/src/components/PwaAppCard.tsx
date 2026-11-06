@@ -11,6 +11,7 @@ export function PwaAppCard() {
     canInstall,
     hasUpdate,
     targetVersion,
+    updateSummary,
     isUpdating,
     promptInstall,
     applyUpdate,
@@ -24,12 +25,13 @@ export function PwaAppCard() {
   return (
     <aside
       role="dialog"
+      aria-live="polite"
       aria-label={
         hasUpdate
           ? `Actualización disponible de ${storeName}`
           : `Instalar aplicación web ${storeName}`
       }
-      className="fixed bottom-20 md:bottom-5 right-3 left-3 sm:left-auto sm:w-[400px] z-40 rounded-3xl bg-white/95 backdrop-blur-xl border border-brand-200 shadow-elevated p-4"
+      className="fixed bottom-20 md:bottom-5 right-3 left-3 sm:left-auto sm:w-[405px] z-50 rounded-3xl bg-white/95 backdrop-blur-xl border-2 border-brand-300 shadow-elevated p-4 animate-in fade-in slide-in-from-bottom-2 duration-300"
     >
       <button
         type="button"
@@ -64,8 +66,8 @@ export function PwaAppCard() {
 
       <p className="mt-2.5 text-xs text-slate-600 leading-relaxed">
         {hasUpdate
-          ? `Actualiza la aplicación web a la versión v${targetVersion}: ${APP_RELEASE.summary}`
-          : `Esta página funciona como Aplicación Web instalable (v${APP_RELEASE.version}): abre al instante, guarda en caché las fotos por ID para no gastar datos dos veces y funciona incluso con señal débil.`}
+          ? `Actualiza la tienda a la versión v${targetVersion} sin perder tu carrito ni tus fotos guardadas: ${updateSummary}`
+          : `Esta página funciona como Aplicación Web instalable (v${APP_RELEASE.version}): abre al instante, guarda en caché las fotos por ID para no gastar datos dos veces y carga el texto rápido incluso con señal débil.`}
       </p>
 
       <div className="mt-3.5 flex items-center justify-end gap-2">

@@ -1,12 +1,15 @@
 import React from 'react';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ProductDetailDto } from '@pequemodas/shared';
 import {
   AnimatedBrandCloudsLogo,
   BrandLogo,
   DesignSystemShowcase
 } from '@pequemodas/ui';
+import { ProductCard } from './components/ProductCard';
 import { CartProvider, useCart } from './context/CartContext';
 import {
   readOfflineSnapshot,
@@ -141,6 +144,76 @@ describe('Storefront UI & Carrito persistente', () => {
     } finally {
       globalThis.fetch = origFetch;
       Object.defineProperty(window, 'caches', { configurable: true, value: origCaches });
+    }
+  });
+
+  it('muestra al instante el texto y precio de la tarjeta mientras la foto sigue cargando en red lenta', () => {
+    const origFetch = globalThis.fetch;
+    // Simula una conexión muy lenta donde la foto aún no termina de descargar
+    globalThis.fetch = (() => new Promise<Response>(() => undefined)) as typeof fetch;
+
+    const slowProduct: ProductDetailDto = {
+      id: 'prod-slow-1',
+      store_id: 'store-1',
+      category_id: 'cat-1',
+      subcategory_id: null,
+      name: 'Vestido Primavera Coral',
+      slug: 'vestido-primavera-coral',
+      description: 'Algodón fresco',
+      base_price_cup: 2450,
+      inventory_mode: 'manual',
+      manual_availability: 'available',
+      publication_status: 'published',
+      is_featured: true,
+      has_variants: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      category: {
+        id: 'cat-1',
+        name: 'Niñas',
+        slug: 'ninas'
+      },
+      subcategory: null,
+      images: [
+        {
+          id: 'img-slow-999',
+          product_id: 'prod-slow-1',
+          storage_bucket: 'product-images',
+          storage_path: 'p/full.webp',
+          public_url: 'https://slow.example.com/full.webp',
+          thumbnail_path: 'p/thumb.webp',
+          thumbnail_url: 'https://slow.example.com/thumb.webp',
+          alt_text: 'Vestido',
+          sort_order: 0,
+          is_primary: true,
+          width: 640,
+          height: 640,
+          size_bytes: 18000,
+          mime_type: 'image/webp',
+          created_at: new Date().toISOString()
+        }
+      ],
+      variants: [],
+      inventory: []
+    };
+
+    try {
+      render(
+        <MemoryRouter>
+          <ProductCard product={slowProduct} />
+        </MemoryRouter>
+      );
+
+      // El título, categoría y precio en CUP aparecen inmediatamente sin esperar la foto
+      expect(screen.getByText('Vestido Primavera Coral')).toBeInTheDocument();
+      expect(screen.getByText('Niñas')).toBeInTheDocument();
+      expect(screen.getByText(/2[\s.,]?450/)).toBeInTheDocument();
+
+      // Mientras tanto, el marco de imagen indica claramente que está cargando la foto
+      expect(screen.getByRole('status', { name: /Cargando imagen del producto/i })).toBeInTheDocument();
+      expect(screen.getByText(/Cargando foto\.\.\./i)).toBeInTheDocument();
+    } finally {
+      globalThis.fetch = origFetch;
     }
   });
 });

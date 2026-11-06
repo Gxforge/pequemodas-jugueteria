@@ -1,6 +1,6 @@
-const SHELL_CACHE = 'pequemodas-shell-v6';
-const IMMUTABLE_CACHE = 'pequemodas-immutable-v6';
-const MEDIA_CACHE = 'pequemodas-media-v6';
+const SHELL_CACHE = 'pequemodas-shell-v7';
+const IMMUTABLE_CACHE = 'pequemodas-immutable-v7';
+const MEDIA_CACHE = 'pequemodas-media-v7';
 const IMAGE_ID_CACHE = 'pequemodas-img-by-id-v1';
 const MAX_MEDIA_ENTRIES = 160;
 

@@ -1,12 +1,37 @@
 const CACHE_BUCKET = 'pequemodas-img-by-id-v1';
 const SYNTHETIC_ORIGIN = 'https://img-id.pequemodas.local';
 const MAX_DISK_ENTRIES = 240;
+const MAX_CONCURRENT_NET_DOWNLOADS = 3;
+const NET_IMAGE_TIMEOUT_MS = 14_000;
 
 export type ImageVariantStage = 'thumb' | 'hd';
 
 // Capa 1 (RAM): acceso síncrono en 0.0 ms durante la sesión sin parpadeos
 const memoryObjectUrls = new Map<string, string>();
 const inflightDownloads = new Map<string, Promise<string>>();
+
+// Cola ligera de red para no saturar conexiones móviles lentas (3G/4G inestable)
+let activeNetCount = 0;
+const pendingQueue: Array<() => void> = [];
+
+function acquireNetSlot(): Promise<void> {
+  if (activeNetCount < MAX_CONCURRENT_NET_DOWNLOADS) {
+    activeNetCount += 1;
+    return Promise.resolve();
+  }
+  return new Promise<void>((resolve) => {
+    pendingQueue.push(() => {
+      activeNetCount += 1;
+      resolve();
+    });
+  });
+}
+
+function releaseNetSlot(): void {
+  activeNetCount = Math.max(0, activeNetCount - 1);
+  const next = pendingQueue.shift();
+  if (next) next();
+}
 
 function makeMemoryKey(imageId: string, variant: ImageVariantStage): string {
   return `${imageId}:${variant}`;
@@ -31,6 +56,14 @@ export function peekCachedImageInRam(
   return memoryObjectUrls.get(makeMemoryKey(imageId, variant)) ?? null;
 }
 
+export function clearMemoryImageEntry(
+  imageId: string | null | undefined,
+  variant: ImageVariantStage
+): void {
+  if (!imageId) return;
+  memoryObjectUrls.delete(makeMemoryKey(imageId, variant));
+}
+
 async function trimIdCache(cache: Cache): Promise<void> {
   const keys = await cache.keys();
   if (keys.length <= MAX_DISK_ENTRIES) return;
@@ -40,8 +73,8 @@ async function trimIdCache(cache: Cache): Promise<void> {
 
 /**
  * Resuelve una imagen por su UUID inmutable de `product_images.id`.
- * Si el `imageId` no ha cambiado, jamás vuelve a descargarla de la red:
- * sirve primero desde RAM (0 ms) y luego desde CacheStorage persistente.
+ * 1) Sirve al instante desde RAM (0 ms) o CacheStorage local sin pasar por cola de red.
+ * 2) Si requiere red, limita descargas paralelas a 3 para no bloquear datos ni texto en señal lenta.
  */
 export async function resolveImageById(
   imageId: string | null | undefined,
@@ -73,27 +106,40 @@ export async function resolveImageById(
         }
       }
 
-      const netRes = await fetch(remoteUrl, { mode: 'cors', credentials: 'omit' });
-      if (!netRes.ok) return remoteUrl;
+      await acquireNetSlot();
+      try {
+        const controller = new window.AbortController();
+        const timer = window.setTimeout(() => controller.abort(), NET_IMAGE_TIMEOUT_MS);
+        const netRes = await fetch(remoteUrl, {
+          mode: 'cors',
+          credentials: 'omit',
+          signal: controller.signal
+        });
+        window.clearTimeout(timer);
 
-      const blob = await netRes.blob();
-      if (blob.size > 0) {
-        await cache.put(
-          cacheUrl,
-          new Response(blob, {
-            headers: {
-              'Content-Type': blob.type || 'image/webp',
-              'X-Image-Id': imageId,
-              'X-Variant': variant
-            }
-          })
-        );
-        void trimIdCache(cache);
-        const objUrl = blobToDisplayUrl(blob, remoteUrl);
-        memoryObjectUrls.set(memKey, objUrl);
-        return objUrl;
+        if (!netRes.ok) return remoteUrl;
+
+        const blob = await netRes.blob();
+        if (blob.size > 0) {
+          await cache.put(
+            cacheUrl,
+            new Response(blob, {
+              headers: {
+                'Content-Type': blob.type || 'image/webp',
+                'X-Image-Id': imageId,
+                'X-Variant': variant
+              }
+            })
+          );
+          void trimIdCache(cache);
+          const objUrl = blobToDisplayUrl(blob, remoteUrl);
+          memoryObjectUrls.set(memKey, objUrl);
+          return objUrl;
+        }
+        return remoteUrl;
+      } finally {
+        releaseNetSlot();
       }
-      return remoteUrl;
     } catch {
       return remoteUrl;
     } finally {

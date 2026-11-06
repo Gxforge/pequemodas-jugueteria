@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, MessageCircle, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Loader2, MessageCircle, ShieldCheck } from 'lucide-react';
 import { Button } from '@pequemodas/ui';
 import { usePageMeta } from '../hooks/usePageMeta';
 
@@ -54,6 +54,7 @@ const VISUAL_STEPS: VisualStep[] = [
 ];
 
 export function OrderGuidePage() {
+  const [loadedSteps, setLoadedSteps] = useState<Record<string, boolean>>({});
   usePageMeta(
     'Cómo pedir paso a paso',
     'Guía visual rápida con imágenes anotadas para pedir en PequeModas-Juguetería.'
@@ -83,11 +84,25 @@ export function OrderGuidePage() {
             className="group rounded-3xl bg-white border border-slate-200/90 shadow-card overflow-hidden flex flex-col hover:border-brand-200 transition-all"
           >
             <div className="relative aspect-[17/11] bg-slate-100 overflow-hidden">
+              {!loadedSteps[step.num] && (
+                <div className="absolute inset-0 pm-img-shimmer flex items-center justify-center">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1 text-[10.5px] font-bold text-slate-600 shadow-sm">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-brand-600" />
+                    <span>Cargando imagen...</span>
+                  </span>
+                </div>
+              )}
               <img
                 src={step.image}
                 alt={step.title}
                 loading="lazy"
-                className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                decoding="async"
+                onLoad={() =>
+                  setLoadedSteps((prev) => ({ ...prev, [step.num]: true }))
+                }
+                className={`h-full w-full object-cover group-hover:scale-105 transition-all duration-500 ${
+                  loadedSteps[step.num] ? 'opacity-100' : 'opacity-0'
+                }`}
               />
 
               {/* Número de paso */}

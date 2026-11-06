@@ -9,10 +9,10 @@ export const BRAND_IDENTITY = {
 } as const;
 
 export const APP_RELEASE = {
-  version: '2.9.0',
+  version: '3.0.0',
   appLabel: 'Aplicación Web (PWA)',
   summary:
-    'Aviso rápido de nueva versión en vivo, barra inferior móvil con Buscador limpio y tarjetas de catálogo con texto instantáneo + indicador de carga de foto para conexiones lentas.'
+    'Arranque con logo y nubes sincronizados, navegación instantánea sin pantallazos blancos, Panel Admin PWA con menú fijo y secciones limpias BD-1 a BD-4 e Historial.'
 } as const;
 
 export const STORAGE_LIMITS = {

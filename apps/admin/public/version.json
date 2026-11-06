@@ -1,5 +1,5 @@
 {
-  "version": "2.9.0",
-  "summary": "Detección automática de actualizaciones en vivo y mejoras de rendimiento móvil.",
-  "releasedAt": "2026-11-06T21:15:00Z"
+  "version": "3.0.0",
+  "summary": "Panel Admin instalable (PWA) con caché inteligente, menú lateral fijo sin pantallas blancas y nuevas secciones Base de Datos (BD-1 a BD-4) e Historial.",
+  "releasedAt": "2026-11-06T22:10:00Z"
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { Suspense, useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   BookOpen,
@@ -83,9 +83,17 @@ export function StorefrontLayout() {
         </div>
       </header>
 
-      {/* Contenido de Página */}
+      {/* Contenido de Página (Suspense interno para no desmontar jamás cabecera ni barra inferior) */}
       <main className="flex-1 pb-24 md:pb-12">
-        <Outlet />
+        <Suspense
+          fallback={
+            <div className="max-w-6xl mx-auto px-4 py-12 text-center text-sm font-semibold text-slate-500">
+              Abriendo sección...
+            </div>
+          }
+        >
+          <Outlet />
+        </Suspense>
       </main>
 
       {/* Pie de Página */}

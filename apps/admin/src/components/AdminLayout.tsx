@@ -1,9 +1,11 @@
-import React, { useMemo } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import React, { Suspense, useMemo } from 'react';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
   Boxes,
+  Database,
   Eye,
   FolderTree,
+  History,
   LayoutDashboard,
   LogOut,
   MessageCircle,
@@ -20,6 +22,11 @@ import {
 import { BrandLogo, Button } from '@pequemodas/ui';
 import { useAuth } from '../context/AuthContext';
 import { AdminLiveUpdateCard } from './AdminLiveUpdateCard';
+import {
+  AdminPanelErrorBoundary,
+  AdminRightWorkspaceLoader,
+  useAdminDataWarmup
+} from './AdminWorkspaceGuard';
 import { NotificationManagerBell } from './NotificationManagerBell';
 
 interface NavEntry {
@@ -36,6 +43,8 @@ const ALL_NAV_ITEMS: NavEntry[] = [
   { to: '/productos', label: 'Productos', icon: Package, requiredPerm: 'products' },
   { to: '/categorias', label: 'Categorías', icon: FolderTree, requiredPerm: 'categories' },
   { to: '/inventario', label: 'Inventario', icon: Boxes, requiredPerm: 'inventory' },
+  { to: '/bases-de-datos', label: 'Base de Datos', icon: Database },
+  { to: '/historial', label: 'Historial', icon: History },
   { to: '/pedidos', label: 'WhatsApp Ext.', icon: MessageSquare, requiredPerm: 'chat' },
   { to: '/vista-previa', label: 'Vista Previa', icon: Eye },
   { to: '/equipo', label: 'Equipo', icon: Users, requiredPerm: 'team' },
@@ -43,7 +52,10 @@ const ALL_NAV_ITEMS: NavEntry[] = [
 ];
 
 export function AdminLayout() {
-  const { profile, settings, signOut } = useAuth();
+  const { profile, settings, session, signOut } = useAuth();
+  const location = useLocation();
+  useAdminDataWarmup(Boolean(session && profile));
+
   const perms = useMemo(() => resolveEffectivePermissions(profile), [profile]);
 
   const visibleItems = useMemo(
@@ -63,6 +75,8 @@ export function AdminLayout() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
       <AdminLiveUpdateCard />
+
+      {/* Menú Lateral Izquierdo SIEMPRE VISIBLE (jamás se oculta al cambiar de sección) */}
       <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 bg-white border-r border-slate-200 z-30">
         <div className="px-4 py-4 border-b border-slate-100 flex items-center justify-between gap-2">
           <div className="min-w-0">
@@ -79,7 +93,7 @@ export function AdminLayout() {
         </div>
 
         <nav
-          className="flex-1 px-3 py-4 space-y-1 overflow-y-auto"
+          className="flex-1 px-3 py-3.5 space-y-1 overflow-y-auto"
           aria-label="Menú principal"
         >
           {visibleItems.map(({ to, label, icon: Icon, end }) => (
@@ -134,9 +148,14 @@ export function AdminLayout() {
         </div>
       </header>
 
+      {/* Área Derecha de Contenido: la carga o cualquier fallo ocurre SOLO aquí a la derecha */}
       <main className="flex-1 lg:pl-64 pb-24 lg:pb-10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 sm:py-7">
-          <Outlet />
+          <AdminPanelErrorBoundary resetKey={location.pathname}>
+            <Suspense fallback={<AdminRightWorkspaceLoader />}>
+              <Outlet />
+            </Suspense>
+          </AdminPanelErrorBoundary>
         </div>
       </main>
 

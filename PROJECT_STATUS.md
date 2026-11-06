@@ -1,4 +1,4 @@
-# Estado Oficial del Proyecto — PequeModas-Juguetería (`v2.9.0`)
+# Estado Oficial del Proyecto — PequeModas-Juguetería (`v3.0.0`)
 
 **Desarrollado por:** StudioLexair  
 **Propietaria:** Katia (Cuba)  
@@ -9,41 +9,42 @@
 
 ## 1. Dominios Oficiales Verificados en Producción
 
-- **Tienda Pública (PWA v2.9.0):** `https://pequemodas.vercel.app` *(dominios antiguos retirados definitivamente — HTTP 404)*
-- **Panel Administrativo (`v2.9.0`):** `https://pequemodas-admin.vercel.app` *(dominios antiguos retirados definitivamente — HTTP 404)*
+- **Tienda Pública (PWA v3.0.0):** `https://pequemodas.vercel.app` *(dominios antiguos retirados definitivamente — HTTP 404)*
+- **Panel Administrativo (PWA v3.0.0):** `https://pequemodas-admin.vercel.app` *(dominios antiguos retirados definitivamente — HTTP 404)*
 - **Aviso sobre Vercel Hobby / Comercial:** Ambos proyectos operan actualmente en plan gratuito Hobby para validación técnica sin pagos ni tarjetas. Conforme a los Términos de Servicio de Vercel, para uso comercial permanente se debe contemplar el paso a Vercel Pro cuando el proyecto disponga de un medio de pago autorizado.
 
 ---
 
-## 2. Arquitectura Dual Round-Robin en Supabase (1 GB Base de Datos + 2 GB Almacenamiento de Fotos)
+## 2. Arquitectura Interna de 4 Unidades (`BD-1` a `BD-4`)
 
 1. **Proyecto 1 (`vcohlillbvznsovswdng` · `pequemodas-jugueteria`):**
-   - **Base de Datos 1 (500 MB):** Catálogo, inventario, equipo con permisos por tareas (`team_role` + `permissions` JSONB) **+ Turno A de Chats, Clientes y Pedidos**.
-   - **Almacenamiento de Fotos 1 (1024 MB = 1 GB):** Bucket `product-images` (Pool 1) + `brand-assets`.
+   - **BD-1 (500 MB):** Catálogo, inventario, equipo con permisos por tareas y clientes/chats iniciales.
+   - **BD-3 (1024 MB = 1 GB):** Almacenamiento de fotografías 1 (`product-images` + `brand-assets`).
    - **Edge Functions activas:** `accept-admin-invite`, `storage-health` y `crm-admin-gateway`.
 2. **Proyecto 2 (`ikwekjyeoqxwyyandyrr` · `pequemodas-jugueteria-chat`):**
-   - **Base de Datos 2 (500 MB):** **Turno B de Chats, Clientes, Pedidos Directos, Avisos y Bot**.
-   - **Almacenamiento de Fotos 2 (+1024 MB = +1 GB Extra):** Bucket `product-images` (Pool 2) con reparto automático **Round-Robin** para sumar **2 GB totales de fotografías**.
+   - **BD-2 (500 MB):** Conversaciones, clientes, pedidos directos, avisos y bot.
+   - **BD-4 (1024 MB = 1 GB):** Almacenamiento de fotografías 2 (`product-images`).
    - **Edge Function activa:** `crm-admin-gateway`.
 
 ---
 
-## 3. Novedades Incorporadas en `v2.9.0`
+## 3. Novedades Incorporadas en `v3.0.0`
 
-1. **Aviso Automático y Rápido de Nueva Versión en Pestañas Abiertas (Sin Necesidad de Recargar):**
-   - `usePwaInstall` (Tienda) y `AdminLiveUpdateCard` (Panel Admin) vigilan `/version.json` con `cache: 'no-store'` cada **15 segundos** mientras la pestaña está visible y al enfocar/interactuar, junto con cabeceras CDN `no-store` en Vercel.
-   - Al publicarse una versión nueva, aparece automáticamente la tarjeta flotante con mini logo animado y botón **«Actualizar a vX.Y.Z»**, conservando el carrito y la caché local de fotografías por ID (`pequemodas-img-by-id-v1`).
-2. **Cabecera Móvil Limpia + Barra Inferior de 5 Botones con `Buscar` (Sin Duplicar `Carrito`):**
-   - Eliminado el bloque extra de buscador y píldoras horizontales debajo del logo móvil.
-   - `Carrito` permanece únicamente arriba a la derecha, mientras los **5 botones inferiores móviles** quedan limpios y directos: **`Inicio`**, **`Catálogo`**, **`Categorías`**, **`Cómo pedir`** y **`Buscar`**.
-3. **Catálogo Ultrarrápido «Texto Primero» + Indicador Visual de Carga de Foto para Conexiones Lentas:**
-   - `StorefrontContext` precarga e hidrata el paquete ligero de datos del catálogo para que Inicio, Catálogo, Categorías y Buscador pinten las tarjetas completas (**nombre, categoría, precio en CUP y estado**) en `0 ms` sin esperar las fotos.
-   - `SmartProductImage` e `imageIdCache` limitan las descargas simultáneas a `3` por turno en vista cercana (`IntersectionObserver`), muestran una onda *shimmer* con aviso **`Cargando foto...`** mientras la imagen descarga en señal débil, e incluyen botón **`Cargar foto`** si la red móvil corta la descarga.
+1. **Pantalla de Carga Real y Sincronizada (Logo + Nubes Juntos sin Desfase):**
+   - `AnimatedBrandCloudsLogo` y `AppBootSplash` decodifican en GPU (`img.decode()`) el logotipo frontal y las nubes antes de levantar el telón, evitando que en teléfonos aparezcan las nubes antes que el logotipo principal.
+   - Eliminados los pantallazos en blanco al cambiar de sección en la tienda y retirado el aviso visible de *«Conexión móvil lenta detectada»* (manteniendo la optimización activa en silencio).
+2. **Panel Admin convertido en PWA Instalable con Caché Inteligente y Menú Lateral Siempre Fijo:**
+   - Añadidos `manifest.webmanifest`, `sw.js`, caché inmutable de módulos `/assets/*` en Vercel, `AdminBootSplash` y precarga automática de datos (`useAdminDataWarmup`).
+   - `<Suspense>` y `<AdminPanelErrorBoundary>` viven ahora **únicamente dentro del panel derecho**, de modo que el menú lateral izquierdo jamás desaparece ni se queda en blanco al abrir `Productos`, `Categorías` o `Inventario`.
+3. **Resumen Limpio sin Tecnicismos + Nuevas Secciones `Base de Datos` (`BD-1`..`BD-4`) e `Historial`:**
+   - Eliminada toda jerga técnica (*Round-Robin*, *Turno A/B*, *Doble Servidor*) de las pantallas del usuario.
+   - En `Resumen` aparecen las 4 tarjetas compactas **`BD-1`**, **`BD-2`**, **`BD-3`** y **`BD-4`** con botón **`? Detalles`** que llevan a `/bases-de-datos`.
+   - Creada la sección independiente **`Historial`** (`/historial`) con buscador y filtros rápidos para mantener `Resumen` ligero y visual.
 
 ---
 
-## 4. Calidad y Verificación (`v2.9.0`)
+## 4. Calidad y Verificación (`v3.0.0`)
 
-- **Límite estricto `<= 300` líneas por archivo:** Verificado mediante `pnpm check:lines` (`100%` de archivos conformes).
+- **Límite estricto `<= 300` líneas por archivo:** `100%` de archivos conformes (`pnpm check:lines`).
 - **Tipado, Linter, Pruebas Unitarias y Build:** `pnpm typecheck`, `pnpm lint`, `pnpm test` y `pnpm build` en verde (`0` errores).
-- **Suite E2E Playwright (`pnpm test:e2e`):** Verificada en Desktop y Mobile (`0` overflow horizontal, detección en vivo de nueva versión sin recargar, barra inferior de 5 botones con `Buscar` y Admin completo).
+- **Suite E2E Playwright (`pnpm test:e2e`):** Verificada en Android Chrome y Desktop Chromium (`8/8` pruebas aprobadas).

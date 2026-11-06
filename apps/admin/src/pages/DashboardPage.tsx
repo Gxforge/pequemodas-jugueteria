@@ -1,18 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Eye, MessageCircle, Plus } from 'lucide-react';
+import { ArrowRight, Eye, History, MessageCircle, Plus } from 'lucide-react';
 import { fetchDashboardStats, fetchDualProjectOverview } from '@pequemodas/shared';
 import { Alert, Button, Card, Skeleton } from '@pequemodas/ui';
-import { formatDateTimeEs, isValidWhatsAppPhone } from '@pequemodas/utils';
+import { isValidWhatsAppPhone } from '@pequemodas/utils';
+import { CompactDatabaseGrid } from '../components/CompactDatabaseGrid';
 import {
   DashboardVisualChart,
-  formatHumanAuditAction,
   MetricSvgChatOrders,
   MetricSvgMini,
   MetricSvgShowcase
 } from '../components/DashboardIllustrations';
-import { InfrastructureDualPoolSection } from '../components/InfrastructureDualPoolSection';
 import { useAuth } from '../context/AuthContext';
 
 function bytesToMb(bytes: number): number {
@@ -32,7 +31,7 @@ export function DashboardPage() {
   });
 
   const stats = data?.stats;
-  const recent = data?.recentActivity ?? [];
+  const recentCount = data?.recentActivity?.length ?? 0;
   const whatsappReady = isValidWhatsAppPhone(settings?.whatsapp_phone);
 
   const db1UsedMb = dualOverview ? bytesToMb(dualOverview.p1.dbBytesUsed) : 0;
@@ -60,10 +59,10 @@ export function DashboardPage() {
             Hola {profile?.full_name || 'Katia'}, bienvenida a tu tienda
           </h1>
           <p className="text-sm text-slate-600">
-            Resumen en vivo con doble servidor activo (2 GB para fotos + Round-Robin en chats y datos).
+            Vista rápida de tus productos, conversaciones y espacio disponible.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
           <Link to="/vista-previa">
             <Button variant="outline" leftIcon={<Eye className="h-4 w-4" />}>
               Ver tienda
@@ -77,7 +76,7 @@ export function DashboardPage() {
 
       {!whatsappReady && (
         <Alert variant="warning" title="Falta tu número de WhatsApp">
-          Tus clientes ya pueden comprarte directo desde la aplicación, pero si deseas activar
+          Tus clientes ya pueden comprarte directo desde la aplicación; si deseas activar
           también el botón de WhatsApp agrégale tu número en{' '}
           <Link to="/configuracion" className="font-bold underline">
             Ajustes
@@ -151,6 +150,45 @@ export function DashboardPage() {
             </Card>
           </div>
 
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+            <Card className="flex items-center gap-3">
+              <MetricSvgMini variant="sections" />
+              <div>
+                <p className="text-xs font-semibold text-slate-500">Categorías</p>
+                <p className="font-heading text-2xl font-extrabold text-slate-900">
+                  {stats.categoriesCount}
+                </p>
+              </div>
+            </Card>
+            <Card className="flex items-center gap-3">
+              <MetricSvgMini variant="contacts" />
+              <div>
+                <p className="text-xs font-semibold text-slate-500">Clientes en Chat</p>
+                <p className="font-heading text-2xl font-extrabold text-emerald-700">
+                  {contactsCount}
+                </p>
+              </div>
+            </Card>
+            <Card className="flex items-center gap-3">
+              <MetricSvgMini variant="drafts" />
+              <div>
+                <p className="text-xs font-semibold text-slate-500">En Borrador</p>
+                <p className="font-heading text-2xl font-extrabold text-slate-900">
+                  {stats.hiddenProducts}
+                </p>
+              </div>
+            </Card>
+            <Card className="flex items-center gap-3">
+              <MetricSvgMini variant="soldout" />
+              <div>
+                <p className="text-xs font-semibold text-slate-500">Agotados</p>
+                <p className="font-heading text-2xl font-extrabold text-rose-600">
+                  {stats.outOfStockProducts}
+                </p>
+              </div>
+            </Card>
+          </div>
+
           <DashboardVisualChart
             rows={[
               {
@@ -180,85 +218,37 @@ export function DashboardPage() {
             ]}
           />
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-            <Card className="flex items-center gap-3">
-              <MetricSvgMini variant="sections" />
+          <CompactDatabaseGrid
+            db1UsedMb={db1UsedMb}
+            db2UsedMb={db2UsedMb}
+            storage1UsedMb={storage1UsedMb}
+            storage2UsedMb={storage2UsedMb}
+          />
+
+          <Card className="bg-slate-50/80 border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="h-10 w-10 rounded-2xl bg-white border border-slate-200 text-brand-600 flex items-center justify-center shrink-0 shadow-sm">
+                <History className="h-5 w-5" />
+              </span>
               <div>
-                <p className="text-xs font-semibold text-slate-500">Categorías</p>
-                <p className="font-heading text-2xl font-extrabold text-slate-900">
-                  {stats.categoriesCount}
+                <p className="font-heading text-sm font-extrabold text-slate-900">
+                  Historial de movimientos
+                </p>
+                <p className="text-xs text-slate-600">
+                  {recentCount > 0
+                    ? `Revisa los cambios recientes realizados en tu tienda.`
+                    : 'Consulta cuando quieras los movimientos de tu tienda.'}
                 </p>
               </div>
-            </Card>
-            <Card className="flex items-center gap-3">
-              <MetricSvgMini variant="contacts" />
-              <div>
-                <p className="text-xs font-semibold text-slate-500">Clientes en Chat</p>
-                <p className="font-heading text-2xl font-extrabold text-emerald-700">
-                  {contactsCount}
-                </p>
-              </div>
-            </Card>
-            <Card className="flex items-center gap-3">
-              <MetricSvgMini variant="drafts" />
-              <div>
-                <p className="text-xs font-semibold text-slate-500">En Borrador</p>
-                <p className="font-heading text-2xl font-extrabold text-slate-700">
-                  {stats.hiddenProducts}
-                </p>
-              </div>
-            </Card>
-            <Card className="flex items-center gap-3">
-              <MetricSvgMini variant="soldout" />
-              <div>
-                <p className="text-xs font-semibold text-slate-500">Agotados</p>
-                <p className="font-heading text-2xl font-extrabold text-rose-600">
-                  {stats.outOfStockProducts}
-                </p>
-              </div>
-            </Card>
-          </div>
+            </div>
+            <Link to="/historial">
+              <Button size="sm" variant="outline" rightIcon={<ArrowRight className="h-4 w-4" />}>
+                Abrir historial
+              </Button>
+            </Link>
+          </Card>
         </>
       )}
-
-      <InfrastructureDualPoolSection
-        storage1UsedMb={storage1UsedMb}
-        storage2UsedMb={storage2UsedMb}
-        db1UsedMb={db1UsedMb}
-        db2UsedMb={db2UsedMb}
-        contactsCount={contactsCount}
-        dualOverview={dualOverview}
-      />
-
-      <Card className="space-y-3">
-        <h2 className="font-heading text-base font-extrabold text-slate-900">
-          Últimos Movimientos en tu Tienda
-        </h2>
-        {recent.length === 0 ? (
-          <p className="text-sm text-slate-500 py-2">
-            Todavía no hay movimientos recientes. Todo lo que actualices aparecerá aquí explicado de forma sencilla.
-          </p>
-        ) : (
-          <ul className="divide-y divide-slate-100 text-sm">
-            {recent.slice(0, 6).map((log) => (
-              <li
-                key={log.id}
-                className="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-1"
-              >
-                <span className="font-semibold text-slate-800">
-                  {formatHumanAuditAction(
-                    log.action,
-                    log.metadata as Record<string, unknown> | null
-                  )}
-                </span>
-                <span className="text-xs text-slate-500 shrink-0">
-                  {formatDateTimeEs(log.created_at)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
     </div>
   );
 }

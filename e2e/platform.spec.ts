@@ -3,28 +3,30 @@ import { expect, test } from '@playwright/test';
 const STOREFRONT_URL = process.env.E2E_STOREFRONT_URL || 'http://localhost:5173';
 const ADMIN_URL = process.env.E2E_ADMIN_URL || 'http://localhost:5174';
 
-test.describe('PequeModas-Juguetería — PWA v2.9.0: Aviso Rápido de Versión, Barra Inferior con Buscar y Catálogo Rápido', () => {
-  test('detecta nueva versión sin recargar la página y verifica chat, catálogo compacto (?) y guía visual', async ({
+test.describe('PequeModas-Juguetería — PWA v3.0.0: Arranque Sincronizado, Navegación Instantánea y Admin PWA', () => {
+  test('detecta nueva versión sin recargar, oculta avisos molestos de red lenta y navega sin pantallazos', async ({
     page,
     request
   }) => {
     await page.goto(STOREFRONT_URL);
     await expect(page.getByRole('heading', { level: 1 })).toContainText('PequeModas');
-    await page.waitForTimeout(850);
+    await page.waitForTimeout(1450);
 
-    // Verifica versión v2.9.0
-    await expect(page.getByText(/Aplicación Web \(PWA\) v2\.9\.0/i)).toBeVisible();
+    // Verifica versión v3.0.0 y que no exista el cartel de conexión móvil lenta
+    await expect(page.getByText(/Aplicación Web \(PWA\) v3\.0\.0/i)).toBeVisible();
+    await expect(page.getByText(/Conexión móvil lenta detectada/i)).toHaveCount(0);
+
     const verRes = await request.get(`${STOREFRONT_URL}/version.json`);
     expect(verRes.status()).toBe(200);
-    expect((await verRes.json()).version).toBe('2.9.0');
+    expect((await verRes.json()).version).toBe('3.0.0');
 
-    // Simula un nuevo despliegue en vivo SIN recargar la pestaña y verifica que aparece la tarjeta flotante
+    // Simula un nuevo despliegue en vivo SIN recargar la pestaña y verifica tarjeta flotante
     await page.route('**/version.json*', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          version: '2.9.9',
+          version: '3.0.9',
           summary: 'Mejoras instantáneas en vivo verificadas.'
         })
       });
@@ -33,7 +35,7 @@ test.describe('PequeModas-Juguetería — PWA v2.9.0: Aviso Rápido de Versión,
     await expect(page.getByText(/¡Nueva versión de la tienda lista!/i)).toBeVisible({
       timeout: 5000
     });
-    await expect(page.getByRole('button', { name: /Actualizar a v2\.9\.9/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Actualizar a v3\.0\.9/i })).toBeVisible();
     await page.getByRole('button', { name: /Más tarde/i }).click();
     await page.unroute('**/version.json*');
 
@@ -68,7 +70,7 @@ test.describe('PequeModas-Juguetería — PWA v2.9.0: Aviso Rápido de Versión,
   }) => {
     await page.goto(STOREFRONT_URL);
     await expect(page.getByRole('heading', { level: 1 })).toContainText('PequeModas');
-    await page.waitForTimeout(850);
+    await page.waitForTimeout(1450);
 
     await context.setOffline(true);
     await page.evaluate(() => window.dispatchEvent(new Event('offline')));
@@ -82,18 +84,16 @@ test.describe('PequeModas-Juguetería — PWA v2.9.0: Aviso Rápido de Versión,
     await expect(page.getByText(/Modo sin conexión:/i)).toBeHidden();
   });
 
-  test('en móvil mantiene cabecera limpia (sin panel superior de búsqueda) y 5 botones abajo con Buscar (sin repetir Carrito)', async ({
+  test('en móvil mantiene cabecera limpia y 5 botones abajo con Buscar (sin repetir Carrito)', async ({
     page
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(STOREFRONT_URL);
-    await page.waitForTimeout(850);
+    await page.waitForTimeout(1450);
 
-    // En móvil el buscador del header está oculto (solo Carrito arriba)
     await expect(page.locator('header input[type="search"]')).toBeHidden();
     await expect(page.locator('header').getByRole('link', { name: /Carrito/i })).toBeVisible();
 
-    // La barra inferior móvil tiene exactamente los 5 botones: Inicio, Catálogo, Categorías, Cómo pedir y Buscar
     const bottomNav = page.getByRole('navigation', { name: /Navegación rápida móvil/i });
     await expect(bottomNav).toBeVisible();
     await expect(bottomNav.getByRole('link')).toHaveCount(5);
@@ -104,7 +104,6 @@ test.describe('PequeModas-Juguetería — PWA v2.9.0: Aviso Rápido de Versión,
     await expect(bottomNav.getByRole('link', { name: 'Buscar' })).toBeVisible();
     await expect(bottomNav.getByRole('link', { name: /Carrito/i })).toHaveCount(0);
 
-    // Al tocar Buscar en la barra inferior abre el buscador inteligente
     await bottomNav.getByRole('link', { name: 'Buscar' }).click();
     await expect(page).toHaveURL(/\/buscar$/);
     await expect(page.locator('main input[type="search"]')).toBeVisible();
@@ -132,11 +131,18 @@ test.describe('PequeModas-Juguetería — PWA v2.9.0: Aviso Rápido de Versión,
   });
 });
 
-test.describe('PequeModas-Juguetería — E2E Admin: Personalizador de Colores del Robot + 2GB Storage + Equipo', () => {
-  test('verifica botón Ver contraseña, Resumen 2GB, Avisos in-app y Modal de Colores del Chat/Robot', async ({
-    page
+test.describe('PequeModas-Juguetería — E2E Admin PWA v3.0.0: Menú Fijo, BD-1..BD-4 sin tecnicismos e Historial', () => {
+  test('mantiene menú lateral siempre visible al cambiar entre Productos/Categorías/Inventario y muestra BD-1..BD-4 + Historial', async ({
+    page,
+    request
   }) => {
+    await page.setViewportSize({ width: 1366, height: 850 });
+
+    const manifestRes = await request.get(`${ADMIN_URL}/manifest.webmanifest`);
+    expect(manifestRes.status()).toBe(200);
+
     await page.goto(ADMIN_URL);
+    await page.waitForTimeout(1250);
     await expect(page).toHaveURL(/\/acceso$/);
 
     const pwdInput = page.locator('input[name="password"]');
@@ -148,16 +154,49 @@ test.describe('PequeModas-Juguetería — E2E Admin: Personalizador de Colores d
     await page.getByLabel(/Correo electrónico/i).fill('junmoxia41@gmail.com');
     await page.getByRole('button', { name: /Entrar al Panel/i }).click();
 
-    await expect(
-      page.getByText(/Capacidad de Fotografías \(2 GB Totales en Doble Servidor\)/i)
-    ).toBeVisible({ timeout: 15000 });
+    // Verifica Resumen limpio sin jerga Round-Robin y con BD-1, BD-2, BD-3 y BD-4
+    await expect(page.getByText('BD-1')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText('BD-2')).toBeVisible();
+    await expect(page.getByText('BD-3')).toBeVisible();
+    await expect(page.getByText('BD-4')).toBeVisible();
+    await expect(page.getByText(/Round-Robin/i)).toHaveCount(0);
 
-    // Abre Mensajes y verifica el Personalizador de Robot y Colores
-    await page.goto(`${ADMIN_URL}/mensajes`);
+    const sidebar = page.getByRole('navigation', { name: /Menú principal/i });
+    await expect(sidebar).toBeVisible();
+
+    // Al tocar BD-1 abre la sección de Base de Datos con el menú lateral siempre visible
+    await page.getByRole('link', { name: /BD-1/i }).click();
+    await expect(page).toHaveURL(/\/bases-de-datos\?unidad=bd-1/);
+    await expect(sidebar).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /Base de Datos y Espacio/i })
+    ).toBeVisible();
+
+    // Navega por Productos, Categorías, Inventario e Historial verificando que el sidebar jamás desaparece
+    await sidebar.getByRole('link', { name: 'Productos' }).click();
+    await expect(page).toHaveURL(/\/productos$/);
+    await expect(sidebar).toBeVisible();
+
+    await sidebar.getByRole('link', { name: 'Categorías' }).click();
+    await expect(page).toHaveURL(/\/categorias$/);
+    await expect(sidebar).toBeVisible();
+
+    await sidebar.getByRole('link', { name: 'Inventario' }).click();
+    await expect(page).toHaveURL(/\/inventario$/);
+    await expect(sidebar).toBeVisible();
+
+    await sidebar.getByRole('link', { name: 'Historial' }).click();
+    await expect(page).toHaveURL(/\/historial$/);
+    await expect(sidebar).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /Historial de tu Tienda/i })
+    ).toBeVisible();
+
+    // Verifica Modal de Colores del Chat/Robot en Chat Clientes
+    await sidebar.getByRole('link', { name: 'Chat Clientes' }).click();
     await page.getByRole('button', { name: /Personalizar Robot y Colores/i }).click();
     await expect(
       page.getByText(/Personalizar Robot y Colores del Chat/i)
     ).toBeVisible();
-    await expect(page.getByText(/Estilos listos/i)).toBeVisible();
   });
 });

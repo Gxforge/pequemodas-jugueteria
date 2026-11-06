@@ -161,7 +161,7 @@ export function MessagesChatPage() {
             Chat de Clientes y Pedidos en Vivo
           </h1>
           <p className="text-sm text-slate-600">
-            Envío instantáneo con confirmación de entrega (✓) y lectura (✓✓ azul) en sistema Round-Robin.
+            Envío instantáneo con confirmación de entrega (✓) y lectura (✓✓ azul).
           </p>
         </div>
         <Button

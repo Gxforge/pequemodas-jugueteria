@@ -139,3 +139,14 @@ export async function fetchDashboardStats(): Promise<{
     recentActivity: (logsRes.data ?? []) as AuditLogRow[]
   };
 }
+
+export async function fetchAuditHistory(limit = 60): Promise<AuditLogRow[]> {
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from('audit_logs')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) throw new Error(error.message);
+  return (data ?? []) as AuditLogRow[];
+}

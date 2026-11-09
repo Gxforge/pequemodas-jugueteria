@@ -4,7 +4,7 @@
   "short_name": "PequeModas",
   "description": "Tienda infantil de juguetes, ropa y accesorios para niños. Explora el catálogo incluso con señal débil y solicita tus pedidos por WhatsApp.",
   "lang": "es",
-  "start_url": "/?utm_source=pwa",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
@@ -12,6 +12,12 @@
   "theme_color": "#D4385B",
   "categories": ["shopping", "kids", "lifestyle"],
   "icons": [
+    {
+      "src": "/icons/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/icons/icon-192.png",
       "sizes": "192x192",

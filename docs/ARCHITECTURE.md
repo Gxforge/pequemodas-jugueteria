@@ -23,7 +23,7 @@ pequemodas-jugueteria/
 ├── scripts/
 │   ├── check-line-limit.mjs        # Verificador automático de <= 300 líneas
 │   └── provision-initial-admin.mjs # Alta segura de la primera administradora
-├── e2e/                   # Pruebas E2E Playwright (Android Pixel 7 + Escritorio)
+├── e2e/                   # Pruebas E2E Playwright (Android Pixel 7, iPhone 13 WebKit y Escritorio)
 └── docs/                  # Documentación integral para StudioLexair y Katia
 ```
 

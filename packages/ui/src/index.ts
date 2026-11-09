@@ -7,3 +7,4 @@ export * from './ModalAndAlert';
 export * from './EmptyAndSkeleton';
 export * from './MessageStatusTicks';
 export * from './DesignSystemShowcase';
+export * from './IosInstallGuide';

@@ -1,6 +1,6 @@
-const ADMIN_SHELL_CACHE = 'pequemodas-admin-shell-v2';
-const ADMIN_IMMUTABLE_CACHE = 'pequemodas-admin-immutable-v2';
-const ADMIN_MEDIA_CACHE = 'pequemodas-admin-media-v2';
+const ADMIN_SHELL_CACHE = 'pequemodas-admin-shell-v3';
+const ADMIN_IMMUTABLE_CACHE = 'pequemodas-admin-immutable-v3';
+const ADMIN_MEDIA_CACHE = 'pequemodas-admin-media-v3';
 
 const ADMIN_SHELL_ASSETS = [
   '/',
@@ -8,6 +8,8 @@ const ADMIN_SHELL_ASSETS = [
   '/manifest.webmanifest',
   '/favicon.png',
   '/icons/icon-192.png',
+  '/icons/apple-touch-icon.png',
+  '/apple-touch-icon.png',
   '/brand/logo-foreground.webp',
   '/brand/cloud-wide.webp',
   '/brand/cloud-side.webp'

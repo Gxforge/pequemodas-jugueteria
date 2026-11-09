@@ -64,6 +64,12 @@ const VERCEL_JSON = Buffer.from(JSON.stringify({
   headers: [
     { source: '/version.json', headers: [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate, max-age=0' }] },
     { source: '/sw.js', headers: [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate, max-age=0' }] },
+    { source: '/manifest.webmanifest', headers: [
+      { key: 'Content-Type', value: 'application/manifest+json; charset=utf-8' },
+      { key: 'Cache-Control', value: 'no-cache, must-revalidate, max-age=0' }
+    ] },
+    { source: '/apple-touch-icon.png', headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, must-revalidate' }] },
+    { source: '/icons/apple-touch-icon.png', headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, must-revalidate' }] },
     { source: '/index.html', headers: [{ key: 'Cache-Control', value: 'no-cache, must-revalidate, max-age=0' }] },
     { source: '/assets/(.*)', headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] },
     { source: '/(.*)', headers: [
@@ -150,12 +156,34 @@ async function verifyHost(host, assets) {
       if (!spa.ok || !spaBody.includes('<div id="root"')) {
         throw new Error(`SPA fallback ${spa.status}`);
       }
+      const iphoneHeaders = {
+        'cache-control': 'no-cache',
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1'
+      };
+      const iconRes = await fetch(`${base}/icons/apple-touch-icon.png?t=${Date.now()}`, { headers: iphoneHeaders });
+      const iconType = iconRes.headers.get('content-type') || '';
+      const iconHead = Buffer.from(await iconRes.arrayBuffer()).subarray(0, 8).toString('hex');
+      if (!iconRes.ok || !/image\/png/i.test(iconType) || iconHead !== '89504e470d0a1a0a') {
+        throw new Error(`Icono Apple ${iconRes.status} ${iconType}`);
+      }
+      const manifestRes = await fetch(`${base}/manifest.webmanifest?t=${Date.now()}`, { headers: iphoneHeaders });
+      const manifestJson = await manifestRes.json().catch(() => null);
+      if (!manifestRes.ok || manifestJson?.display !== 'standalone') {
+        throw new Error(`Manifest iOS ${manifestRes.status}`);
+      }
+      const iosHtmlRes = await fetch(`${base}/?t=${Date.now()}`, { headers: iphoneHeaders });
+      const iosHtml = await iosHtmlRes.text();
+      if (!iosHtmlRes.ok || !iosHtml.includes('apple-mobile-web-app-capable')) {
+        throw new Error(`Meta etiquetas iOS ${iosHtmlRes.status}`);
+      }
       return {
         version: versionJson.version,
         versionCache: versionRes.headers.get('cache-control'),
         swCache,
         assetCount: assets.length,
-        spa: spa.status
+        spa: spa.status,
+        iosIcon: iconRes.status,
+        iosManifest: manifestRes.status
       };
     } catch (err) {
       lastError = String(err);

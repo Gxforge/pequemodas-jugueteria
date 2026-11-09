@@ -5,7 +5,7 @@
 El sistema visual de **PequeModas-Juguetería** combina alegría infantil con orden comercial y confianza para madres, padres y familiares:
 
 - **Marca oficial:** Emblema de bloques infantiles y percha boutique con nombre **PequeModas-Juguetería** intacto (configurable en Ajustes si la propietaria sube un archivo de logotipo personalizado).
-- **Optimización Android-first:** Todos los botones y controles interactivos respetan alturas mínimas táctiles de `44px`, con barra de navegación inferior fija de 5 accesos tanto en la Tienda Pública como en el Panel Administrativo.
+- **Móvil primero, Android e iOS:** Todos los botones y controles interactivos respetan alturas mínimas táctiles de `44px`. La Tienda Pública conserva su barra inferior de 5 accesos; el Panel Admin móvil usa botón de hamburguesa y panel lateral, y ambas apps incluyen guía de instalación para iPhone/iPad.
 
 ## 2. Paleta Cromática (`@pequemodas/config`)
 

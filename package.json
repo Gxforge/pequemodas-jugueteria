@@ -21,6 +21,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:e2e:ios": "playwright test --config=playwright.ios.config.ts",
+    "check:pwa:ios": "node scripts/check-pwa-ios.mjs",
     "deploy:static": "node scripts/deploy-static.mjs"
   },
   "devDependencies": {

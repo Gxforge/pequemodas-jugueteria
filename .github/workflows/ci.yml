@@ -1,0 +1,119 @@
+name: Calidad, PWA e iOS (iPhone/iPad)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      verificar_produccion:
+        description: 'Verificar también las URLs de producción con agente de iPhone'
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pequemodas-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  calidad-ios:
+    name: Lint, tipos, unitarias, build y E2E Safari/WebKit
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.18.0
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Instalar dependencias del monorepo
+        run: pnpm install --frozen-lockfile
+
+      - name: Preparar variables de compilación ficticias (sin secretos reales)
+        run: |
+          {
+            echo 'VITE_SUPABASE_URL=https://ci-placeholder.supabase.co'
+            echo 'VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiJ9.ci_placeholder_anon_key'
+            echo 'VITE_CHAT_SUPABASE_URL=https://ci-placeholder-chat.supabase.co'
+            echo 'VITE_CHAT_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiJ9.ci_placeholder_chat_key'
+            echo 'VITE_STORE_PUBLIC_URL=https://pequemodas.vercel.app'
+            echo 'VITE_STOREFRONT_PUBLIC_URL=https://pequemodas.vercel.app'
+            echo 'VITE_ADMIN_PUBLIC_URL=https://pequemodas-admin.vercel.app'
+            echo 'VITE_MAX_IMAGE_SIZE_MB=5'
+          } > .env.local
+
+      - name: ESLint y límite de 300 líneas
+        run: pnpm lint
+
+      - name: Tipado estricto de los 8 paquetes
+        run: pnpm typecheck
+
+      - name: Pruebas unitarias y de componentes
+        run: pnpm test
+
+      - name: Compilación de producción de Tienda y Panel
+        run: pnpm build
+
+      - name: Validar etiquetas Apple, manifest, icono 180 px y Service Worker
+        run: pnpm check:pwa:ios
+
+      - name: Instalar WebKit (Safari) y Chromium con dependencias del sistema
+        run: pnpm exec playwright install --with-deps webkit chromium
+
+      - name: E2E iPhone/iPad en WebKit + regresión Android en Chromium
+        run: pnpm test:e2e:ios
+
+  produccion-ios:
+    name: Verificación en vivo con agente de iPhone
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.verificar_produccion }}
+    needs: calidad-ios
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.18.0
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Instalar dependencias del monorepo
+        run: pnpm install --frozen-lockfile
+
+      - name: Preparar variables de compilación ficticias (sin secretos reales)
+        run: |
+          {
+            echo 'VITE_SUPABASE_URL=https://ci-placeholder.supabase.co'
+            echo 'VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiJ9.ci_placeholder_anon_key'
+            echo 'VITE_CHAT_SUPABASE_URL=https://ci-placeholder-chat.supabase.co'
+            echo 'VITE_CHAT_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiJ9.ci_placeholder_chat_key'
+            echo 'VITE_STORE_PUBLIC_URL=https://pequemodas.vercel.app'
+            echo 'VITE_STOREFRONT_PUBLIC_URL=https://pequemodas.vercel.app'
+            echo 'VITE_ADMIN_PUBLIC_URL=https://pequemodas-admin.vercel.app'
+            echo 'VITE_MAX_IMAGE_SIZE_MB=5'
+          } > .env.local
+
+      - name: Compilar para comparar version.json con producción
+        run: pnpm build
+
+      - name: Verificar Tienda y Panel con User-Agent de iPhone Safari
+        env:
+          STOREFRONT_URL: https://pequemodas.vercel.app
+          ADMIN_URL: https://pequemodas-admin.vercel.app
+        run: node scripts/check-pwa-ios.mjs --live

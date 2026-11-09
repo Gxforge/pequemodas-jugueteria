@@ -1,6 +1,6 @@
-const SHELL_CACHE = 'pequemodas-shell-v9';
-const IMMUTABLE_CACHE = 'pequemodas-immutable-v9';
-const MEDIA_CACHE = 'pequemodas-media-v9';
+const SHELL_CACHE = 'pequemodas-shell-v10';
+const IMMUTABLE_CACHE = 'pequemodas-immutable-v10';
+const MEDIA_CACHE = 'pequemodas-media-v10';
 const IMAGE_ID_CACHE = 'pequemodas-img-by-id-v2';
 const MAX_MEDIA_ENTRIES = 160;
 
@@ -10,6 +10,8 @@ const APP_SHELL = [
   '/manifest.webmanifest',
   '/favicon.png',
   '/icons/icon-192.png',
+  '/icons/apple-touch-icon.png',
+  '/apple-touch-icon.png',
   '/brand/logo-foreground.webp',
   '/brand/cloud-wide.webp',
   '/brand/cloud-side.webp'

@@ -1,5 +1,5 @@
 {
-  "version": "3.1.2",
-  "summary": "Nuevo menú hamburguesa en el Panel Admin móvil: panel lateral con todas las secciones y sin barra inferior de 5 botones.",
+  "version": "3.1.3",
+  "summary": "El Panel Admin se puede añadir en iPhone y iPad desde Safari, con guía en la pantalla de acceso, icono Apple de 180 px y apertura a pantalla completa. El menú hamburguesa de Android se mantiene.",
   "releasedAt": "2026-11-06T23:30:00Z"
 }

@@ -1,5 +1,5 @@
 {
-  "version": "3.1.2",
-  "summary": "El Panel Admin móvil usa ahora un botón de hamburguesa con menú lateral completo. La tienda pública conserva su barra de 5 botones.",
+  "version": "3.1.3",
+  "summary": "La tienda y el Panel ya se pueden añadir en iPhone y iPad desde Safari con una guía paso a paso, icono Apple de 180 px y etiquetas de pantalla completa. Android conserva su instalación automática.",
   "releasedAt": "2026-11-06T23:30:00Z"
 }

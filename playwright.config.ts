@@ -2,6 +2,8 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
+  // pwa-ios.spec.ts se ejecuta con playwright.ios.config.ts sobre el build.
+  testIgnore: '**/pwa-ios.spec.ts',
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,

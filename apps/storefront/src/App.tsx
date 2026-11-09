@@ -11,6 +11,7 @@ import { CategoriesIndexPage } from './pages/CategoriesIndexPage';
 import { CategoryDetailPage } from './pages/CategoryDetailPage';
 import { ContactPage } from './pages/ContactPage';
 import { HomePage } from './pages/HomePage';
+import { InstallGuidePage } from './pages/InstallGuidePage';
 import { OrderGuidePage } from './pages/OrderGuidePage';
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 import { ProductDetailPage } from './pages/ProductDetailPage';
@@ -59,6 +60,7 @@ export function App() {
                 <Route path="contacto" element={<ContactPage />} />
                 <Route path="privacidad" element={<PrivacyPolicyPage />} />
                 <Route path="informacion-pedidos" element={<OrderGuidePage />} />
+                <Route path="instalar" element={<InstallGuidePage />} />
                 <Route path="guia-visual" element={<DesignSystemPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Route>

@@ -32,6 +32,17 @@ Configurar únicamente variables públicas (nunca incluir `SUPABASE_SERVICE_ROLE
 
 Para despliegues sin integración Git se usa `scripts/deploy-static.mjs`. El script conserva las rutas anidadas de `dist/` (especialmente `/assets/*`), genera un `vercel.json` con `headers` y `rewrites`, desactiva temporalmente la protección SSO solo para verificar la URL de preview, comprueba que cada módulo responda con `application/javascript` o `text/css`, asigna los alias oficiales y restaura la configuración del proyecto. Así se evita que un `rewrite` SPA devuelva `index.html` con tipo HTML donde el navegador espera JavaScript.
 
+## 1.2 Verificación PWA de iPhone / iPad y GitHub Actions
+
+`scripts/deploy-static.mjs` comprueba, antes de asignar los alias de producción,
+que el HTML incluya `apple-mobile-web-app-capable`, que
+`/icons/apple-touch-icon.png` responda como PNG real y que
+`/manifest.webmanifest` tenga `display: standalone`. El workflow
+`.github/workflows/ci.yml` ejecuta `pnpm check:pwa:ios`, `pnpm test:e2e:ios`
+(WebKit con perfil iPhone 13 y Chromium con Pixel 7) y, al despacharlo con
+`verificar_produccion = true`, valida ambas URLs reales con `User-Agent` de
+Safari en iPhone. Consulta `docs/PWA_IOS.md`.
+
 ## 2. ADVERTENCIA CRÍTICA DE CUMPLIMIENTO: Plan Vercel Hobby vs. Uso Comercial
 
 Durante la auditoría real de infraestructura se comprobó que la cuenta de Vercel asociada se encuentra en el plan **`hobby`** (`junmoxia41's projects`, `plan: hobby`).
@@ -44,5 +55,5 @@ Durante la auditoría real de infraestructura se comprobó que la cuenta de Verc
 
 ## 3. Restricciones Territoriales y Operativas (Cuba)
 
-- La tienda pública y el panel administrativo utilizan arquitectura estática + llamadas HTTPS estándar a Supabase y enlaces `wa.me`, compatibles con navegadores Android en Cuba.
+- La tienda pública y el panel administrativo utilizan arquitectura estática + llamadas HTTPS estándar a Supabase y enlaces `wa.me`, compatibles con Chrome en Android y Safari en iPhone/iPad en Cuba.
 - Los proyectos del plan gratuito de Supabase se pausan tras **7 días sin actividad**; si la tienda pasa una semana sin visitas, puede reactivarse sin costo desde el panel de Supabase o mediante su Management API (`POST /v1/projects/{ref}/restore`).

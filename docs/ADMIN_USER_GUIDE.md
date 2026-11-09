@@ -1,15 +1,16 @@
-# GUÍA DE USUARIA PARA KATIA — Administración desde Teléfono Android
+# GUÍA DE USUARIA PARA KATIA — Administración desde Android, iPhone o iPad
 
-¡Bienvenida a tu tienda **PequeModas-Juguetería**! Esta guía está pensada para que puedas manejar toda tu tienda desde tu celular Android de forma sencilla y segura.
+¡Bienvenida a tu tienda **PequeModas-Juguetería**! Esta guía está pensada para que puedas manejar toda tu tienda desde tu celular Android, iPhone o iPad de forma sencilla y segura.
 
 ---
 
 ## 1. Cómo entrar a tu Panel Administrativo
 
-1. Abre en el navegador Chrome de tu teléfono el enlace privado de **Administración** que te entregará StudioLexair.
+1. Abre el enlace privado de **Administración** en **Chrome** (Android) o en **Safari** (iPhone/iPad). Si te llega por WhatsApp, ábrelo primero en el navegador.
 2. Escribe tu **correo electrónico** y tu **contraseña privada** y toca **«Entrar al Panel»**.
-3. *Consejo práctico:* En Chrome, toca el menú de tres puntos (`⋮`) arriba a la derecha y elige **«Añadir a pantalla de inicio»** para tener un icono directo en tu teléfono.
-4. Si algún día olvidas tu clave, toca **«¿Olvidaste tu contraseña? Recuperar acceso»** y recibirás un enlace en tu correo para crear una nueva.
+3. **En Android:** toca los tres puntos (`⋮`) de Chrome y elige **«Instalar aplicación»** o **«Añadir a pantalla de inicio»**.
+4. **En iPhone o iPad:** toca **«Compartir»** (cuadrado con flecha hacia arriba), elige **«Añadir a pantalla de inicio»**, deja activado **«Abrir como App Web»** y confirma con **«Añadir»**. La pantalla de acceso te mostrará estos pasos automáticamente.
+5. Si algún día olvidas tu clave, toca **«¿Olvidaste tu contraseña? Recuperar acceso»** y recibirás un enlace en tu correo para crear una nueva.
 
 ---
 

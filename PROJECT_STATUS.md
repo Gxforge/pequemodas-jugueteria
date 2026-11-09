@@ -1,4 +1,4 @@
-# Estado Oficial del Proyecto — PequeModas-Juguetería (`v3.1.2`)
+# Estado Oficial del Proyecto — PequeModas-Juguetería (`v3.1.3`)
 
 **Desarrollado por:** StudioLexair  
 **Propietaria:** Katia (Cuba)  
@@ -9,10 +9,10 @@
 
 ## 1. Dominios Oficiales Verificados en Producción
 
-- **Tienda Pública (PWA v3.1.2):** `https://pequemodas.vercel.app` — despliegue `dpl_BdCwi6rRQMcUxaJHt2xjTo6Juv8x` (`200 OK`, `/version.json = 3.1.2`).
-- **Panel Administrativo (PWA v3.1.2):** `https://pequemodas-admin.vercel.app` — despliegue `dpl_GNWge8G9o9U6aJJTAA8fxKKQDd7u` (`200 OK`, `/version.json = 3.1.2`).
+- **Tienda Pública (PWA v3.1.3):** `https://pequemodas.vercel.app` — despliegue `dpl_2V3Nenoowiue8dvkp16tkUJNgWQC` (`200 OK`, `/version.json = 3.1.3`).
+- **Panel Administrativo (PWA v3.1.3):** `https://pequemodas-admin.vercel.app` — despliegue `dpl_DhAtqxQWfmnmaQxbwhmZohTqPLac` (`200 OK`, `/version.json = 3.1.3`).
 - **Dominios antiguos:** `pequemodas-jugueteria.vercel.app` y `pequemodas-jugueteria-admin.vercel.app` continúan retirados (`404`).
-- **Cabeceras verificadas:** `/version.json` y `/sw.js` con `no-store`; `/assets/*` con `public, max-age=31536000, immutable` y `content-type` real `application/javascript` / `text/css`.
+- **Cabeceras verificadas:** `/version.json`, `/sw.js` y `/manifest.webmanifest` sin caché persistente; `/assets/*` con `public, max-age=31536000, immutable` y `content-type` real `application/javascript` / `text/css`; `/icons/apple-touch-icon.png` y `/apple-touch-icon.png` como `image/png`.
 - **Aviso sobre Vercel Hobby / Comercial:** Ambos proyectos operan actualmente en plan gratuito Hobby para validación técnica sin pagos ni tarjetas. Conforme a los Términos de Servicio de Vercel, para uso comercial permanente se debe contemplar el paso a Vercel Pro cuando el proyecto disponga de un medio de pago autorizado.
 
 ---
@@ -60,7 +60,19 @@
 
 ---
 
-## 6. Limpieza de pruebas solicitada por Katia
+## 6. `v3.1.3` — Instalación PWA en iPhone / iPad y CI en GitHub Actions
+
+1. **Causa real del problema reportado:** la plataforma dependía solo de `beforeinstallprompt`, el evento de Android/Chrome que Safari en iOS no implementa. En iPhone no aparecía ningún botón de instalación ni instrucciones; además faltaban las etiquetas Apple, el icono `apple-touch-icon` de `180 × 180` y el `start_url` del manifest tenía un parámetro innecesario. La documentación y las pruebas anteriores cubrían únicamente Android.
+2. **Etiquetas e icono oficiales:** en ambas apps se añadieron `apple-mobile-web-app-capable`, `mobile-web-app-capable`, `apple-mobile-web-app-title`, `apple-mobile-web-app-status-bar-style` y `viewport-fit=cover`; se generó un PNG opaco de `180 × 180` en `/icons/` y en la raíz, con `apple-touch-icon-precomposed`.
+3. **Manifest y caché:** `start_url: "/"`, `scope: "/"`, iconos `180/192/512` + `maskable`; cachés del Service Worker pasaron a Storefront `v10` (conservando `img-by-id-v2`) y Admin `v3`, con el icono Apple precargado y sin cachear HTML como JS/CSS.
+4. **Guía real para la usuaria:** `useIosInstallGuide` detecta iPhone, iPad (incluido modo escritorio de iPadOS), app ya instalada y navegadores in-app/Chrome iOS. La Tienda, `/instalar` y `/acceso` del Panel muestran «Compartir → Añadir a pantalla de inicio» sin prometer un botón automático inexistente. Android conserva su instalación nativa y su barra de 5 botones.
+5. **GitHub Actions (`.github/workflows/ci.yml`):** en cada `push`/PR ejecuta `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, `pnpm check:pwa:ios`, instala WebKit/Chromium y corre `pnpm test:e2e:ios`. Con `workflow_dispatch` + `verificar_produccion = true` valida ambas URLs reales con `User-Agent` de Safari en iPhone. No usa secretos reales: genera variables `VITE_*` ficticias solo para compilar.
+6. **Producción verificada con WebKit de iPhone:** ambas apps muestran la guía, tienen `apple-mobile-web-app-capable=yes`, icono de `180 px`, `standalone=false` en Safari normal y **cero errores de consola**. `node scripts/check-pwa-ios.mjs --live` confirma `LIVE_IOS_OK` para Tienda y Panel.
+7. **Seguridad en las pruebas:** se retiraron el correo y la contraseña reales de `e2e/platform.spec.ts`; ahora se leen de `E2E_ADMIN_EMAIL` / `E2E_ADMIN_PASSWORD` en `.env.local` (ignorado por Git) y `.env.example` solo contiene valores ficticios. GitHub Actions no recibe secretos reales. Si el histórico público del repositorio llegó a contener la clave anterior, se recomienda rotarla desde Supabase Auth.
+
+---
+
+## 7. Limpieza de pruebas solicitada por Katia
 
 Se eliminó **sin respaldo**, por decisión explícita de la propietaria, todo el rastro de pruebas detectado en ambos proyectos:
 
@@ -71,18 +83,20 @@ Se eliminó **sin respaldo**, por decisión explícita de la propietaria, todo e
 
 ---
 
-## 7. Vídeos para Katia
+## 8. Vídeos para Katia
 
 - **Tutorial completo (`v3.0.0`):** `/home/user/Tutorial-Katia-PequeModas-Completo.mp4` — `2 min 27 s`.
-- **Apéndice de moneda (`v3.1.0`, compatible con `v3.1.2`):** `/home/user/Tutorial-Katia-Monedas-CUP-USD.mp4` — `53 s`, `1280×720`, H.264 + AAC, `2.2 MB`, voz española y subtítulos.
+- **Apéndice de moneda (`v3.1.0`, compatible con `v3.1.3`):** `/home/user/Tutorial-Katia-Monedas-CUP-USD.mp4` — `53 s`, `1280×720`, H.264 + AAC, `2.2 MB`, voz española y subtítulos.
 - Las capturas del apéndice seleccionan `USD` sin guardar y simulan un carrito mixto solo en `localStorage`.
 
 ---
 
-## 8. Calidad y Verificación (`v3.1.2`)
+## 9. Calidad y Verificación (`v3.1.3`)
 
-- **Límite `<= 300` líneas:** `100%` de `176` archivos conformes (`pnpm check:lines`).
-- **Tipado, Linter, Unitarias y Build:** `pnpm typecheck`/`build`, `pnpm lint` y `pnpm test` (`23/23`) en verde.
-- **Suite E2E Playwright:** `12/12` aprobadas en `Android Pixel 7` y `Desktop Chromium`, incluida la nueva prueba del menú hamburguesa sin barra inferior.
-- **Producción verificada:** `v3.1.2`, JS/CSS con su `content-type` real, fallback SPA `/catalogo`, panel lateral del Admin en vivo, cero errores de consola y cero errores de assets; dominios antiguos en `404`.
+- **Límite `<= 300` líneas:** `100%` de `183` archivos conformes (`pnpm check:lines`).
+- **Tipado, Linter, Unitarias y Build:** `pnpm typecheck`/`build`, `pnpm lint` y `pnpm test` (`30/30`) en verde.
+- **Suite E2E Playwright:** `12/12` aprobadas en `Android Pixel 7` y `Desktop Chromium`; `7` aprobadas y `3` omitidas por proyecto en la suite iOS (`iPhone 13 WebKit` + regresión `Pixel 7 Chromium`).
+- **Verificación PWA iOS:** `pnpm check:pwa:ios` estático + `--live` contra producción; etiquetas Apple, manifest, icono PNG `180 × 180`, `/sw.js` y `/assets/*.js` con `content-type` real, fallback SPA `/catalogo` y guía visible en WebKit de iPhone con cero errores de consola.
+- **GitHub Actions:** workflow de calidad y verificación iOS creado y despachado contra `main` y producción. Sin secretos reales en el repositorio ni en el workflow.
+- **Producción verificada:** `v3.1.3`, dominios antiguos en `404`, panel lateral del Admin intacto, CUP/USD sin conversión y limpieza de datos de prueba intacta.
 - **Infraestructura intacta:** sin pagos, sin dominios comprados, sin `SERVICE_ROLE` en frontend, sin pasarelas y sin datos comerciales inventados.

@@ -1,7 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Download, RefreshCw, Sparkles, X } from 'lucide-react';
+import { Download, RefreshCw, Share2, Sparkles, X } from 'lucide-react';
 import { APP_RELEASE, BRAND_IDENTITY } from '@pequemodas/config';
-import { AnimatedBrandCloudsLogo, Button } from '@pequemodas/ui';
+import {
+  AnimatedBrandCloudsLogo,
+  Button,
+  IosInstallSteps,
+  useIosInstallGuide
+} from '@pequemodas/ui';
 import { useAuth } from '../context/AuthContext';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -27,6 +32,11 @@ export function AdminLiveUpdateCard() {
   const [dismissedFor, setDismissedFor] = useState<string | null>(null);
   const [reloading, setReloading] = useState(false);
   const lastCheckRef = useRef(0);
+  const {
+    guide: iosGuide,
+    dismissed: iosDismissed,
+    dismiss: dismissIos
+  } = useIosInstallGuide('admin-v3.1.3');
 
   useEffect(() => {
     let cancelled = false;
@@ -85,11 +95,22 @@ export function AdminLiveUpdateCard() {
 
   const hasUpdate = Boolean(remoteVersion && dismissedFor !== remoteVersion);
   const canInstall = Boolean(deferredInstall) && !installDismissed;
-
-  if (!hasUpdate && !canInstall) return null;
+  // Safari en iPhone no ofrece beforeinstallprompt: mostrar la guía manual.
+  const showIosGuide =
+    !hasUpdate && !canInstall && !iosDismissed && Boolean(iosGuide.canShow);
+  if (!hasUpdate && !canInstall && !showIosGuide) return null;
 
   const storeName = settings?.commercial_name || BRAND_IDENTITY.commercialName;
   const targetVer = remoteVersion || APP_RELEASE.version;
+  const handleDismiss = () => {
+    if (showIosGuide) {
+      dismissIos();
+    } else if (hasUpdate) {
+      setDismissedFor(remoteVersion);
+    } else {
+      setInstallDismissed(true);
+    }
+  };
 
   const handleApplyUpdate = async () => {
     setReloading(true);
@@ -118,15 +139,15 @@ export function AdminLiveUpdateCard() {
       aria-label={
         hasUpdate
           ? `Nueva actualización v${targetVer} disponible`
-          : `Instalar panel de ${storeName}`
+          : showIosGuide
+            ? `Cómo añadir el Panel de ${storeName} a tu ${iosGuide.deviceLabel}`
+            : `Instalar panel de ${storeName}`
       }
       className="fixed bottom-4 lg:bottom-5 right-3 left-3 sm:left-auto sm:w-[400px] z-50 rounded-3xl bg-white/95 backdrop-blur-xl border-2 border-brand-300 shadow-elevated p-4"
     >
       <button
         type="button"
-        onClick={() =>
-          hasUpdate ? setDismissedFor(targetVer) : setInstallDismissed(true)
-        }
+        onClick={handleDismiss}
         aria-label="Cerrar aviso"
         className="absolute top-3 right-3 rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
       >
@@ -143,31 +164,37 @@ export function AdminLiveUpdateCard() {
         </div>
         <div className="min-w-0 space-y-1">
           <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 border border-brand-200 px-2.5 py-0.5 text-[11px] font-extrabold text-brand-700">
-            <Sparkles className="h-3 w-3" />
-            Panel PWA · v{targetVer}
+            {showIosGuide ? (
+              <Share2 className="h-3 w-3" />
+            ) : (
+              <Sparkles className="h-3 w-3" />
+            )}
+            {showIosGuide
+              ? `${iosGuide.deviceLabel} / iPad`
+              : `Panel PWA · v${targetVer}`}
           </span>
           <h3 className="font-heading text-sm font-extrabold text-slate-900 leading-snug">
             {hasUpdate
               ? '¡Nueva actualización del panel lista!'
-              : 'Instala tu Panel en el teléfono o PC'}
+              : showIosGuide
+                ? `Añade tu Panel a tu ${iosGuide.deviceLabel}`
+                : 'Instala tu Panel en el teléfono o PC'}
           </h3>
         </div>
       </div>
 
-      <p className="mt-2.5 text-xs text-slate-600 leading-relaxed">
-        {hasUpdate
-          ? remoteSummary || APP_RELEASE.summary
-          : 'Abre tu panel administrativo directo desde tu pantalla de inicio con carga instantánea y caché inteligente.'}
-      </p>
+      {showIosGuide ? (
+        <IosInstallSteps guide={iosGuide} appName="tu Panel" />
+      ) : (
+        <p className="mt-2.5 text-xs text-slate-600 leading-relaxed">
+          {hasUpdate
+            ? remoteSummary || APP_RELEASE.summary
+            : 'Abre tu panel administrativo directo desde tu pantalla de inicio con carga instantánea y caché inteligente.'}
+        </p>
+      )}
 
       <div className="mt-3 flex items-center justify-end gap-2">
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() =>
-            hasUpdate ? setDismissedFor(targetVer) : setInstallDismissed(true)
-          }
-        >
+        <Button size="sm" variant="ghost" onClick={handleDismiss}>
           Más tarde
         </Button>
         {hasUpdate ? (
@@ -178,6 +205,10 @@ export function AdminLiveUpdateCard() {
             onClick={() => void handleApplyUpdate()}
           >
             Actualizar a v{targetVer}
+          </Button>
+        ) : showIosGuide ? (
+          <Button size="sm" onClick={dismissIos}>
+            Entendido
           </Button>
         ) : (
           <Button

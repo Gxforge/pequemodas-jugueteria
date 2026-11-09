@@ -2,8 +2,18 @@ import { expect, test } from '@playwright/test';
 
 const STOREFRONT_URL = process.env.E2E_STOREFRONT_URL || 'http://localhost:5173';
 const ADMIN_URL = process.env.E2E_ADMIN_URL || 'http://localhost:5174';
+const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || '';
+const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || '';
 
-test.describe('PequeModas-Juguetería — PWA v3.1.2: Arranque Sincronizado, Navegación Instantánea y Admin PWA', () => {
+// Las credenciales reales NUNCA van en el repositorio: se leen del entorno local.
+function requireAdminCredentials() {
+  test.skip(
+    !ADMIN_EMAIL || !ADMIN_PASSWORD,
+    'Define E2E_ADMIN_EMAIL y E2E_ADMIN_PASSWORD en .env.local (no subir a Git)'
+  );
+}
+
+test.describe('PequeModas-Juguetería — PWA v3.1.3: Arranque Sincronizado, Navegación Instantánea y Admin PWA', () => {
   test('detecta nueva versión sin recargar, oculta avisos molestos de red lenta y navega sin pantallazos', async ({
     page,
     request
@@ -12,13 +22,13 @@ test.describe('PequeModas-Juguetería — PWA v3.1.2: Arranque Sincronizado, Nav
     await expect(page.getByRole('heading', { level: 1 })).toContainText('PequeModas');
     await page.waitForTimeout(1450);
 
-    // Verifica versión v3.1.2 y que no exista el cartel de conexión móvil lenta
-    await expect(page.getByText(/Aplicación Web \(PWA\) v3\.1\.2/i)).toBeVisible();
+    // Verifica versión v3.1.3 y que no exista el cartel de conexión móvil lenta
+    await expect(page.getByText(/Aplicación Web \(PWA\) v3\.1\.3/i)).toBeVisible();
     await expect(page.getByText(/Conexión móvil lenta detectada/i)).toHaveCount(0);
 
     const verRes = await request.get(`${STOREFRONT_URL}/version.json`);
     expect(verRes.status()).toBe(200);
-    expect((await verRes.json()).version).toBe('3.1.2');
+    expect((await verRes.json()).version).toBe('3.1.3');
 
     // Simula un nuevo despliegue en vivo SIN recargar la pestaña y verifica tarjeta flotante
     await page.route('**/version.json*', async (route) => {
@@ -131,7 +141,8 @@ test.describe('PequeModas-Juguetería — PWA v3.1.2: Arranque Sincronizado, Nav
   });
 });
 
-test.describe('PequeModas-Juguetería — E2E Admin PWA v3.1.2: Menú Fijo, BD-1..BD-4 sin tecnicismos e Historial', () => {
+test.describe('PequeModas-Juguetería — E2E Admin PWA v3.1.3: Menú Fijo, BD-1..BD-4 sin tecnicismos e Historial', () => {
+  test.beforeEach(requireAdminCredentials);
   test('mantiene menú lateral siempre visible al cambiar entre Productos/Categorías/Inventario y muestra BD-1..BD-4 + Historial', async ({
     page,
     request
@@ -146,12 +157,12 @@ test.describe('PequeModas-Juguetería — E2E Admin PWA v3.1.2: Menú Fijo, BD-1
     await expect(page).toHaveURL(/\/acceso$/);
 
     const pwdInput = page.locator('input[name="password"]');
-    await pwdInput.fill('Lexair-bae05a5d12#26');
+    await pwdInput.fill(ADMIN_PASSWORD);
     await expect(pwdInput).toHaveAttribute('type', 'password');
     await page.getByRole('button', { name: /Ver contraseña/i }).click();
     await expect(pwdInput).toHaveAttribute('type', 'text');
 
-    await page.getByLabel(/Correo electrónico/i).fill('junmoxia41@gmail.com');
+    await page.getByLabel(/Correo electrónico/i).fill(ADMIN_EMAIL);
     await page.getByRole('button', { name: /Entrar al Panel/i }).click();
 
     // Verifica Resumen limpio sin jerga Round-Robin y con BD-1, BD-2, BD-3 y BD-4
@@ -201,7 +212,8 @@ test.describe('PequeModas-Juguetería — E2E Admin PWA v3.1.2: Menú Fijo, BD-1
   });
 });
 
-test.describe('PequeModas-Juguetería — E2E v3.1.2: Moneda CUP / USD configurable sin datos de prueba', () => {
+test.describe('PequeModas-Juguetería — E2E v3.1.3: Moneda CUP / USD configurable sin datos de prueba', () => {
+  test.beforeEach(requireAdminCredentials);
   test('Katia ve CUP y USD en productos nuevos y en Ajustes sin guardar artículos de prueba', async ({
     page
   }) => {
@@ -209,8 +221,8 @@ test.describe('PequeModas-Juguetería — E2E v3.1.2: Moneda CUP / USD configura
     await page.goto(ADMIN_URL);
     await expect(page).toHaveURL(/\/acceso$/);
 
-    await page.getByLabel(/Correo electrónico/i).fill('junmoxia41@gmail.com');
-    await page.locator('input[name="password"]').fill('Lexair-bae05a5d12#26');
+    await page.getByLabel(/Correo electrónico/i).fill(ADMIN_EMAIL);
+    await page.locator('input[name="password"]').fill(ADMIN_PASSWORD);
     await page.getByRole('button', { name: /Entrar al Panel/i }).click();
     await expect(page.getByText('BD-1')).toBeVisible({ timeout: 15000 });
 
@@ -228,7 +240,8 @@ test.describe('PequeModas-Juguetería — E2E v3.1.2: Moneda CUP / USD configura
   });
 });
 
-test.describe('PequeModas-Juguetería — Admin móvil v3.1.2: menú hamburguesa sin barra inferior', () => {
+test.describe('PequeModas-Juguetería — Admin móvil v3.1.3: menú hamburguesa sin barra inferior', () => {
+  test.beforeEach(requireAdminCredentials);
   test('abre un panel lateral con todas las secciones y navega sin dejar la barra de 5 botones', async ({
     page
   }) => {
@@ -236,8 +249,8 @@ test.describe('PequeModas-Juguetería — Admin móvil v3.1.2: menú hamburguesa
     await page.goto(ADMIN_URL);
     await expect(page).toHaveURL(/\/acceso$/);
 
-    await page.getByLabel(/Correo electrónico/i).fill('junmoxia41@gmail.com');
-    await page.locator('input[name="password"]').fill('Lexair-bae05a5d12#26');
+    await page.getByLabel(/Correo electrónico/i).fill(ADMIN_EMAIL);
+    await page.locator('input[name="password"]').fill(ADMIN_PASSWORD);
     await page.getByRole('button', { name: /Entrar al Panel/i }).click();
     await expect(page.getByText('BD-1')).toBeVisible({ timeout: 15000 });
 

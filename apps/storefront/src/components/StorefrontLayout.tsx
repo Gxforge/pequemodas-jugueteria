@@ -129,6 +129,11 @@ export function StorefrontLayout() {
                   Información de la tienda
                 </Link>
               </li>
+              <li>
+                <Link to="/instalar" className="hover:text-brand-600">
+                  Instalar la aplicación
+                </Link>
+              </li>
             </ul>
           </div>
           <div className="space-y-2">

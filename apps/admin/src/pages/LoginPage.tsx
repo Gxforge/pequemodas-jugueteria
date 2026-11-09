@@ -15,6 +15,7 @@ import {
   Button,
   Card,
   Input,
+  IosInstallGuideCard,
   Modal
 } from '@pequemodas/ui';
 import { useAuth } from '../context/AuthContext';
@@ -74,6 +75,12 @@ export function LoginPage() {
             Acceso exclusivo para gestionar el catálogo de PequeModas-Juguetería.
           </p>
         </div>
+
+        <IosInstallGuideCard
+          appName="tu Panel"
+          storageKey="admin-login-v3.1.3"
+          inline
+        />
 
         {!configured && (
           <Alert variant="warning" title="Conexión pendiente">

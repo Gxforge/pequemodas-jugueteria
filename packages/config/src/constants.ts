@@ -9,10 +9,10 @@ export const BRAND_IDENTITY = {
 } as const;
 
 export const APP_RELEASE = {
-  version: '3.1.2',
+  version: '3.1.3',
   appLabel: 'Aplicación Web (PWA)',
   summary:
-    'Panel Admin móvil con botón de hamburguesa y menú lateral desplegable, sin barra inferior de 5 botones; conserva CUP/USD y la corrección de caché PWA.'
+    'Instalación guiada en iPhone y iPad con etiquetas Apple, icono de 180 px y guía paso a paso; Android conserva su instalación automática y el Panel Admin su menú hamburguesa.'
 } as const;
 
 export const STORAGE_LIMITS = {

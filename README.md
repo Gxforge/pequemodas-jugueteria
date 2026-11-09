@@ -4,15 +4,15 @@ Plataforma integral de comercio electrónico infantil (**Tienda Pública PWA** +
 
 ## Estructura del Monorepositorio
 
-- `apps/storefront` — Tienda pública instalable en Android (PWA), catálogo paginado con precios en `CUP` o `USD`, variantes dinámicas, carrito persistente y preparación de pedidos por WhatsApp.
-- `apps/admin` — Panel administrativo privado para Katia (móvil Android y escritorio): productos, fotografías WebP, categorías, inventario híbrido, solicitudes y ajustes.
+- `apps/storefront` — Tienda pública instalable en Android, iPhone y iPad (PWA), catálogo paginado con precios en `CUP` o `USD`, variantes dinámicas, carrito persistente y preparación de pedidos por WhatsApp.
+- `apps/admin` — Panel administrativo privado para Katia (Android, iPhone/iPad y escritorio): productos, fotografías WebP, categorías, inventario híbrido, solicitudes y ajustes.
 - `packages/config` — Tokens del sistema de diseño, preset Tailwind y constantes de dominio.
 - `packages/schemas` — Esquemas de validación estricta con Zod.
 - `packages/shared` — Cliente público de Supabase, repositorios, tipos e inventario híbrido.
 - `packages/ui` — Biblioteca de componentes accesibles y Guía Visual interactiva.
 - `packages/utils` — Formato y totales separados `CUP` / `USD`, generador `wa.me`, optimizador cliente WebP y utilidades.
 - `supabase/` — migraciones SQL versionadas de catálogo, pedidos y chat con Row Level Security (RLS), `seed.sql` limpio y Edge Function `storage-health`.
-- `docs/` — Los 15 documentos técnicos, de seguridad, despliegue, respaldos y manual paso a paso para Katia (`ADMIN_USER_GUIDE.md`).
+- `docs/` — Los 16 documentos técnicos, de seguridad, despliegue, respaldos, PWA en iOS y manual paso a paso para Katia (`ADMIN_USER_GUIDE.md`).
 
 ## Arranque Rápido Local
 
@@ -37,6 +37,12 @@ pnpm lint          # ESLint + límite de líneas
 pnpm test          # Pruebas unitarias y de componentes (Vitest + RTL)
 pnpm build         # Compilación de producción de ambas aplicaciones
 pnpm test:e2e      # Pruebas E2E Playwright (Android Pixel 7 + Escritorio)
+pnpm check:pwa:ios # Valida etiquetas Apple, manifest, icono 180 px y Service Worker
+pnpm test:e2e:ios  # E2E iPhone 13 (WebKit) + regresión Android sobre el build
 ```
+
+En iPhone la instalación se hace desde Safari → Compartir → «Añadir a pantalla de
+inicio»; la app muestra esa guía automáticamente. GitHub Actions ejecuta toda la
+verificación de calidad y PWA en cada `push` (` .github/workflows/ci.yml`).
 
 Consulta la documentación completa en [`docs/PROJECT_OVERVIEW.md`](./docs/PROJECT_OVERVIEW.md), la guía para Katia en [`docs/ADMIN_USER_GUIDE.md`](./docs/ADMIN_USER_GUIDE.md) y el estado detallado por fases en [`PROJECT_STATUS.md`](./PROJECT_STATUS.md).

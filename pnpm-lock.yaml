@@ -348,6 +348,9 @@ importers:
       '@pequemodas/config':
         specifier: workspace:*
         version: link:../config
+      '@pequemodas/utils':
+        specifier: workspace:*
+        version: link:../utils
       lucide-react:
         specifier: ^0.475.0
         version: 0.475.0(react@18.3.1)

@@ -9,10 +9,10 @@ export const BRAND_IDENTITY = {
 } as const;
 
 export const APP_RELEASE = {
-  version: '3.1.1',
+  version: '3.1.2',
   appLabel: 'Aplicación Web (PWA)',
   summary:
-    'Monedas CUP/USD configurables, totales separados y corrección de caché PWA: los módulos JS/CSS se sirven con su tipo real y se descartan respuestas HTML antiguas.'
+    'Panel Admin móvil con botón de hamburguesa y menú lateral desplegable, sin barra inferior de 5 botones; conserva CUP/USD y la corrección de caché PWA.'
 } as const;
 
 export const STORAGE_LIMITS = {

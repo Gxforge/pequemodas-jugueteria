@@ -20,7 +20,8 @@
     "check:lines": "node scripts/check-line-limit.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "deploy:static": "node scripts/deploy-static.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

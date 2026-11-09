@@ -1,5 +1,5 @@
 {
-  "version": "3.1.1",
-  "summary": "Corrección de caché PWA del Panel Admin. Se conservan moneda principal en Ajustes, CUP/USD por producto y totales separados.",
+  "version": "3.1.2",
+  "summary": "Nuevo menú hamburguesa en el Panel Admin móvil: panel lateral con todas las secciones y sin barra inferior de 5 botones.",
   "releasedAt": "2026-11-06T23:30:00Z"
 }

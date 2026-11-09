@@ -171,7 +171,7 @@ export function ProductEditorPage() {
           }}
         />
 
-        <div className="sticky bottom-20 lg:bottom-4 z-20 flex justify-end">
+        <div className="sticky bottom-4 z-20 flex justify-end">
           <Button
             type="submit"
             size="lg"

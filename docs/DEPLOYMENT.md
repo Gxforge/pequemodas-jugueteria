@@ -28,6 +28,10 @@ Configurar únicamente variables públicas (nunca incluir `SUPABASE_SERVICE_ROLE
 
 ---
 
+## 1.1 Despliegue estático verificado (`pnpm deploy:static`)
+
+Para despliegues sin integración Git se usa `scripts/deploy-static.mjs`. El script conserva las rutas anidadas de `dist/` (especialmente `/assets/*`), genera un `vercel.json` con `headers` y `rewrites`, desactiva temporalmente la protección SSO solo para verificar la URL de preview, comprueba que cada módulo responda con `application/javascript` o `text/css`, asigna los alias oficiales y restaura la configuración del proyecto. Así se evita que un `rewrite` SPA devuelva `index.html` con tipo HTML donde el navegador espera JavaScript.
+
 ## 2. ADVERTENCIA CRÍTICA DE CUMPLIMIENTO: Plan Vercel Hobby vs. Uso Comercial
 
 Durante la auditoría real de infraestructura se comprobó que la cuenta de Vercel asociada se encuentra en el plan **`hobby`** (`junmoxia41's projects`, `plan: hobby`).

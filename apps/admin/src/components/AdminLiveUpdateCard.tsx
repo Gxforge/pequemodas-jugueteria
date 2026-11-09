@@ -120,7 +120,7 @@ export function AdminLiveUpdateCard() {
           ? `Nueva actualización v${targetVer} disponible`
           : `Instalar panel de ${storeName}`
       }
-      className="fixed bottom-20 lg:bottom-5 right-3 left-3 sm:left-auto sm:w-[400px] z-50 rounded-3xl bg-white/95 backdrop-blur-xl border-2 border-brand-300 shadow-elevated p-4"
+      className="fixed bottom-4 lg:bottom-5 right-3 left-3 sm:left-auto sm:w-[400px] z-50 rounded-3xl bg-white/95 backdrop-blur-xl border-2 border-brand-300 shadow-elevated p-4"
     >
       <button
         type="button"

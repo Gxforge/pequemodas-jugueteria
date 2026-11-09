@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 const STOREFRONT_URL = process.env.E2E_STOREFRONT_URL || 'http://localhost:5173';
 const ADMIN_URL = process.env.E2E_ADMIN_URL || 'http://localhost:5174';
 
-test.describe('PequeModas-Juguetería — PWA v3.1.1: Arranque Sincronizado, Navegación Instantánea y Admin PWA', () => {
+test.describe('PequeModas-Juguetería — PWA v3.1.2: Arranque Sincronizado, Navegación Instantánea y Admin PWA', () => {
   test('detecta nueva versión sin recargar, oculta avisos molestos de red lenta y navega sin pantallazos', async ({
     page,
     request
@@ -12,13 +12,13 @@ test.describe('PequeModas-Juguetería — PWA v3.1.1: Arranque Sincronizado, Nav
     await expect(page.getByRole('heading', { level: 1 })).toContainText('PequeModas');
     await page.waitForTimeout(1450);
 
-    // Verifica versión v3.1.1 y que no exista el cartel de conexión móvil lenta
-    await expect(page.getByText(/Aplicación Web \(PWA\) v3\.1\.1/i)).toBeVisible();
+    // Verifica versión v3.1.2 y que no exista el cartel de conexión móvil lenta
+    await expect(page.getByText(/Aplicación Web \(PWA\) v3\.1\.2/i)).toBeVisible();
     await expect(page.getByText(/Conexión móvil lenta detectada/i)).toHaveCount(0);
 
     const verRes = await request.get(`${STOREFRONT_URL}/version.json`);
     expect(verRes.status()).toBe(200);
-    expect((await verRes.json()).version).toBe('3.1.1');
+    expect((await verRes.json()).version).toBe('3.1.2');
 
     // Simula un nuevo despliegue en vivo SIN recargar la pestaña y verifica tarjeta flotante
     await page.route('**/version.json*', async (route) => {
@@ -131,7 +131,7 @@ test.describe('PequeModas-Juguetería — PWA v3.1.1: Arranque Sincronizado, Nav
   });
 });
 
-test.describe('PequeModas-Juguetería — E2E Admin PWA v3.1.1: Menú Fijo, BD-1..BD-4 sin tecnicismos e Historial', () => {
+test.describe('PequeModas-Juguetería — E2E Admin PWA v3.1.2: Menú Fijo, BD-1..BD-4 sin tecnicismos e Historial', () => {
   test('mantiene menú lateral siempre visible al cambiar entre Productos/Categorías/Inventario y muestra BD-1..BD-4 + Historial', async ({
     page,
     request
@@ -201,7 +201,7 @@ test.describe('PequeModas-Juguetería — E2E Admin PWA v3.1.1: Menú Fijo, BD-1
   });
 });
 
-test.describe('PequeModas-Juguetería — E2E v3.1.1: Moneda CUP / USD configurable sin datos de prueba', () => {
+test.describe('PequeModas-Juguetería — E2E v3.1.2: Moneda CUP / USD configurable sin datos de prueba', () => {
   test('Katia ve CUP y USD en productos nuevos y en Ajustes sin guardar artículos de prueba', async ({
     page
   }) => {
@@ -225,5 +225,34 @@ test.describe('PequeModas-Juguetería — E2E v3.1.1: Moneda CUP / USD configura
     await expect(storeCurrency).toBeVisible();
     await expect(storeCurrency.locator('option[value="CUP"]')).toHaveCount(1);
     await expect(storeCurrency.locator('option[value="USD"]')).toHaveCount(1);
+  });
+});
+
+test.describe('PequeModas-Juguetería — Admin móvil v3.1.2: menú hamburguesa sin barra inferior', () => {
+  test('abre un panel lateral con todas las secciones y navega sin dejar la barra de 5 botones', async ({
+    page
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(ADMIN_URL);
+    await expect(page).toHaveURL(/\/acceso$/);
+
+    await page.getByLabel(/Correo electrónico/i).fill('junmoxia41@gmail.com');
+    await page.locator('input[name="password"]').fill('Lexair-bae05a5d12#26');
+    await page.getByRole('button', { name: /Entrar al Panel/i }).click();
+    await expect(page.getByText('BD-1')).toBeVisible({ timeout: 15000 });
+
+    await expect(page.getByRole('navigation', { name: /Navegación móvil/i })).toHaveCount(0);
+    const hamburger = page.getByRole('button', { name: /Abrir menú del panel/i });
+    await expect(hamburger).toBeVisible();
+    await hamburger.click();
+
+    const drawer = page.getByRole('dialog', { name: /Menú del panel/i });
+    await expect(drawer).toBeVisible();
+    for (const label of ['Base de Datos', 'Historial', 'Vista Previa', 'Equipo', 'Ajustes']) {
+      await expect(drawer.getByRole('link', { name: label })).toBeVisible();
+    }
+    await drawer.getByRole('link', { name: 'Ajustes' }).click();
+    await expect(page).toHaveURL(/\/configuracion$/);
+    await expect(page.getByRole('dialog', { name: /Menú del panel/i })).toHaveCount(0);
   });
 });

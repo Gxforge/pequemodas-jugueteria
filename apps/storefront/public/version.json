@@ -1,5 +1,5 @@
 {
-  "version": "3.1.1",
-  "summary": "Corrección de caché PWA: módulos y estilos se sirven con su tipo real. Se conservan CUP/USD por producto y totales separados.",
+  "version": "3.1.2",
+  "summary": "El Panel Admin móvil usa ahora un botón de hamburguesa con menú lateral completo. La tienda pública conserva su barra de 5 botones.",
   "releasedAt": "2026-11-06T23:30:00Z"
 }

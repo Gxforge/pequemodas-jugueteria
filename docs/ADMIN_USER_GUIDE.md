@@ -16,7 +16,7 @@
 ## 2. Primer paso recomendado: Configurar tu WhatsApp y Datos de la Tienda
 
 Antes de publicar tus productos:
-1. En la barra inferior de tu pantalla toca **«Ajustes»** (icono de engranaje).
+1. En el teléfono, toca el botón de **tres líneas** arriba a la izquierda y elige **«Ajustes»** en el panel que se abre.
 2. En **«Número de WhatsApp para recibir pedidos»**, escribe tu número con el código de Cuba, por ejemplo: `+535XXXXXXX`.
 3. En **«Moneda de los precios»**, elige **CUP** o **USD** como moneda principal para los productos nuevos. Cambiarla no modifica los artículos que ya existen.
 4. Si deseas, sube tu **logotipo**, escribe una breve bienvenida, tus **horarios** y explica tus condiciones de **Entrega a domicilio** (zonas o cómo se coordina la mensajería) y de **Recogida**.
@@ -27,7 +27,7 @@ Antes de publicar tus productos:
 ## 3. Crear Categorías y Subcategorías
 
 Para mantener tu tienda ordenada:
-1. Toca **«Categorías»** en la barra inferior.
+1. Abre el menú de **tres líneas** y toca **«Categorías»**.
 2. Pulsa **«Nueva categoría»** y escribe el nombre (por ejemplo: *Juguetes*, *Ropa de Niña*, *Bebés*). El sistema generará el enlace automáticamente.
 3. Si dentro de *Ropa de Niña* quieres crear *Vestidos* o *Conjuntos*, toca el botón **«+ Subcategoría»** dentro de esa tarjeta.
 

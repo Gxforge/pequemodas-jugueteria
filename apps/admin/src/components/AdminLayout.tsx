@@ -1,4 +1,4 @@
-import React, { Suspense, useMemo } from 'react';
+import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
   Boxes,
@@ -8,6 +8,7 @@ import {
   History,
   LayoutDashboard,
   LogOut,
+  Menu,
   MessageCircle,
   MessageSquare,
   Package,
@@ -22,6 +23,7 @@ import {
 import { BrandLogo, Button } from '@pequemodas/ui';
 import { useAuth } from '../context/AuthContext';
 import { AdminLiveUpdateCard } from './AdminLiveUpdateCard';
+import { AdminMobileDrawer } from './AdminMobileDrawer';
 import {
   AdminPanelErrorBoundary,
   AdminRightWorkspaceLoader,
@@ -54,7 +56,14 @@ const ALL_NAV_ITEMS: NavEntry[] = [
 export function AdminLayout() {
   const { profile, settings, session, signOut } = useAuth();
   const location = useLocation();
+  const [drawerOpen, setDrawerOpen] = useState(false);
   useAdminDataWarmup(Boolean(session && profile));
+
+  const closeDrawer = useCallback(() => setDrawerOpen(false), []);
+
+  useEffect(() => {
+    setDrawerOpen(false);
+  }, [location.pathname]);
 
   const perms = useMemo(() => resolveEffectivePermissions(profile), [profile]);
 
@@ -66,7 +75,6 @@ export function AdminLayout() {
     [perms]
   );
 
-  const mobileBarItems = visibleItems.slice(0, 5);
   const roleLabel =
     profile?.job_title ||
     (profile?.role ? ROLE_PRESETS[profile.role]?.label : null) ||
@@ -76,7 +84,7 @@ export function AdminLayout() {
     <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
       <AdminLiveUpdateCard />
 
-      {/* Menú Lateral Izquierdo SIEMPRE VISIBLE (jamás se oculta al cambiar de sección) */}
+      {/* Menú lateral de escritorio: always visible, only the right panel can load. */}
       <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 bg-white border-r border-slate-200 z-30">
         <div className="px-4 py-4 border-b border-slate-100 flex items-center justify-between gap-2">
           <div className="min-w-0">
@@ -128,28 +136,38 @@ export function AdminLayout() {
         </div>
       </aside>
 
-      <header className="lg:hidden sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200 px-4 py-2.5 flex items-center justify-between gap-2">
-        <BrandLogo
-          logoUrl={settings?.logo_url}
-          commercialName={settings?.commercial_name}
-          size="sm"
-        />
-        <div className="flex items-center gap-1.5">
-          <NotificationManagerBell />
+      <header className="lg:hidden sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200 px-3 py-2.5 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 min-w-0">
           <Button
             variant="ghost"
             size="sm"
-            aria-label="Cerrar sesión"
-            leftIcon={<LogOut className="h-4 w-4" />}
-            onClick={() => void signOut()}
-          >
-            Salir
-          </Button>
+            aria-label="Abrir menú del panel"
+            aria-controls="admin-mobile-drawer"
+            aria-expanded={drawerOpen}
+            leftIcon={<Menu className="h-5 w-5" />}
+            onClick={() => setDrawerOpen(true)}
+          />
+          <BrandLogo
+            logoUrl={settings?.logo_url}
+            commercialName={settings?.commercial_name}
+            size="sm"
+          />
         </div>
+        <NotificationManagerBell />
       </header>
 
-      {/* Área Derecha de Contenido: la carga o cualquier fallo ocurre SOLO aquí a la derecha */}
-      <main className="flex-1 lg:pl-64 pb-24 lg:pb-10">
+      <AdminMobileDrawer
+        open={drawerOpen}
+        onClose={closeDrawer}
+        items={visibleItems}
+        profileName={profile?.full_name || 'Katia'}
+        roleLabel={roleLabel}
+        logoUrl={settings?.logo_url}
+        commercialName={settings?.commercial_name}
+        onSignOut={() => void signOut()}
+      />
+
+      <main className="flex-1 lg:pl-64 pb-8 lg:pb-10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 sm:py-7">
           <AdminPanelErrorBoundary resetKey={location.pathname}>
             <Suspense fallback={<AdminRightWorkspaceLoader />}>
@@ -158,27 +176,6 @@ export function AdminLayout() {
           </AdminPanelErrorBoundary>
         </div>
       </main>
-
-      <nav
-        aria-label="Navegación móvil"
-        className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-slate-200 grid grid-cols-5 px-1 py-1.5 shadow-elevated"
-      >
-        {mobileBarItems.map(({ to, label, icon: Icon, end }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={end}
-            className={({ isActive }) =>
-              `flex flex-col items-center justify-center py-1.5 rounded-xl text-[11px] font-semibold ${
-                isActive ? 'text-brand-600 bg-brand-50/70' : 'text-slate-500'
-              }`
-            }
-          >
-            <Icon className="h-5 w-5 mb-0.5" />
-            <span className="truncate max-w-[64px]">{label}</span>
-          </NavLink>
-        ))}
-      </nav>
     </div>
   );
 }

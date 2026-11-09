@@ -25,6 +25,12 @@ en iPhone siempre es manual desde Compartir → «Añadir a pantalla de inicio»
 La plataforma ya lo explica dentro de la app en lugar de esperar un botón que
 Apple no ofrece.
 
+**Valor real de GitHub Actions en esta fase:** el checkout limpio de CI reveló dos
+fallos que las pruebas locales no veían: `design-tokens.ts` quedaba fuera de Git
+por el patrón `*tokens*`, y el primer Service Worker se confundía con una
+actualización, ocultando la guía de iPhone. Ambos están corregidos y cubiertos por
+`pnpm test:e2e:ios` con WebKit.
+
 ## Lista Transparente de Bloqueos y Limitaciones Externas
 
 1. **Plan Vercel Hobby para operación comercial definitiva:** La cuenta Vercel proporcionada (`junmoxia41`) opera bajo el plan `hobby` (no comercial según los Términos de Servicio de Vercel). Los proyectos y entornos de vista previa técnica quedan configurados y operativos con catálogo vacío, pero **antes de iniciar ventas comerciales reales sobre Vercel se requiere autorización de presupuesto para Vercel Pro** (no contratado por restricción estricta de cero pagos/tarjetas).

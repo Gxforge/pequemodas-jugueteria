@@ -1,6 +1,6 @@
-const ADMIN_SHELL_CACHE = 'pequemodas-admin-shell-v3';
-const ADMIN_IMMUTABLE_CACHE = 'pequemodas-admin-immutable-v3';
-const ADMIN_MEDIA_CACHE = 'pequemodas-admin-media-v3';
+const ADMIN_SHELL_CACHE = 'pequemodas-admin-shell-v4';
+const ADMIN_IMMUTABLE_CACHE = 'pequemodas-admin-immutable-v4';
+const ADMIN_MEDIA_CACHE = 'pequemodas-admin-media-v4';
 
 const ADMIN_SHELL_ASSETS = [
   '/',

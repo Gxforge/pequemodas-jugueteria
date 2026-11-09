@@ -9,8 +9,8 @@
 
 ## 1. Dominios Oficiales Verificados en Producción
 
-- **Tienda Pública (PWA v3.1.3):** `https://pequemodas.vercel.app` — despliegue `dpl_2V3Nenoowiue8dvkp16tkUJNgWQC` (`200 OK`, `/version.json = 3.1.3`).
-- **Panel Administrativo (PWA v3.1.3):** `https://pequemodas-admin.vercel.app` — despliegue `dpl_DhAtqxQWfmnmaQxbwhmZohTqPLac` (`200 OK`, `/version.json = 3.1.3`).
+- **Tienda Pública (PWA v3.1.3):** `https://pequemodas.vercel.app` — despliegue `dpl_72sG94JhjfZn34hn3gFr7UkJ5TE3` (`200 OK`, `/version.json = 3.1.3`).
+- **Panel Administrativo (PWA v3.1.3):** `https://pequemodas-admin.vercel.app` — despliegue `dpl_7o5nHAqk335rt4NvY6V58PSDPDum` (`200 OK`, `/version.json = 3.1.3`).
 - **Dominios antiguos:** `pequemodas-jugueteria.vercel.app` y `pequemodas-jugueteria-admin.vercel.app` continúan retirados (`404`).
 - **Cabeceras verificadas:** `/version.json`, `/sw.js` y `/manifest.webmanifest` sin caché persistente; `/assets/*` con `public, max-age=31536000, immutable` y `content-type` real `application/javascript` / `text/css`; `/icons/apple-touch-icon.png` y `/apple-touch-icon.png` como `image/png`.
 - **Aviso sobre Vercel Hobby / Comercial:** Ambos proyectos operan actualmente en plan gratuito Hobby para validación técnica sin pagos ni tarjetas. Conforme a los Términos de Servicio de Vercel, para uso comercial permanente se debe contemplar el paso a Vercel Pro cuando el proyecto disponga de un medio de pago autorizado.
@@ -64,12 +64,13 @@
 
 1. **Causa real del problema reportado:** la plataforma dependía solo de `beforeinstallprompt`, el evento de Android/Chrome que Safari en iOS no implementa. En iPhone no aparecía ningún botón de instalación ni instrucciones; además faltaban las etiquetas Apple, el icono `apple-touch-icon` de `180 × 180` y el `start_url` del manifest tenía un parámetro innecesario. La documentación y las pruebas anteriores cubrían únicamente Android.
 2. **Etiquetas e icono oficiales:** en ambas apps se añadieron `apple-mobile-web-app-capable`, `mobile-web-app-capable`, `apple-mobile-web-app-title`, `apple-mobile-web-app-status-bar-style` y `viewport-fit=cover`; se generó un PNG opaco de `180 × 180` en `/icons/` y en la raíz, con `apple-touch-icon-precomposed`.
-3. **Manifest y caché:** `start_url: "/"`, `scope: "/"`, iconos `180/192/512` + `maskable`; cachés del Service Worker pasaron a Storefront `v10` (conservando `img-by-id-v2`) y Admin `v3`, con el icono Apple precargado y sin cachear HTML como JS/CSS.
+3. **Manifest y caché:** `start_url: "/"`, `scope: "/"`, iconos `180/192/512` + `maskable`; cachés del Service Worker pasaron a Storefront `v11` (conservando `img-by-id-v2`) y Admin `v4`, con el icono Apple precargado y sin cachear HTML como JS/CSS.
 4. **Guía real para la usuaria:** `useIosInstallGuide` detecta iPhone, iPad (incluido modo escritorio de iPadOS), app ya instalada y navegadores in-app/Chrome iOS. La Tienda, `/instalar` y `/acceso` del Panel muestran «Compartir → Añadir a pantalla de inicio» sin prometer un botón automático inexistente. Android conserva su instalación nativa y su barra de 5 botones.
 5. **GitHub Actions (`.github/workflows/ci.yml`):** en cada `push`/PR ejecuta `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, `pnpm check:pwa:ios`, instala WebKit/Chromium y corre `pnpm test:e2e:ios`. Con `workflow_dispatch` + `verificar_produccion = true` valida ambas URLs reales con `User-Agent` de Safari en iPhone. No usa secretos reales: genera variables `VITE_*` ficticias solo para compilar.
 6. **Producción verificada con WebKit de iPhone:** ambas apps muestran la guía, tienen `apple-mobile-web-app-capable=yes`, icono de `180 px`, `standalone=false` en Safari normal y **cero errores de consola**. `node scripts/check-pwa-ios.mjs --live` confirma `LIVE_IOS_OK` para Tienda y Panel.
 7. **Fallo real detectado por GitHub Actions:** el patrón `*tokens*` de `.gitignore` excluía por accidente `packages/config/src/design-tokens.ts`; el checkout limpio de CI no podía compilar aunque localmente sí. Se añadió la excepción explícita y el archivo quedó versionado.
-8. **Seguridad en las pruebas:** se retiraron el correo y la contraseña reales de `e2e/platform.spec.ts`; ahora se leen de `E2E_ADMIN_EMAIL` / `E2E_ADMIN_PASSWORD` en `.env.local` (ignorado por Git) y `.env.example` solo contiene valores ficticios. GitHub Actions no recibe secretos reales. Si el histórico público del repositorio llegó a contener la clave anterior, se recomienda rotarla desde Supabase Auth.
+8. **Falso aviso de actualización corregido:** en la primera instalación del Service Worker, `updatefound` se interpretaba como una nueva versión y la tarjeta «Nueva versión de la tienda lista» tapaba la guía de iPhone. Ahora solo se considera actualización si ya existía un Service Worker activo; GitHub Actions lo detectó y la suite iOS quedó estable.
+9. **Seguridad en las pruebas:** se retiraron el correo y la contraseña reales de `e2e/platform.spec.ts`; ahora se leen de `E2E_ADMIN_EMAIL` / `E2E_ADMIN_PASSWORD` en `.env.local` (ignorado por Git) y `.env.example` solo contiene valores ficticios. GitHub Actions no recibe secretos reales. Si el histórico público del repositorio llegó a contener la clave anterior, se recomienda rotarla desde Supabase Auth.
 
 ---
 

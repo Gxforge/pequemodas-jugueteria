@@ -23,7 +23,7 @@ Safari. El resultado era: Android instalaba, iPhone parecía «no poder instalar
 | Icono de inicio | Solo `192 × 192` genérico | `apple-touch-icon.png` opaco de `180 × 180` en `/icons/` y en la raíz, más `apple-touch-icon-precomposed` |
 | Manifest | `start_url: "/?utm_source=pwa"` | `start_url: "/"` y `scope: "/"` en ambas apps; se añade el icono de `180` |
 | Guía para la usuaria | Inexistente | Tarjeta con pasos de Safari, página `/instalar` y guía en `/acceso` del Panel |
-| Service Worker | Cachés `v9` / `v2` | Cachés `v10` / `v3`, con el icono Apple precargado y sin guardar HTML como JS/CSS |
+| Service Worker | Cachés `v9` / `v2` | Cachés `v11` / `v4`, con el icono Apple precargado y sin guardar HTML como JS/CSS |
 | Pruebas | Android + escritorio | Se añade WebKit con perfil `iPhone 13` y regresión Android, ejecutables en GitHub Actions |
 
 La guía detecta iPhone, iPad (incluido iPadOS que se identifica como `MacIntel`),

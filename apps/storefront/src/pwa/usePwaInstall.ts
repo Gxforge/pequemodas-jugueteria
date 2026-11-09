@@ -95,17 +95,20 @@ export function usePwaInstall() {
     window.addEventListener('pointerdown', onInteraction, { passive: true });
 
     if ('serviceWorker' in navigator && import.meta.env.PROD) {
+      // Un Service Worker que se instala por PRIMERA vez también dispara
+      // `updatefound`. Solo es una actualización real si ya había un SW activo.
+      const hadActiveWorker = Boolean(navigator.serviceWorker.controller);
       navigator.serviceWorker
         .register('/sw.js')
         .then((reg) => {
           if (disposed) return;
           swRegRef.current = reg;
-          if (reg.waiting && navigator.serviceWorker.controller) {
+          if (hadActiveWorker && reg.waiting && navigator.serviceWorker.controller) {
             setUpdateRegistration(reg);
           }
           reg.addEventListener('updatefound', () => {
             const installing = reg.installing;
-            if (!installing) return;
+            if (!installing || !hadActiveWorker) return;
             installing.addEventListener('statechange', () => {
               if (
                 installing.state === 'installed' &&

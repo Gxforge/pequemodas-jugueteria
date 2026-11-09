@@ -75,7 +75,8 @@ export function AppBootSplash() {
         if ('serviceWorker' in navigator && import.meta.env.PROD) {
           try {
             const reg = await navigator.serviceWorker.getRegistration();
-            if (reg) {
+            // Solo aplicar un SW en espera si ya existía uno controlando la página.
+            if (reg && navigator.serviceWorker.controller) {
               await reg.update().catch(() => undefined);
               if (reg.waiting) {
                 setStepLabel('Aplicando actualización nueva...');

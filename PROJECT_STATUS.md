@@ -99,6 +99,6 @@ Se eliminó **sin respaldo**, por decisión explícita de la propietaria, todo e
 - **Tipado, Linter, Unitarias y Build:** `pnpm typecheck`/`build`, `pnpm lint` y `pnpm test` (`30/30`) en verde.
 - **Suite E2E Playwright:** `12/12` aprobadas en `Android Pixel 7` y `Desktop Chromium`; `7` aprobadas y `3` omitidas por proyecto en la suite iOS (`iPhone 13 WebKit` + regresión `Pixel 7 Chromium`).
 - **Verificación PWA iOS:** `pnpm check:pwa:ios` estático + `--live` contra producción; etiquetas Apple, manifest, icono PNG `180 × 180`, `/sw.js` y `/assets/*.js` con `content-type` real, fallback SPA `/catalogo` y guía visible en WebKit de iPhone con cero errores de consola.
-- **GitHub Actions:** workflow de calidad y verificación iOS creado y despachado contra `main` y producción. Sin secretos reales en el repositorio ni en el workflow.
+- **GitHub Actions:** run `42696638087` en verde (`success`) con los dos jobs: calidad + E2E Safari/WebKit y verificación en vivo de Tienda y Panel con `User-Agent` de iPhone. Sin secretos reales en el repositorio ni en el workflow.
 - **Producción verificada:** `v3.1.3`, dominios antiguos en `404`, panel lateral del Admin intacto, CUP/USD sin conversión y limpieza de datos de prueba intacta.
 - **Infraestructura intacta:** sin pagos, sin dominios comprados, sin `SERVICE_ROLE` en frontend, sin pasarelas y sin datos comerciales inventados.

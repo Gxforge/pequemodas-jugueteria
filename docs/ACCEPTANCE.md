@@ -29,7 +29,7 @@ Apple no ofrece.
 fallos que las pruebas locales no veían: `design-tokens.ts` quedaba fuera de Git
 por el patrón `*tokens*`, y el primer Service Worker se confundía con una
 actualización, ocultando la guía de iPhone. Ambos están corregidos y cubiertos por
-`pnpm test:e2e:ios` con WebKit.
+`pnpm test:e2e:ios` con WebKit. El run de GitHub Actions `42696638087` terminó en `success` con verificación de producción incluida.
 
 ## Lista Transparente de Bloqueos y Limitaciones Externas
 

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { currencyCodeSchema } from './currency.schema';
 
 export const socialLinksSchema = z.object({
   instagram: z.string().trim().max(200).optional().or(z.literal('')),
@@ -14,6 +15,7 @@ export const storeSettingsFormSchema = z.object({
     .min(2, 'El nombre comercial es obligatorio.')
     .max(120),
   description: z.string().trim().max(1000).optional().or(z.literal('')),
+  defaultCurrencyCode: currencyCodeSchema.default('CUP'),
   logoUrl: z.string().trim().max(500).optional().or(z.literal('')),
   phone: z.string().trim().max(30).optional().or(z.literal('')),
   whatsappPhone: z

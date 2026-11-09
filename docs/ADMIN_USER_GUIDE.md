@@ -18,8 +18,9 @@
 Antes de publicar tus productos:
 1. En la barra inferior de tu pantalla toca **«Ajustes»** (icono de engranaje).
 2. En **«Número de WhatsApp para recibir pedidos»**, escribe tu número con el código de Cuba, por ejemplo: `+535XXXXXXX`.
-3. Si deseas, sube tu **logotipo**, escribe una breve bienvenida, tus **horarios** y explica tus condiciones de **Entrega a domicilio** (zonas o cómo se coordina la mensajería) y de **Recogida**.
-4. Toca el botón **«Guardar configuración»**.
+3. En **«Moneda de los precios»**, elige **CUP** o **USD** como moneda principal para los productos nuevos. Cambiarla no modifica los artículos que ya existen.
+4. Si deseas, sube tu **logotipo**, escribe una breve bienvenida, tus **horarios** y explica tus condiciones de **Entrega a domicilio** (zonas o cómo se coordina la mensajería) y de **Recogida**.
+5. Toca el botón **«Guardar configuración»**.
 
 ---
 
@@ -37,7 +38,8 @@ Para mantener tu tienda ordenada:
 1. Toca **«Productos»** y luego **«Crear producto»**.
 2. Completa los datos básicos:
    - **Nombre del producto** (ej. *Conjunto de algodón estampado*).
-   - **Precio base (CUP)** (ej. `2500`).
+   - **Precio base** (ej. `2500` o `12`) y elige **CUP** o **USD** en **«Moneda del precio»**.
+   - El campo se llamará **«Precio base (CUP)»** o **«Precio base (USD)»**; las tallas y colores usarán esa misma moneda.
    - Elige su **Categoría** y **Subcategoría**.
    - Escribe una **Descripción** clara (material, edades recomendadas, medidas).
 3. **¿Tiene tallas, colores o modelos distintos?**
@@ -49,6 +51,8 @@ Para mantener tu tienda ordenada:
    - El sistema las optimizará automáticamente para que carguen rápido sin gastar datos de más.
    - Toca la **estrella (★)** en la foto que quieras mostrar como portada principal.
 6. Cuando esté listo para que tus clientes lo vean, cambia **«Estado de publicación»** a **«Publicado en la tienda»** y guarda.
+
+> **Monedas claras:** cada artículo conserva la moneda que le pusiste. El carrito y los mensajes suman CUP y USD por separado; no hay conversión automática ni tasa de cambio.
 
 ---
 
@@ -64,7 +68,7 @@ En la pestaña **«Inventario»** tienes dos formas de trabajar con cada product
 
 ## 6. Cómo atender Pedidos que llegan por WhatsApp
 
-1. Cuando un cliente arma su carrito en tu tienda pública y pulsa **«Abrir WhatsApp con mi pedido»**, te llegará un mensaje ordenado con los productos, variantes, cantidades, total estimado en CUP y si desea entrega o recogida.
+1. Cuando un cliente arma su carrito en tu tienda pública y pulsa **«Abrir WhatsApp con mi pedido»**, te llegará un mensaje ordenado con los productos, variantes, cantidades, los totales estimados en CUP y USD por separado, sin convertir, y si desea entrega o recogida.
 2. **Muy importante:** El sistema **no descuenta tu inventario solo porque alguien abra WhatsApp**.
 3. Verifica que tengas el producto disponible, confirma con el cliente por WhatsApp el costo de mensajería (si aplica) y acuerda la entrega.
 4. En la sección **«Solicitudes»** del panel puedes cambiar el estado de *Solicitud recibida* a **«Confirmar pedido»** o **«Marcar entregado»**, y descontar las unidades vendidas en **«Inventario»** si usas control por cantidades.

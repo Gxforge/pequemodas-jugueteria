@@ -9,8 +9,8 @@
 
 ### v1.1 — Operaciones y Catálogo Rápido en Campo
 - **Modo borrador offline en Panel Admin:** Permitir que Katia redacte productos sin conexión móvil y sincronice al recuperar datos.
-- **Generación de catálogo PDF / imagen compartible para Estados de WhatsApp:** Exportar automáticamente láminas promocionales en `CUP` de los productos destacados para publicar en grupos de WhatsApp.
-- **Carga por lotes de precios en CUP:** Ajuste porcentual o masivo por categoría ante variaciones cambiarias locales.
+- **Generación de catálogo PDF / imagen compartible para Estados de WhatsApp:** Exportar automáticamente láminas promocionales en la moneda de cada producto de los productos destacados para publicar en grupos de WhatsApp.
+- **Carga por lotes de precios por moneda:** Ajuste porcentual o masivo por categoría ante variaciones cambiarias locales.
 
 ### v1.2 — Experiencia del Cliente y Fidelización
 - **Lista de favoritos local:** Guardar juguetes o prendas para cumpleaños futuros en el teléfono del cliente.

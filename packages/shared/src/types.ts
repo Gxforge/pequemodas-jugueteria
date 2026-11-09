@@ -1,3 +1,4 @@
+import type { CurrencyCode, CurrencyTotals } from '@pequemodas/config';
 import type {
   DeliveryModeType,
   InventoryMode,
@@ -45,6 +46,7 @@ export interface StoreSettingsRow {
   id: string;
   store_id: string;
   commercial_name: string;
+  default_currency_code?: CurrencyCode;
   logo_url: string | null;
   logo_storage_path: string | null;
   description: string | null;
@@ -127,7 +129,9 @@ export interface ProductRow {
   name: string;
   slug: string;
   description: string | null;
+  // Importe numérico histórico; la moneda real está en currency_code.
   base_price_cup: number;
+  currency_code?: CurrencyCode;
   inventory_mode: InventoryMode;
   manual_availability: ManualAvailability;
   publication_status: PublicationStatus;
@@ -169,6 +173,7 @@ export interface OrderItemRow {
   quantity: number;
   unit_price_cup: number;
   subtotal_cup: number;
+  currency_code?: CurrencyCode;
   created_at: string;
 }
 
@@ -182,7 +187,9 @@ export interface OrderRow {
   customer_phone: string | null;
   delivery_address: string | null;
   delivery_notes: string | null;
+  // Subtotal exclusivo en CUP; el desglose completo está en totals_by_currency.
   estimated_total_cup: number;
+  totals_by_currency?: CurrencyTotals | null;
   whatsapp_message_snapshot: string;
   confirmed_at: string | null;
   confirmed_by: string | null;

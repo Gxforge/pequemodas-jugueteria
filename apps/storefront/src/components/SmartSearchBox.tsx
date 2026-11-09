@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import {
   detectStoreSearchIntent,
-  formatCup,
+  formatCurrencyTotals,
   scoreSmartTextMatch,
   suggestDidYouMean
 } from '@pequemodas/utils';
@@ -38,7 +38,7 @@ export function SmartSearchBox({
 }: SmartSearchBoxProps) {
   const navigate = useNavigate();
   const { categories } = useStorefront();
-  const { items: cartItems, totalQuantity, estimatedTotalCup } = useCart();
+  const { items: cartItems, totalQuantity, totalsByCurrency } = useCart();
   const [focused, setFocused] = useState(false);
   const boxRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -173,7 +173,7 @@ export function SmartSearchBox({
                 <div className="truncate">
                   <p className="font-extrabold text-slate-900">
                     {totalQuantity > 0
-                      ? `Tu Carrito: ${totalQuantity} artículo(s) · ${formatCup(estimatedTotalCup)}`
+                      ? `Tu Carrito: ${totalQuantity} artículo(s) · ${formatCurrencyTotals(totalsByCurrency)}`
                       : 'Ir a tu Carrito de Pedido (vacío)'}
                   </p>
                   <p className="text-[11px] text-slate-600 truncate">

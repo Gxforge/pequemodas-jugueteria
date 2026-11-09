@@ -1,5 +1,6 @@
 import React from 'react';
 import { Sparkles, Trash2, X } from 'lucide-react';
+import type { CurrencyCode } from '@pequemodas/config';
 import type { InventoryMode, ProductVariantInput } from '@pequemodas/schemas';
 import { Badge, Button, Input, Select } from '@pequemodas/ui';
 
@@ -13,6 +14,7 @@ export const QUICK_DETAIL_PRESETS = [
 export interface VariantOptionCardProps {
   index: number;
   inventoryMode: InventoryMode;
+  currencyCode: CurrencyCode;
   variant: ProductVariantInput;
   draft: { key: string; value: string };
   onUpdate: (patch: Partial<ProductVariantInput>) => void;
@@ -25,6 +27,7 @@ export interface VariantOptionCardProps {
 export function VariantOptionCard({
   index,
   inventoryMode,
+  currencyCode,
   variant,
   draft,
   onUpdate,
@@ -91,7 +94,7 @@ export function VariantOptionCard({
         )}
 
         <Input
-          label="Precio distinto en CUP (solo si cambia)"
+          label={`Precio distinto en ${currencyCode} (solo si cambia)`}
           type="number"
           min="0"
           step="0.01"

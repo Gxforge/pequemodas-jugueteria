@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { MessageCircle, Sparkles } from 'lucide-react';
 import { BRAND_IDENTITY } from '@pequemodas/config';
 import {
+  compareProductsByCurrencyPrice,
   fetchProductsPaginated,
   resolveProductAvailability,
   type PaginatedProductsResult,
@@ -13,6 +14,7 @@ import { Button, EmptyState, ProductCardSkeleton } from '@pequemodas/ui';
 import {
   buildProductInquiryUrl,
   isValidWhatsAppPhone,
+  normalizeCurrencyCode,
   scoreSmartTextMatch
 } from '@pequemodas/utils';
 import { CatalogCompactToolbar } from '../components/CatalogCompactToolbar';
@@ -22,7 +24,7 @@ import { usePageMeta } from '../hooks/usePageMeta';
 import { writeOfflineSnapshotPatch } from '../pwa/offlineSnapshot';
 
 export function CatalogPage() {
-  usePageMeta('Catálogo', 'Explora todo el catálogo de juguetes y ropa infantil en CUP.');
+  usePageMeta('Catálogo', 'Explora el catálogo con precios en CUP o USD, sin conversiones.');
   const { configured, categories, settings, catalogPreview, catalogItems } =
     useStorefront();
 
@@ -31,6 +33,7 @@ export function CatalogPage() {
   const [subcategoryId, setSubcategoryId] = useState('');
   const [onlyAvailable, setOnlyAvailable] = useState(false);
   const [sort, setSort] = useState<ProductSortOption>('newest');
+  const primaryCurrencyCode = normalizeCurrencyCode(settings?.default_currency_code);
   const [page, setPage] = useState(1);
 
   const rootCategories = categories.filter((c) => c.parent_id === null);
@@ -66,9 +69,13 @@ export function CatalogPage() {
       );
     }
     if (sort === 'price_asc') {
-      list.sort((a, b) => a.base_price_cup - b.base_price_cup);
+      list.sort((a, b) =>
+        compareProductsByCurrencyPrice(a, b, 'asc', primaryCurrencyCode)
+      );
     } else if (sort === 'price_desc') {
-      list.sort((a, b) => b.base_price_cup - a.base_price_cup);
+      list.sort((a, b) =>
+        compareProductsByCurrencyPrice(a, b, 'desc', primaryCurrencyCode)
+      );
     } else if (sort === 'name_asc') {
       list.sort((a, b) => a.name.localeCompare(b.name, 'es'));
     }
@@ -80,10 +87,23 @@ export function CatalogPage() {
       pageSize: 12,
       totalPages: Math.max(1, Math.ceil(list.length / 12))
     };
-  }, [isDefaultView, catalogPreview, page, catalogItems, categoryId, subcategoryId, search, sort]);
+  }, [
+    isDefaultView,
+    catalogPreview,
+    page,
+    catalogItems,
+    categoryId,
+    subcategoryId,
+    search,
+    sort,
+    primaryCurrencyCode
+  ]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['public-catalog', { search, categoryId, subcategoryId, sort, page }],
+    queryKey: [
+      'public-catalog',
+      { search, categoryId, subcategoryId, sort, page, primaryCurrencyCode }
+    ],
     queryFn: async () => {
       const res = await fetchProductsPaginated({
         publicationStatus: 'published',
@@ -91,6 +111,7 @@ export function CatalogPage() {
         categoryId: categoryId || undefined,
         subcategoryId: subcategoryId || undefined,
         sort,
+        primaryCurrencyCode,
         page,
         pageSize: 12
       });

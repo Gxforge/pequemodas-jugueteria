@@ -1,4 +1,6 @@
-import { formatCup, roundMoney } from './currency';
+import type { CurrencyCode } from '@pequemodas/config';
+import { formatMoney, normalizeCurrencyCode, roundMoney } from './currency';
+import { formatCurrencyTotals, sumCurrencyTotals } from './currency-totals';
 
 export type DeliveryMode = 'delivery' | 'pickup';
 
@@ -8,6 +10,7 @@ export interface WhatsAppOrderLineInput {
   attributesSummary?: string | null;
   quantity: number;
   unitPriceCup: number;
+  currencyCode?: CurrencyCode | string | null;
 }
 
 export interface WhatsAppOrderPayload {
@@ -43,22 +46,32 @@ export function buildWhatsAppOrderMessage(payload: WhatsAppOrderPayload): string
   lines.push('');
   lines.push('*Resumen de productos:*');
 
-  let estimatedTotal = 0;
+  const totals = sumCurrencyTotals(
+    payload.items.map((item) => ({
+      unitPrice: item.unitPriceCup,
+      quantity: item.quantity,
+      currencyCode: item.currencyCode
+    }))
+  );
+
   payload.items.forEach((item, index) => {
+    const currencyCode = normalizeCurrencyCode(item.currencyCode);
     const lineSubtotal = roundMoney(item.unitPriceCup * item.quantity);
-    estimatedTotal = roundMoney(estimatedTotal + lineSubtotal);
     const variantPart = item.variantLabel ? ` (${item.variantLabel})` : '';
     const attrsPart = item.attributesSummary ? ` [${item.attributesSummary}]` : '';
     lines.push(
       `${index + 1}. *${item.productName}*${variantPart}${attrsPart}`
     );
     lines.push(
-      `   Cantidad: ${item.quantity} × ${formatCup(item.unitPriceCup)} = *${formatCup(lineSubtotal)}*`
+      `   Cantidad: ${item.quantity} × ${formatMoney(item.unitPriceCup, currencyCode)} = *${formatMoney(lineSubtotal, currencyCode)}*`
     );
   });
 
   lines.push('');
-  lines.push(`*Total estimado en productos:* ${formatCup(estimatedTotal)}`);
+  lines.push(`*Total estimado en productos:* ${formatCurrencyTotals(totals)}`);
+  if (totals.length > 1) {
+    lines.push('Los importes en CUP y USD se suman por separado, sin convertir.');
+  }
   lines.push(
     `*Modalidad solicitada:* ${
       payload.deliveryMode === 'delivery' ? 'Entrega a domicilio' : 'Recogida'

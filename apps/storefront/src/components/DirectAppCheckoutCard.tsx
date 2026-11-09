@@ -6,19 +6,24 @@ import {
   submitDirectAppOrder
 } from '@pequemodas/shared';
 import { Alert, Button, Card, Input, Select, Textarea } from '@pequemodas/ui';
-import { formatCup } from '@pequemodas/utils';
+import {
+  getCurrencyTotal,
+  normalizeCurrencyCode,
+  type CurrencyTotal
+} from '@pequemodas/utils';
+import { CurrencyTotals } from './CurrencyTotals';
 import type { CartItem } from '../context/CartContext';
 import { useStorefront } from '../context/StorefrontContext';
 
 export interface DirectAppCheckoutCardProps {
   items: CartItem[];
-  estimatedTotalCup: number;
+  totalsByCurrency: CurrencyTotal[];
   onOrderCompleted: () => void;
 }
 
 export function DirectAppCheckoutCard({
   items,
-  estimatedTotalCup,
+  totalsByCurrency,
   onOrderCompleted
 }: DirectAppCheckoutCardProps) {
   const { settings } = useStorefront();
@@ -70,7 +75,7 @@ export function DirectAppCheckoutCard({
         deliveryMode,
         deliveryAddress: address,
         deliveryNotes: notes,
-        estimatedTotalCup,
+        estimatedTotalCup: getCurrencyTotal(totalsByCurrency, 'CUP'),
         items: items.map((i) => ({
           product_id: i.productId,
           variant_id: i.variantId,
@@ -78,7 +83,8 @@ export function DirectAppCheckoutCard({
           variant_name: i.variantName,
           attributes: i.attributes,
           quantity: i.quantity,
-          unit_price_cup: i.unitPriceCup
+          unit_price_cup: i.unitPriceCup,
+          currency_code: normalizeCurrencyCode(i.currencyCode)
         }))
       });
       setCreatedRef(result.referenceCode);
@@ -130,9 +136,7 @@ export function DirectAppCheckoutCard({
 
       <div className="rounded-2xl bg-brand-50/70 border border-brand-100 p-3.5 flex items-center justify-between">
         <span className="text-sm font-semibold text-slate-700">Total estimado:</span>
-        <span className="font-heading text-xl font-extrabold text-brand-600">
-          {formatCup(estimatedTotalCup)}
-        </span>
+        <CurrencyTotals totals={totalsByCurrency} size="sm" showNote />
       </div>
 
       <Alert variant="info" title="Confirmación directa en la tienda">

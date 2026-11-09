@@ -16,9 +16,9 @@ import {
   getRootInventoryQuantity,
   updateProductWithVariants
 } from '@pequemodas/shared';
-import { Alert, Button, Card, Input, Select, Textarea } from '@pequemodas/ui';
-import { slugify } from '@pequemodas/utils';
+import { Alert, Button } from '@pequemodas/ui';
 import { PhotosManagerSection } from '../components/PhotosManagerSection';
+import { ProductMainFields } from '../components/ProductMainFields';
 import { VariantsEditorSection } from '../components/VariantsEditorSection';
 import { useAuth } from '../context/AuthContext';
 
@@ -27,7 +27,7 @@ export function ProductEditorPage() {
   const isEditing = Boolean(productId);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { store } = useAuth();
+  const { store, settings } = useAuth();
 
   const [variants, setVariants] = useState<ProductVariantInput[]>([]);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
@@ -51,6 +51,7 @@ export function ProductEditorPage() {
       slug: '',
       description: '',
       basePriceCup: 0,
+      currencyCode: settings?.default_currency_code ?? 'CUP',
       categoryId: null,
       subcategoryId: null,
       inventoryMode: 'quantity',
@@ -61,6 +62,14 @@ export function ProductEditorPage() {
     }
   });
 
+  // Si los ajustes llegan un instante después, adopta la moneda principal
+  // sin sobrescribir una elección que Katia ya haya tocado en este formulario.
+  useEffect(() => {
+    if (isEditing || !settings?.default_currency_code) return;
+    if (form.formState.touchedFields.currencyCode) return;
+    form.setValue('currencyCode', settings.default_currency_code);
+  }, [isEditing, settings?.default_currency_code, form]);
+
   useEffect(() => {
     if (!existingProduct) return;
     form.reset({
@@ -68,6 +77,7 @@ export function ProductEditorPage() {
       slug: existingProduct.slug,
       description: existingProduct.description ?? '',
       basePriceCup: existingProduct.base_price_cup,
+      currencyCode: existingProduct.currency_code ?? 'CUP',
       categoryId: existingProduct.category_id,
       subcategoryId: existingProduct.subcategory_id,
       inventoryMode: existingProduct.inventory_mode,
@@ -93,14 +103,6 @@ export function ProductEditorPage() {
       })
     );
   }, [existingProduct, form]);
-
-  const selectedCategoryId = form.watch('categoryId');
-  const selectedInventoryMode = form.watch('inventoryMode');
-
-  const rootCategories = categories.filter((c) => c.parent_id === null);
-  const subcategories = categories.filter(
-    (c) => selectedCategoryId && c.parent_id === selectedCategoryId
-  );
 
   const onSubmit = async (values: ProductFormInput) => {
     if (!store) return;
@@ -147,122 +149,16 @@ export function ProductEditorPage() {
       {saveError && <Alert variant="error">{saveError}</Alert>}
 
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" noValidate>
-        <Card className="space-y-4">
-          <h2 className="font-heading text-lg font-bold text-slate-900">
-            Información Principal
-          </h2>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <Input
-              label="Nombre del producto"
-              requiredMark
-              error={form.formState.errors.name?.message}
-              {...form.register('name', {
-                onChange: (e) => {
-                  if (!isEditing) {
-                    form.setValue('slug', slugify(e.target.value), { shouldValidate: true });
-                  }
-                }
-              })}
-            />
-            <Input
-              label="Identificador URL (slug)"
-              requiredMark
-              error={form.formState.errors.slug?.message}
-              {...form.register('slug')}
-            />
-          </div>
-
-          <div className="grid sm:grid-cols-3 gap-4">
-            <Input
-              label="Precio base (CUP)"
-              type="number"
-              min="0"
-              step="0.01"
-              requiredMark
-              error={form.formState.errors.basePriceCup?.message}
-              {...form.register('basePriceCup')}
-            />
-            <Select
-              label="Categoría"
-              value={selectedCategoryId ?? ''}
-              onChange={(e) => {
-                form.setValue('categoryId', e.target.value || null);
-                form.setValue('subcategoryId', null);
-              }}
-              options={[
-                { value: '', label: 'Sin categoría' },
-                ...rootCategories.map((c) => ({ value: c.id, label: c.name }))
-              ]}
-            />
-            <Select
-              label="Subcategoría"
-              value={form.watch('subcategoryId') ?? ''}
-              disabled={subcategories.length === 0}
-              onChange={(e) => form.setValue('subcategoryId', e.target.value || null)}
-              options={[
-                { value: '', label: 'Sin subcategoría' },
-                ...subcategories.map((s) => ({ value: s.id, label: s.name }))
-              ]}
-            />
-          </div>
-
-          <Textarea
-            label="Descripción detallada"
-            rows={4}
-            placeholder="Materiales, edades recomendadas, medidas o detalles importantes..."
-            error={form.formState.errors.description?.message}
-            {...form.register('description')}
-          />
-
-          <div className="grid sm:grid-cols-3 gap-4">
-            <Select
-              label="Estado de publicación"
-              options={[
-                { value: 'draft', label: 'Borrador (privado)' },
-                { value: 'published', label: 'Publicado en la tienda' },
-                { value: 'hidden', label: 'Oculto temporalmente' },
-                { value: 'archived', label: 'Archivado' }
-              ]}
-              {...form.register('publicationStatus')}
-            />
-            <Select
-              label="Modalidad de inventario"
-              options={[
-                { value: 'quantity', label: 'Modalidad A: Por cantidades' },
-                { value: 'manual', label: 'Modalidad B: Disponibilidad manual' }
-              ]}
-              {...form.register('inventoryMode')}
-            />
-            {variants.length === 0 &&
-              (selectedInventoryMode === 'quantity' ? (
-                <Input
-                  label="Cantidad disponible"
-                  type="number"
-                  min="0"
-                  error={form.formState.errors.stockQuantity?.message}
-                  {...form.register('stockQuantity')}
-                />
-              ) : (
-                <Select
-                  label="Disponibilidad manual"
-                  options={[
-                    { value: 'available', label: 'Disponible' },
-                    { value: 'inquire', label: 'Consultar disponibilidad' },
-                    { value: 'out_of_stock', label: 'Agotado' }
-                  ]}
-                  {...form.register('manualAvailability')}
-                />
-              ))}
-          </div>
-
-          <label className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
-            <input type="checkbox" className="h-4 w-4 rounded" {...form.register('isFeatured')} />
-            Destacar en la portada de la tienda
-          </label>
-        </Card>
+        <ProductMainFields
+          form={form}
+          isEditing={isEditing}
+          categories={categories}
+          variantsCount={variants.length}
+        />
 
         <VariantsEditorSection
-          inventoryMode={selectedInventoryMode}
+          inventoryMode={form.watch('inventoryMode')}
+          currencyCode={form.watch('currencyCode')}
           variants={variants}
           onChange={setVariants}
         />

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { currencyCodeSchema } from './currency.schema';
 
 export const inventoryModeSchema = z.enum(['quantity', 'manual']);
 export const manualAvailabilitySchema = z.enum([
@@ -54,10 +55,13 @@ export const productFormSchema = z.object({
     .max(160)
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Formato de URL inválido.'),
   description: z.string().trim().max(3000, 'Máximo 3000 caracteres.').optional().or(z.literal('')),
+  // El importe numérico se guarda en la columna histórica base_price_cup;
+  // la moneda real de ese importe se define en currencyCode.
   basePriceCup: z.coerce
     .number()
-    .min(0, 'El precio en CUP no puede ser negativo.')
+    .min(0, 'El precio no puede ser negativo.')
     .max(9999999, 'Precio fuera de rango.'),
+  currencyCode: currencyCodeSchema.default('CUP'),
   categoryId: z.string().uuid().nullable().optional(),
   subcategoryId: z.string().uuid().nullable().optional(),
   inventoryMode: inventoryModeSchema.default('quantity'),

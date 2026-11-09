@@ -4,14 +4,14 @@ Plataforma integral de comercio electrónico infantil (**Tienda Pública PWA** +
 
 ## Estructura del Monorepositorio
 
-- `apps/storefront` — Tienda pública instalable en Android (PWA), catálogo paginado en `CUP`, variantes dinámicas, carrito persistente y preparación de pedidos por WhatsApp.
+- `apps/storefront` — Tienda pública instalable en Android (PWA), catálogo paginado con precios en `CUP` o `USD`, variantes dinámicas, carrito persistente y preparación de pedidos por WhatsApp.
 - `apps/admin` — Panel administrativo privado para Katia (móvil Android y escritorio): productos, fotografías WebP, categorías, inventario híbrido, solicitudes y ajustes.
 - `packages/config` — Tokens del sistema de diseño, preset Tailwind y constantes de dominio.
 - `packages/schemas` — Esquemas de validación estricta con Zod.
 - `packages/shared` — Cliente público de Supabase, repositorios, tipos e inventario híbrido.
 - `packages/ui` — Biblioteca de componentes accesibles y Guía Visual interactiva.
-- `packages/utils` — Formato de moneda `CUP`, generador `wa.me`, optimizador cliente WebP y utilidades.
-- `supabase/` — 8 migraciones SQL versionadas con Row Level Security (RLS), `seed.sql` limpio y Edge Function `storage-health`.
+- `packages/utils` — Formato y totales separados `CUP` / `USD`, generador `wa.me`, optimizador cliente WebP y utilidades.
+- `supabase/` — migraciones SQL versionadas de catálogo, pedidos y chat con Row Level Security (RLS), `seed.sql` limpio y Edge Function `storage-health`.
 - `docs/` — Los 15 documentos técnicos, de seguridad, despliegue, respaldos y manual paso a paso para Katia (`ADMIN_USER_GUIDE.md`).
 
 ## Arranque Rápido Local

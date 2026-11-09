@@ -19,7 +19,7 @@ import { Button, Card, EmptyState, ProductCardSkeleton } from '@pequemodas/ui';
 import {
   buildProductInquiryUrl,
   detectStoreSearchIntent,
-  formatCup,
+  formatCurrencyTotals,
   isValidWhatsAppPhone,
   scoreSmartTextMatch
 } from '@pequemodas/utils';
@@ -34,7 +34,7 @@ export function SearchResultsPage() {
   const initialQ = searchParams.get('q') ?? '';
   const [term, setTerm] = useState(initialQ);
   const { configured, settings, categoryTree, catalogItems } = useStorefront();
-  const { totalQuantity, estimatedTotalCup } = useCart();
+  const { totalQuantity, totalsByCurrency } = useCart();
 
   useEffect(() => {
     setTerm(initialQ);
@@ -141,7 +141,7 @@ export function SearchResultsPage() {
               <p className="font-heading font-extrabold text-slate-900">
                 {intent.kind === 'cart'
                   ? totalQuantity > 0
-                    ? `Tienes ${totalQuantity} artículo(s) en tu carrito (${formatCup(estimatedTotalCup)})`
+                    ? `Tienes ${totalQuantity} artículo(s) en tu carrito (${formatCurrencyTotals(totalsByCurrency)})`
                     : 'Tu carrito está listo para llenarse'
                   : intent.title}
               </p>

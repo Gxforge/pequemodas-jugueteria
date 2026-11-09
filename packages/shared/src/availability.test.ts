@@ -41,6 +41,7 @@ describe('Inventario híbrido y resolución de variantes', () => {
     expect(ok.status).toBe('available');
     expect(ok.availableQuantity).toBe(3);
     expect(ok.canAddToCart).toBe(true);
+    expect(ok.currencyCode).toBe('CUP');
 
     const zero = resolveProductAvailability({
       ...baseProduct,
@@ -59,6 +60,12 @@ describe('Inventario híbrido y resolución de variantes', () => {
     expect(inquire.status).toBe('inquire');
     expect(inquire.availableQuantity).toBeNull();
     expect(inquire.canAddToCart).toBe(true);
+  });
+
+  it('conserva USD como moneda del producto sin convertir el precio', () => {
+    const res = resolveProductAvailability({ ...baseProduct, currency_code: 'USD' });
+    expect(res.currencyCode).toBe('USD');
+    expect(res.unitPriceCup).toBe(1200);
   });
 
   it('aplica precio propio de variante cuando existe override en CUP', () => {
@@ -92,6 +99,7 @@ describe('Inventario híbrido y resolución de variantes', () => {
       variant
     );
     expect(res.unitPriceCup).toBe(1650);
+    expect(res.currencyCode).toBe('CUP');
     expect(res.availableQuantity).toBe(2);
   });
 });

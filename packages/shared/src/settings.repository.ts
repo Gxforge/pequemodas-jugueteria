@@ -50,6 +50,7 @@ export async function updateStoreSettings(
 
   const payload = {
     commercial_name: input.commercialName.trim(),
+    default_currency_code: input.defaultCurrencyCode,
     description: input.description?.trim() || null,
     logo_url: input.logoUrl?.trim() || null,
     phone: input.phone?.trim() || null,
@@ -80,7 +81,10 @@ export async function updateStoreSettings(
     action: 'settings.update',
     entity_type: 'store_settings',
     entity_id: data.id,
-    metadata: { commercial_name: payload.commercial_name }
+    metadata: {
+      commercial_name: payload.commercial_name,
+      default_currency_code: payload.default_currency_code
+    }
   });
 
   return data as StoreSettingsRow;

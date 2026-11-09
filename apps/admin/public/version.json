@@ -1,5 +1,5 @@
 {
-  "version": "3.0.0",
-  "summary": "Panel Admin instalable (PWA) con caché inteligente, menú lateral fijo sin pantallas blancas y nuevas secciones Base de Datos (BD-1 a BD-4) e Historial.",
-  "releasedAt": "2026-11-06T22:10:00Z"
+  "version": "3.1.0",
+  "summary": "Nueva moneda principal en Ajustes y selector CUP / USD en cada producto, con totales separados en pedidos y carrito.",
+  "releasedAt": "2026-11-06T23:30:00Z"
 }

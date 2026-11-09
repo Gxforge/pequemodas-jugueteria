@@ -1,4 +1,6 @@
+import type { CurrencyCode } from '@pequemodas/config';
 import type { ManualAvailability } from '@pequemodas/schemas';
+import { normalizeCurrencyCode } from '@pequemodas/utils';
 import type { InventoryRow, ProductDetailDto, ProductVariantRow } from './types';
 
 export interface ResolvedAvailability {
@@ -6,6 +8,7 @@ export interface ResolvedAvailability {
   availableQuantity: number | null;
   canAddToCart: boolean;
   unitPriceCup: number;
+  currencyCode: CurrencyCode;
 }
 
 export function getRootInventoryQuantity(inventory: InventoryRow[]): number {
@@ -22,20 +25,25 @@ export function getVariantInventoryQuantity(
 }
 
 export function resolveVariantAvailability(
-  product: Pick<ProductDetailDto, 'inventory_mode' | 'base_price_cup' | 'inventory'>,
+  product: Pick<
+    ProductDetailDto,
+    'inventory_mode' | 'base_price_cup' | 'currency_code' | 'inventory'
+  >,
   variant: ProductVariantRow
 ): ResolvedAvailability {
   const unitPriceCup =
     variant.price_override_cup !== null && variant.price_override_cup !== undefined
       ? Number(variant.price_override_cup)
       : Number(product.base_price_cup);
+  const currencyCode = normalizeCurrencyCode(product.currency_code);
 
   if (!variant.is_active) {
     return {
       status: 'out_of_stock',
       availableQuantity: 0,
       canAddToCart: false,
-      unitPriceCup
+      unitPriceCup,
+      currencyCode
     };
   }
 
@@ -45,7 +53,8 @@ export function resolveVariantAvailability(
       status: qty > 0 ? 'available' : 'out_of_stock',
       availableQuantity: qty,
       canAddToCart: qty > 0,
-      unitPriceCup
+      unitPriceCup,
+      currencyCode
     };
   }
 
@@ -53,12 +62,14 @@ export function resolveVariantAvailability(
     status: variant.manual_availability,
     availableQuantity: null,
     canAddToCart: variant.manual_availability !== 'out_of_stock',
-    unitPriceCup
+    unitPriceCup,
+    currencyCode
   };
 }
 
 export function resolveProductAvailability(product: ProductDetailDto): ResolvedAvailability {
   const activeVariants = product.variants.filter((v) => v.is_active);
+  const currencyCode = normalizeCurrencyCode(product.currency_code);
 
   if (activeVariants.length > 0) {
     const resolvedList = activeVariants.map((v) => resolveVariantAvailability(product, v));
@@ -73,7 +84,8 @@ export function resolveProductAvailability(product: ProductDetailDto): ResolvedA
         status: totalQty > 0 ? 'available' : 'out_of_stock',
         availableQuantity: totalQty,
         canAddToCart: totalQty > 0,
-        unitPriceCup: minPrice
+        unitPriceCup: minPrice,
+        currencyCode
       };
     }
 
@@ -89,7 +101,8 @@ export function resolveProductAvailability(product: ProductDetailDto): ResolvedA
       status,
       availableQuantity: null,
       canAddToCart: status !== 'out_of_stock',
-      unitPriceCup: minPrice
+      unitPriceCup: minPrice,
+      currencyCode
     };
   }
 
@@ -100,7 +113,8 @@ export function resolveProductAvailability(product: ProductDetailDto): ResolvedA
       status: qty > 0 ? 'available' : 'out_of_stock',
       availableQuantity: qty,
       canAddToCart: qty > 0,
-      unitPriceCup: basePrice
+      unitPriceCup: basePrice,
+      currencyCode
     };
   }
 
@@ -108,7 +122,8 @@ export function resolveProductAvailability(product: ProductDetailDto): ResolvedA
     status: product.manual_availability,
     availableQuantity: null,
     canAddToCart: product.manual_availability !== 'out_of_stock',
-    unitPriceCup: basePrice
+    unitPriceCup: basePrice,
+    currencyCode
   };
 }
 

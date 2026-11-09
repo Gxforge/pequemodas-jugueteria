@@ -12,6 +12,7 @@ import {
   type ProductDetailDto,
   type ProductSortOption
 } from '@pequemodas/shared';
+import { normalizeCurrencyCode } from '@pequemodas/utils';
 import {
   Alert,
   Button,
@@ -25,7 +26,8 @@ import { AdminProductCard } from '../components/AdminProductCard';
 import { useAuth } from '../context/AuthContext';
 
 export function ProductsListPage() {
-  const { store } = useAuth();
+  const { store, settings } = useAuth();
+  const primaryCurrencyCode = normalizeCurrencyCode(settings?.default_currency_code);
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<PublicationStatus | 'all'>('all');
@@ -40,13 +42,17 @@ export function ProductsListPage() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ['admin-products', { search, status, categoryId, sort, page }],
+    queryKey: [
+      'admin-products',
+      { search, status, categoryId, sort, page, primaryCurrencyCode }
+    ],
     queryFn: () =>
       fetchProductsPaginated({
         search,
         publicationStatus: status,
         categoryId: categoryId || undefined,
         sort,
+        primaryCurrencyCode,
         page,
         pageSize: 12
       })
@@ -145,8 +151,8 @@ export function ProductsListPage() {
           onChange={(e) => setSort(e.target.value as ProductSortOption)}
           options={[
             { value: 'newest', label: 'Más recientes' },
-            { value: 'price_asc', label: 'Menor precio' },
-            { value: 'price_desc', label: 'Mayor precio' },
+            { value: 'price_asc', label: 'Menor precio (por moneda)' },
+            { value: 'price_desc', label: 'Mayor precio (por moneda)' },
             { value: 'name_asc', label: 'Nombre A-Z' }
           ]}
         />
@@ -161,7 +167,7 @@ export function ProductsListPage() {
       ) : !data || data.items.length === 0 ? (
         <EmptyState
           title="No hay productos en esta vista"
-          description="El catálogo comienza vacío. Pulsa «Crear producto» para subir tu primer artículo con sus fotografías y precio en CUP."
+          description="El catálogo comienza vacío. Pulsa «Crear producto» para subir tu primer artículo con sus fotografías y precio en CUP o USD."
           primaryAction={
             <Link to="/productos/nuevo">
               <Button>Crear primer producto</Button>

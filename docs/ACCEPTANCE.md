@@ -6,17 +6,18 @@
 | 2 | El panel administrativo funciona en Android y PC | Cumplido | `apps/admin` con navegación táctil inferior + sidebar escritorio |
 | 3 | Katia puede gestionar productos y categorías | Cumplido | Crear, editar, publicar, ocultar, duplicar, archivar y eliminar |
 | 4 | Carga múltiple y optimización WebP de fotografías | Cumplido | `optimizeProductImage()` + `PhotosManagerSection` + bucket `product-images` |
-| 5 | Sistema flexible de variantes ilimitadas | Cumplido | `attributes jsonb` libre + precio propio opcional en `CUP` |
+| 5 | Sistema flexible de variantes ilimitadas | Cumplido | `attributes jsonb` libre + precio propio opcional en la moneda del producto (`CUP`/`USD`) |
 | 6 | Inventario híbrido (Cantidades + Manual) | Cumplido | RPC `record_inventory_movement` + modal de confirmación al cambiar modalidad |
 | 7 | Carrito persistente funcional | Cumplido | `CartContext.tsx` con persistencia `localStorage` y pruebas RTL |
 | 8 | Pedidos por WhatsApp sin descontar stock | Cumplido | `buildWhatsAppOrderMessage` + `wa.me` + RPC `request_received` verificada |
 | 9 | Base de datos con políticas RLS completas | Cumplido | 12 tablas con `rowsecurity = true` y `disable_signup = true` en vivo |
 | 10 | PWA instalable en Android sin caché obsoleta | Cumplido | `manifest.webmanifest`, iconos 192/512 y `sw.js` que excluye API Supabase |
-| 11 | Pruebas unitarias, integración y E2E en verde | Cumplido | Vitest (15/15), Integración Supabase en vivo (9/9) y Playwright (4/4) |
+| 11 | Pruebas unitarias, integración y E2E en verde | Cumplido | Vitest (23/23) y Playwright (10/10 en Android + Escritorio) |
 | 12 | Ningún archivo de código supera 300 líneas | Cumplido | Verificado por `pnpm check:lines` (`scripts/check-line-limit.mjs`) |
 | 13 | Catálogo inicial vacío y cero datos inventados | Cumplido | `0` productos en BD; teléfonos, tarifas y horarios vacíos y editables |
 | 14 | Documentación completa (15 documentos + estado) | Cumplido | Carpeta `docs/` completa + `PROJECT_STATUS.md` + `README.md` |
 | 15 | Bloqueos externos identificados con transparencia | Cumplido | Documentados en sección inferior y en `DEPLOYMENT.md` |
+| 16 | Katia configura CUP o USD por producto y moneda principal | Cumplido | Selectores en `Productos`/`Ajustes`, `CHECK` en BD, totales separados y apéndice en vídeo |
 
 ## Lista Transparente de Bloqueos y Limitaciones Externas
 

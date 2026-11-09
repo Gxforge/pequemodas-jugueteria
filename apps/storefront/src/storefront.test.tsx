@@ -4,6 +4,7 @@ import { describe, expect, it, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ProductDetailDto } from '@pequemodas/shared';
+import { formatCurrencyTotals } from '@pequemodas/utils';
 import {
   AnimatedBrandCloudsLogo,
   BrandLogo,
@@ -37,6 +38,7 @@ function CartHarness() {
             variantName: 'Talla 2',
             attributes: { Talla: '2 años' },
             unitPriceCup: 1500,
+            currencyCode: 'CUP',
             quantity: 2,
             maxQuantity: 3,
             thumbnailUrl: null
@@ -50,6 +52,52 @@ function CartHarness() {
           OverMax
         </button>
       )}
+    </div>
+  );
+}
+
+function MixedCurrencyCartHarness() {
+  const { totalsByCurrency, addItem } = useCart();
+  const base = {
+    productSlug: 'articulo',
+    variantId: null,
+    variantName: null,
+    attributes: {},
+    quantity: 1,
+    maxQuantity: null,
+    thumbnailUrl: null
+  };
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() =>
+          addItem({
+            ...base,
+            productId: 'cup-1',
+            productName: 'Vestido CUP',
+            unitPriceCup: 1000,
+            currencyCode: 'CUP'
+          })
+        }
+      >
+        Add CUP
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          addItem({
+            ...base,
+            productId: 'usd-1',
+            productName: 'Juguete USD',
+            unitPriceCup: 10,
+            currencyCode: 'USD'
+          })
+        }
+      >
+        Add USD
+      </button>
+      <span data-testid="mixed-totals">{formatCurrencyTotals(totalsByCurrency)}</span>
     </div>
   );
 }
@@ -85,6 +133,21 @@ describe('Storefront UI & Carrito persistente', () => {
     await user.click(screen.getByText('OverMax'));
     expect(screen.getByTestId('qty')).toHaveTextContent('3');
     expect(screen.getByTestId('total')).toHaveTextContent('4500');
+  });
+
+  it('suma CUP y USD por separado en el carrito sin convertir', async () => {
+    const user = userEvent.setup();
+    render(
+      <CartProvider>
+        <MixedCurrencyCartHarness />
+      </CartProvider>
+    );
+    await user.click(screen.getByText('Add CUP'));
+    await user.click(screen.getByText('Add USD'));
+    const text = screen.getByTestId('mixed-totals').textContent ?? '';
+    expect(text).toContain('CUP');
+    expect(text).toContain('USD');
+    expect(text).toContain('+');
   });
 
   it('persiste instantánea offline-first y renderiza capas separadas de logo y nubes', () => {

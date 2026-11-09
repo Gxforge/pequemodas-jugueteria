@@ -1,5 +1,5 @@
 {
-  "version": "3.0.0",
-  "summary": "Pantalla de arranque sincronizada (logo + nubes), cambio instantáneo de secciones sin pantallazos en blanco y catálogo optimizado.",
-  "releasedAt": "2026-11-06T22:10:00Z"
+  "version": "3.1.0",
+  "summary": "Katia puede elegir CUP o USD en cada producto. El carrito, WhatsApp y el chat suman cada moneda por separado, sin conversiones.",
+  "releasedAt": "2026-11-06T23:30:00Z"
 }

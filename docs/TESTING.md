@@ -25,13 +25,13 @@ pnpm test:e2e
 ## 2. Cobertura por Capas
 
 1. **Unitarias (`packages/utils`, `packages/schemas`, `packages/shared`):**
-   - Formateo monetario en `CUP` y redondeo exacto.
+   - Formateo `CUP` / `USD`, redondeo exacto y totales separados sin conversión.
    - Normalización de teléfonos y construcción codificada de enlaces `https://wa.me/...` con variantes, subtotales y modalidad de entrega.
    - Validación MIME y límite de peso de fotografías antes de subir a Storage.
    - Rechazo de variables `SERVICE_ROLE` en cliente y bloqueo de precios/cantidades negativas en Zod.
    - Motor de **Inventario Híbrido** (Modalidad A por cantidades y Modalidad B manual, más sobrescritura de precio por variante).
 2. **Integración de Componentes (`apps/storefront`, `apps/admin`):**
-   - Carrito persistente (`CartProvider`): suma de cantidades, tope por stock disponible y cálculo en `CUP`.
+   - Carrito persistente (`CartProvider`): suma de cantidades, tope por stock disponible y cálculo separado en `CUP` y `USD`.
    - Renderizado de marca oficial y demostración del Sistema de Diseño.
    - Protección de rutas administrativas sin registro público.
 3. **Integración Real contra PostgreSQL 17 + RLS + Storage en Supabase:**

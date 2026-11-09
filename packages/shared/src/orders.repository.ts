@@ -1,3 +1,4 @@
+import type { CurrencyCode } from '@pequemodas/config';
 import type { DeliveryModeType, OrderStatus } from '@pequemodas/schemas';
 import { resolveProductAvailability } from './availability';
 import { fetchProductsPaginated } from './products-read.repository';
@@ -12,6 +13,7 @@ export interface CreateOrderRequestLine {
   attributes: Record<string, string>;
   quantity: number;
   unit_price_cup: number;
+  currency_code?: CurrencyCode;
 }
 
 export async function submitWhatsAppOrderRequest(params: {

@@ -92,6 +92,9 @@ export function CatalogCompactToolbar({
               <li>
                 • <strong>Haz tu pedido:</strong> entra al artículo, elige talla o modelo y agrégalo a tu bolsita.
               </li>
+              <li>
+                • <strong>Precios claros:</strong> verás CUP o USD en cada artículo; el carrito suma cada moneda por separado.
+              </li>
             </ul>
           </div>
           <button
@@ -150,8 +153,8 @@ export function CatalogCompactToolbar({
               onChange={(e) => onSortChange(e.target.value as ProductSortOption)}
               options={[
                 { value: 'newest', label: 'Más recientes' },
-                { value: 'price_asc', label: 'Precio: menor a mayor' },
-                { value: 'price_desc', label: 'Precio: mayor a menor' },
+                { value: 'price_asc', label: 'Precio: menor a mayor (por moneda)' },
+                { value: 'price_desc', label: 'Precio: mayor a menor (por moneda)' },
                 { value: 'name_asc', label: 'Nombre: A - Z' }
               ]}
             />

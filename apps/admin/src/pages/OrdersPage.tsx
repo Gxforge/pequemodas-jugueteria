@@ -1,11 +1,22 @@
 import React, { useState } from 'react';
+import type { CurrencyTotals } from '@pequemodas/config';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, MessageSquare, XCircle } from 'lucide-react';
 import type { OrderStatus } from '@pequemodas/schemas';
-import { fetchOrdersForAdmin, updateOrderStatusByAdmin } from '@pequemodas/shared';
+import {
+  fetchOrdersForAdmin,
+  updateOrderStatusByAdmin,
+  type OrderRow
+} from '@pequemodas/shared';
 import { Alert, Badge, Button, Card, EmptyState, Select } from '@pequemodas/ui';
-import { formatCup, formatDateTimeEs } from '@pequemodas/utils';
+import { formatCurrencyTotals, formatDateTimeEs, formatMoney } from '@pequemodas/utils';
 import { useAuth } from '../context/AuthContext';
+
+function orderTotals(order: OrderRow): CurrencyTotals {
+  const totals = order.totals_by_currency;
+  if (totals && Object.keys(totals).length > 0) return totals;
+  return { CUP: Number(order.estimated_total_cup) };
+}
 
 export function OrdersPage() {
   const { store } = useAuth();
@@ -123,7 +134,9 @@ export function OrdersPage() {
                         {item.quantity}× {item.product_name_snapshot}
                         {item.variant_name_snapshot ? ` (${item.variant_name_snapshot})` : ''}
                       </span>
-                      <span className="font-semibold">{formatCup(item.subtotal_cup)}</span>
+                      <span className="font-semibold">
+                        {formatMoney(item.subtotal_cup, item.currency_code)}
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -131,7 +144,7 @@ export function OrdersPage() {
 
               <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
                 <span className="font-heading font-extrabold text-brand-600">
-                  Total estimado: {formatCup(Number(order.estimated_total_cup))}
+                  Total estimado: {formatCurrencyTotals(orderTotals(order))}
                 </span>
                 <div className="flex flex-wrap gap-2">
                   {order.status === 'request_received' && (

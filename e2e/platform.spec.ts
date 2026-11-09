@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 const STOREFRONT_URL = process.env.E2E_STOREFRONT_URL || 'http://localhost:5173';
 const ADMIN_URL = process.env.E2E_ADMIN_URL || 'http://localhost:5174';
 
-test.describe('PequeModas-Juguetería — PWA v3.0.0: Arranque Sincronizado, Navegación Instantánea y Admin PWA', () => {
+test.describe('PequeModas-Juguetería — PWA v3.1.0: Arranque Sincronizado, Navegación Instantánea y Admin PWA', () => {
   test('detecta nueva versión sin recargar, oculta avisos molestos de red lenta y navega sin pantallazos', async ({
     page,
     request
@@ -12,13 +12,13 @@ test.describe('PequeModas-Juguetería — PWA v3.0.0: Arranque Sincronizado, Nav
     await expect(page.getByRole('heading', { level: 1 })).toContainText('PequeModas');
     await page.waitForTimeout(1450);
 
-    // Verifica versión v3.0.0 y que no exista el cartel de conexión móvil lenta
-    await expect(page.getByText(/Aplicación Web \(PWA\) v3\.0\.0/i)).toBeVisible();
+    // Verifica versión v3.1.0 y que no exista el cartel de conexión móvil lenta
+    await expect(page.getByText(/Aplicación Web \(PWA\) v3\.1\.0/i)).toBeVisible();
     await expect(page.getByText(/Conexión móvil lenta detectada/i)).toHaveCount(0);
 
     const verRes = await request.get(`${STOREFRONT_URL}/version.json`);
     expect(verRes.status()).toBe(200);
-    expect((await verRes.json()).version).toBe('3.0.0');
+    expect((await verRes.json()).version).toBe('3.1.0');
 
     // Simula un nuevo despliegue en vivo SIN recargar la pestaña y verifica tarjeta flotante
     await page.route('**/version.json*', async (route) => {
@@ -26,7 +26,7 @@ test.describe('PequeModas-Juguetería — PWA v3.0.0: Arranque Sincronizado, Nav
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          version: '3.0.9',
+          version: '3.1.9',
           summary: 'Mejoras instantáneas en vivo verificadas.'
         })
       });
@@ -35,7 +35,7 @@ test.describe('PequeModas-Juguetería — PWA v3.0.0: Arranque Sincronizado, Nav
     await expect(page.getByText(/¡Nueva versión de la tienda lista!/i)).toBeVisible({
       timeout: 5000
     });
-    await expect(page.getByRole('button', { name: /Actualizar a v3\.0\.9/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Actualizar a v3\.1\.9/i })).toBeVisible();
     await page.getByRole('button', { name: /Más tarde/i }).click();
     await page.unroute('**/version.json*');
 
@@ -131,7 +131,7 @@ test.describe('PequeModas-Juguetería — PWA v3.0.0: Arranque Sincronizado, Nav
   });
 });
 
-test.describe('PequeModas-Juguetería — E2E Admin PWA v3.0.0: Menú Fijo, BD-1..BD-4 sin tecnicismos e Historial', () => {
+test.describe('PequeModas-Juguetería — E2E Admin PWA v3.1.0: Menú Fijo, BD-1..BD-4 sin tecnicismos e Historial', () => {
   test('mantiene menú lateral siempre visible al cambiar entre Productos/Categorías/Inventario y muestra BD-1..BD-4 + Historial', async ({
     page,
     request
@@ -198,5 +198,32 @@ test.describe('PequeModas-Juguetería — E2E Admin PWA v3.0.0: Menú Fijo, BD-1
     await expect(
       page.getByText(/Personalizar Robot y Colores del Chat/i)
     ).toBeVisible();
+  });
+});
+
+test.describe('PequeModas-Juguetería — E2E v3.1.0: Moneda CUP / USD configurable sin datos de prueba', () => {
+  test('Katia ve CUP y USD en productos nuevos y en Ajustes sin guardar artículos de prueba', async ({
+    page
+  }) => {
+    await page.setViewportSize({ width: 1366, height: 850 });
+    await page.goto(ADMIN_URL);
+    await expect(page).toHaveURL(/\/acceso$/);
+
+    await page.getByLabel(/Correo electrónico/i).fill('junmoxia41@gmail.com');
+    await page.locator('input[name="password"]').fill('Lexair-bae05a5d12#26');
+    await page.getByRole('button', { name: /Entrar al Panel/i }).click();
+    await expect(page.getByText('BD-1')).toBeVisible({ timeout: 15000 });
+
+    await page.goto(`${ADMIN_URL}/productos/nuevo`);
+    const productCurrency = page.getByLabel('Moneda del precio');
+    await expect(productCurrency).toBeVisible();
+    await expect(productCurrency.locator('option[value="CUP"]')).toHaveCount(1);
+    await expect(productCurrency.locator('option[value="USD"]')).toHaveCount(1);
+
+    await page.goto(`${ADMIN_URL}/configuracion`);
+    const storeCurrency = page.getByLabel('Moneda principal para productos nuevos');
+    await expect(storeCurrency).toBeVisible();
+    await expect(storeCurrency.locator('option[value="CUP"]')).toHaveCount(1);
+    await expect(storeCurrency.locator('option[value="USD"]')).toHaveCount(1);
   });
 });

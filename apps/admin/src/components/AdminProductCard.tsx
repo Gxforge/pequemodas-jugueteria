@@ -8,7 +8,7 @@ import {
   type ProductDetailDto
 } from '@pequemodas/shared';
 import { AvailabilityBadge, Badge, Button, Card } from '@pequemodas/ui';
-import { formatCup } from '@pequemodas/utils';
+import { formatMoney } from '@pequemodas/utils';
 
 export function AdminProductCard({
   product,
@@ -66,7 +66,7 @@ export function AdminProductCard({
             {product.name}
           </h3>
           <p className="text-base font-extrabold text-brand-600 mt-0.5">
-            {formatCup(avail.unitPriceCup)}
+            {formatMoney(avail.unitPriceCup, avail.currencyCode)}
           </p>
         </div>
 

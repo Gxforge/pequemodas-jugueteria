@@ -14,7 +14,7 @@ pequemodas-jugueteria/
 │   ├── schemas/           # Validaciones Zod compartidas (formularios y entorno)
 │   ├── shared/            # Cliente Supabase, repositorios, disponibilidad híbrida y tipos
 │   ├── ui/                # Sistema de Diseño reutilizable y Guía Visual interactiva
-│   └── utils/             # Moneda CUP, codificador wa.me, optimizador WebP y slugs
+│   └── utils/             # Moneda CUP/USD, totales separados, codificador wa.me, optimizador WebP y slugs
 ├── supabase/
 │   ├── config.toml        # Configuración declarativa para Supabase CLI
 │   ├── migrations/        # 8 migraciones SQL versionadas (< 300 líneas cada una)

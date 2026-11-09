@@ -6,7 +6,7 @@
 - **Propietaria:** Katia
 - **Empresa desarrolladora:** StudioLexair
 - **Naturaleza del negocio:** Tienda infantil especializada en juguetes, ropa infantil, calzado y accesorios para bebés, niñas y niños.
-- **Moneda operativa del catálogo:** Peso Cubano (`CUP`).
+- **Monedas configurables:** `CUP` y `USD` por producto, con moneda principal en Ajustes y totales separados sin conversión.
 
 ## 2. Propósito de la Plataforma
 

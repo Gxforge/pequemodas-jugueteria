@@ -5,9 +5,12 @@ import {
   buildWhatsAppUrl,
   detectStoreSearchIntent,
   formatCup,
+  formatCurrencyTotals,
+  formatMoney,
   isValidWhatsAppPhone,
   scoreSmartTextMatch,
   slugify,
+  sumCurrencyTotals,
   suggestDidYouMean,
   validateImageFile
 } from './index';
@@ -17,6 +20,19 @@ describe('@pequemodas/utils', () => {
     expect(formatCup(0)).toBe('0 CUP');
     expect(formatCup(1500)).toContain('CUP');
     expect(formatCup(1250.5)).toContain('50 CUP');
+  });
+
+  it('formatea CUP y USD y suma cada moneda por separado', () => {
+    expect(formatMoney(15.5, 'USD')).toContain('15,50 USD');
+    expect(formatMoney(15.5, 'usd')).toContain('USD');
+    const totals = sumCurrencyTotals([
+      { unitPrice: 1800, quantity: 2, currencyCode: 'CUP' },
+      { unitPrice: 12, quantity: 1, currencyCode: 'USD' }
+    ]);
+    const text = formatCurrencyTotals(totals);
+    expect(text).toContain('CUP');
+    expect(text).toContain('USD');
+    expect(text).toContain(' + ');
   });
 
   it('genera slugs limpios sin tildes ni caracteres especiales', () => {
@@ -51,7 +67,14 @@ describe('@pequemodas/utils', () => {
           variantLabel: 'Talla 4 - Coral',
           attributesSummary: 'Talla: 4 años, Color: Coral',
           quantity: 2,
-          unitPriceCup: 1800
+          unitPriceCup: 1800,
+          currencyCode: 'CUP'
+        },
+        {
+          productName: 'Juguete Importado',
+          quantity: 1,
+          unitPriceCup: 12,
+          currencyCode: 'USD'
         }
       ]
     });
@@ -63,6 +86,8 @@ describe('@pequemodas/utils', () => {
     expect(msg).toContain('Entrega a domicilio');
     expect(msg).toContain('Elena Gómez');
     expect(msg).toContain('confirmación manual');
+    expect(msg).toContain('USD');
+    expect(msg).toContain('sin convertir');
   });
 
   it('valida tipos MIME y tamaño máximo de fotografías antes de subir a Storage', () => {

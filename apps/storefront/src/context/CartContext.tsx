@@ -1,6 +1,12 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import type { CurrencyCode } from '@pequemodas/config';
 import { notifyCartAdditionQuietly } from '@pequemodas/shared';
-import { roundMoney } from '@pequemodas/utils';
+import {
+  getCurrencyTotal,
+  normalizeCurrencyCode,
+  sumCurrencyTotals,
+  type CurrencyTotal
+} from '@pequemodas/utils';
 
 export interface CartItem {
   key: string;
@@ -10,7 +16,9 @@ export interface CartItem {
   variantId: string | null;
   variantName: string | null;
   attributes: Record<string, string>;
+  // Importe numérico histórico; la moneda real está en currencyCode.
   unitPriceCup: number;
+  currencyCode: CurrencyCode;
   quantity: number;
   maxQuantity: number | null;
   thumbnailUrl: string | null;
@@ -20,6 +28,7 @@ interface CartContextValue {
   items: CartItem[];
   totalQuantity: number;
   estimatedTotalCup: number;
+  totalsByCurrency: CurrencyTotal[];
   addItem: (item: Omit<CartItem, 'key'>) => void;
   updateQuantity: (key: string, quantity: number) => void;
   removeItem: (key: string) => void;
@@ -29,12 +38,26 @@ interface CartContextValue {
 const STORAGE_KEY = 'pequemodas.cart.v1';
 const CartContext = createContext<CartContextValue | null>(null);
 
+function toTotals(items: CartItem[]): CurrencyTotal[] {
+  return sumCurrencyTotals(
+    items.map((item) => ({
+      unitPrice: item.unitPriceCup,
+      quantity: item.quantity,
+      currencyCode: item.currencyCode
+    }))
+  );
+}
+
 function loadInitialCart(): CartItem[] {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as CartItem[]) : [];
+    if (!Array.isArray(parsed)) return [];
+    return (parsed as CartItem[]).map((item) => ({
+      ...item,
+      currencyCode: normalizeCurrencyCode(item.currencyCode)
+    }));
   } catch {
     return [];
   }
@@ -62,7 +85,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           incoming.maxQuantity !== null ? Math.min(nextQty, incoming.maxQuantity) : nextQty;
         nextList = prev.map((i) =>
           i.key === key
-            ? { ...i, quantity: Math.max(1, capped), unitPriceCup: incoming.unitPriceCup }
+            ? {
+                ...i,
+                quantity: Math.max(1, capped),
+                unitPriceCup: incoming.unitPriceCup,
+                currencyCode: incoming.currencyCode
+              }
             : i
         );
       } else {
@@ -72,15 +100,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             : incoming.quantity;
         nextList = [...prev, { ...incoming, key, quantity: Math.max(1, capped) }];
       }
-      const nextCount = nextList.reduce((s, x) => s + x.quantity, 0);
-      const nextEst = nextList.reduce(
-        (s, x) => roundMoney(s + roundMoney(x.unitPriceCup * x.quantity)),
-        0
-      );
+      const nextTotals = toTotals(nextList);
       void notifyCartAdditionQuietly({
         productName: incoming.productName,
-        cartCount: nextCount,
-        estimatedCup: nextEst
+        cartCount: nextList.reduce((s, x) => s + x.quantity, 0),
+        estimatedCup: getCurrencyTotal(nextTotals, 'CUP'),
+        totalsByCurrency: nextTotals
       });
       return nextList;
     });
@@ -108,11 +133,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const totals = useMemo(() => {
     const totalQuantity = items.reduce((sum, i) => sum + i.quantity, 0);
-    const estimatedTotalCup = items.reduce(
-      (sum, i) => roundMoney(sum + roundMoney(i.unitPriceCup * i.quantity)),
-      0
-    );
-    return { totalQuantity, estimatedTotalCup };
+    const totalsByCurrency = toTotals(items);
+    return {
+      totalQuantity,
+      totalsByCurrency,
+      estimatedTotalCup: getCurrencyTotal(totalsByCurrency, 'CUP')
+    };
   }, [items]);
 
   return (
@@ -121,6 +147,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         items,
         totalQuantity: totals.totalQuantity,
         estimatedTotalCup: totals.estimatedTotalCup,
+        totalsByCurrency: totals.totalsByCurrency,
         addItem,
         updateQuantity,
         removeItem,

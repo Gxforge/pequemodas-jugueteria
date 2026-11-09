@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
 import { CheckCircle2, Layers, Plus } from 'lucide-react';
+import type { CurrencyCode } from '@pequemodas/config';
 import type { InventoryMode, ProductVariantInput } from '@pequemodas/schemas';
 import { Button, Card } from '@pequemodas/ui';
 import { VariantOptionCard } from './VariantOptionCard';
 
 interface VariantsEditorSectionProps {
   inventoryMode: InventoryMode;
+  currencyCode: CurrencyCode;
   variants: ProductVariantInput[];
   onChange: (next: ProductVariantInput[]) => void;
 }
 
 export function VariantsEditorSection({
   inventoryMode,
+  currencyCode,
   variants,
   onChange
 }: VariantsEditorSectionProps) {
@@ -139,6 +142,7 @@ export function VariantsEditorSection({
               key={variant.id ?? `opt-${idx}`}
               index={idx}
               inventoryMode={inventoryMode}
+              currencyCode={currencyCode}
               variant={variant}
               draft={detailDrafts[idx] ?? { key: 'Talla', value: '' }}
               onUpdate={(patch) => updateOption(idx, patch)}

@@ -6,7 +6,7 @@ import {
   type ProductDetailDto
 } from '@pequemodas/shared';
 import { AvailabilityBadge, Badge, Card } from '@pequemodas/ui';
-import { formatCup } from '@pequemodas/utils';
+import { formatMoney } from '@pequemodas/utils';
 import { SmartProductImage } from './SmartProductImage';
 
 export function ProductCard({ product }: { product: ProductDetailDto }) {
@@ -55,7 +55,7 @@ export function ProductCard({ product }: { product: ProductDetailDto }) {
               <span className="block text-[11px] text-slate-400">Desde</span>
             )}
             <span className="font-heading text-base sm:text-lg font-extrabold text-brand-600">
-              {formatCup(avail.unitPriceCup)}
+              {formatMoney(avail.unitPriceCup, avail.currencyCode)}
             </span>
           </div>
           <AvailabilityBadge status={avail.status} />

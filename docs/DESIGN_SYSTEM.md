@@ -11,7 +11,7 @@ El sistema visual de **PequeModas-Juguetería** combina alegría infantil con or
 
 | Token | Color Hex | Uso Principal |
 | :--- | :--- | :--- |
-| `brand-600` | `#D4385B` | Acciones primarias, precios en CUP y acentos de marca (contraste AA sobre blanco) |
+| `brand-600` | `#D4385B` | Acciones primarias, precios en CUP / USD y acentos de marca (contraste AA sobre blanco) |
 | `brand-50` | `#FFF1F4` | Fondos suaves de secciones destacadas |
 | `sky-600` | `#0284C7` | Acciones secundarias, categorías e insignias informativas |
 | `sunny-500` | `#F59E0B` | Etiquetas de productos destacados e imagen principal |

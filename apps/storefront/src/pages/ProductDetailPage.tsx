@@ -19,7 +19,7 @@ import {
   EmptyState,
   Skeleton
 } from '@pequemodas/ui';
-import { buildProductInquiryUrl, formatCup, isValidWhatsAppPhone } from '@pequemodas/utils';
+import { buildProductInquiryUrl, formatMoney, isValidWhatsAppPhone } from '@pequemodas/utils';
 import { ProductCard } from '../components/ProductCard';
 import { ProductImageGallery } from '../components/ProductImageGallery';
 import { useCart } from '../context/CartContext';
@@ -110,6 +110,7 @@ export function ProductDetailPage() {
       variantName: selectedVariant?.name ?? null,
       attributes: selectedVariant?.attributes ?? {},
       unitPriceCup: resolved.unitPriceCup,
+      currencyCode: resolved.currencyCode,
       quantity,
       maxQuantity: resolved.availableQuantity,
       thumbnailUrl: thumbUrl
@@ -142,13 +143,18 @@ export function ProductDetailPage() {
             </h1>
             <div className="flex flex-wrap items-center gap-3 pt-1">
               <span className="font-heading text-2xl sm:text-3xl font-extrabold text-brand-600">
-                {formatCup(resolved.unitPriceCup)}
+                {formatMoney(resolved.unitPriceCup, resolved.currencyCode)}
               </span>
               <AvailabilityBadge
                 status={resolved.status}
                 quantity={resolved.availableQuantity}
               />
             </div>
+            {resolved.currencyCode === 'USD' && (
+              <p className="text-xs font-semibold text-sky-700">
+                Este artículo se muestra en USD. En el carrito verás cada moneda por separado.
+              </p>
+            )}
           </div>
 
           {product.description && (
@@ -185,7 +191,7 @@ export function ProductDetailPage() {
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-bold text-sm text-slate-900">{variant.name}</span>
                         <span className="text-xs font-extrabold text-brand-600">
-                          {formatCup(vRes.unitPriceCup)}
+                          {formatMoney(vRes.unitPriceCup, vRes.currencyCode)}
                         </span>
                       </div>
                       {attrText && <p className="text-xs text-slate-500 mt-0.5">{attrText}</p>}

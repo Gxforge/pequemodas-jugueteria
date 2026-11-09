@@ -5,7 +5,7 @@ import type {
   StoreSettingsRow
 } from '@pequemodas/shared';
 
-const SNAPSHOT_KEY = 'pequemodas.offline.snapshot.v1';
+const SNAPSHOT_KEY = 'pequemodas.offline.snapshot.v2';
 
 export interface StorefrontOfflineSnapshot {
   savedAt: string;

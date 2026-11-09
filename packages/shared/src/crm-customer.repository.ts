@@ -11,6 +11,7 @@ import {
   type CrmShardId,
   type PublicBotAppearance
 } from './crm-types';
+import { normalizeCurrencyCode, totalsToObject, type CurrencyTotal } from '@pequemodas/utils';
 import { getSupabaseClient, isSupabaseConfigured } from './supabase-client';
 
 const CUSTOMER_PROFILE_KEY = 'pequemodas.customer.profile.v2';
@@ -143,7 +144,13 @@ export async function fetchCustomerChatThread(): Promise<{
   orders: Array<
     Pick<
       CrmDirectOrder,
-      'id' | 'reference_code' | 'delivery_mode' | 'estimated_total_cup' | 'status' | 'created_at'
+      | 'id'
+      | 'reference_code'
+      | 'delivery_mode'
+      | 'estimated_total_cup'
+      | 'totals_by_currency'
+      | 'status'
+      | 'created_at'
     >
   >;
 }> {
@@ -205,7 +212,10 @@ export async function submitDirectAppOrder(input: {
     p_delivery_mode: input.deliveryMode,
     p_delivery_address: input.deliveryAddress?.trim() || null,
     p_delivery_notes: input.deliveryNotes?.trim() || null,
-    p_items: input.items,
+    p_items: input.items.map((line) => ({
+      ...line,
+      currency_code: normalizeCurrencyCode(line.currency_code)
+    })),
     p_estimated_total_cup: input.estimatedTotalCup
   });
 
@@ -233,16 +243,18 @@ export async function notifyCartAdditionQuietly(input: {
   productName: string;
   cartCount: number;
   estimatedCup: number;
+  totalsByCurrency: CurrencyTotal[];
 }): Promise<void> {
   try {
     const identity = getStoredCustomerIdentity();
     const shard: CrmShardId = identity?.shard ?? (isChatSupabaseConfigured() ? 'p2' : 'p1');
     const client = getShardClient(shard);
-    await client.rpc('record_cart_activity_signal', {
+    await client.rpc('record_cart_activity_signal_v2', {
       p_session_key: getOrCreateCartSessionId(),
       p_product_name: input.productName,
       p_cart_count: input.cartCount,
-      p_estimated_cup: input.estimatedCup
+      p_estimated_cup: input.estimatedCup,
+      p_totals_by_currency: totalsToObject(input.totalsByCurrency)
     });
   } catch {
     // Silencioso para no afectar experiencia de compra

@@ -1,5 +1,6 @@
 export * from './env.schema';
 export * from './auth.schema';
+export * from './currency.schema';
 export * from './category.schema';
 export * from './product.schema';
 export * from './inventory.schema';

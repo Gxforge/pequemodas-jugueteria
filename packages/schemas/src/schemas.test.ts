@@ -50,6 +50,29 @@ describe('@pequemodas/schemas', () => {
     expect(negMovement.success).toBe(false);
   });
 
+  it('permite elegir CUP o USD en cada producto y en los ajustes de la tienda', () => {
+    const usdProduct = productFormSchema.parse({
+      name: 'Muñeca Coleccionable',
+      slug: 'muneca-coleccionable',
+      basePriceCup: 20,
+      currencyCode: 'USD'
+    });
+    expect(usdProduct.currencyCode).toBe('USD');
+    expect(
+      productFormSchema.safeParse({
+        name: 'Muñeca Coleccionable',
+        slug: 'muneca-coleccionable',
+        basePriceCup: 20,
+        currencyCode: 'EUR'
+      }).success
+    ).toBe(false);
+    const settings = storeSettingsFormSchema.parse({
+      commercialName: 'PequeModas-Juguetería',
+      defaultCurrencyCode: 'USD'
+    });
+    expect(settings.defaultCurrencyCode).toBe('USD');
+  });
+
   it('exige dirección cuando el cliente elige entrega a domicilio pero no en recogida', () => {
     const missingAddr = whatsappCheckoutSchema.safeParse({
       deliveryMode: 'delivery',

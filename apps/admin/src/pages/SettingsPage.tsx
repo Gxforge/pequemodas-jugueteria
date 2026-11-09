@@ -9,6 +9,7 @@ import {
   uploadStoreLogo
 } from '@pequemodas/shared';
 import { Alert, BrandLogo, Button, Card, Input, Textarea } from '@pequemodas/ui';
+import { CurrencySettingsCard } from '../components/CurrencySettingsCard';
 import { useAuth } from '../context/AuthContext';
 
 export function SettingsPage() {
@@ -23,6 +24,7 @@ export function SettingsPage() {
     defaultValues: {
       commercialName: 'PequeModas-Juguetería',
       description: '',
+      defaultCurrencyCode: 'CUP',
       logoUrl: '',
       phone: '',
       whatsappPhone: '',
@@ -47,6 +49,7 @@ export function SettingsPage() {
     form.reset({
       commercialName: settings.commercial_name,
       description: settings.description ?? '',
+      defaultCurrencyCode: settings.default_currency_code ?? 'CUP',
       logoUrl: settings.logo_url ?? '',
       phone: settings.phone ?? '',
       whatsappPhone: settings.whatsapp_phone ?? '',
@@ -113,6 +116,8 @@ export function SettingsPage() {
       {errorMsg && <Alert variant="error">{errorMsg}</Alert>}
 
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" noValidate>
+        <CurrencySettingsCard register={form.register} />
+
         <Card className="space-y-4">
           <h2 className="font-heading text-lg font-bold text-slate-900">Identidad y Marca</h2>
           <div className="flex flex-wrap items-center justify-between gap-4 bg-slate-50 p-4 rounded-2xl">

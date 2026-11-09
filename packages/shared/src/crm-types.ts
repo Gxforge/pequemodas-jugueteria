@@ -1,3 +1,5 @@
+import type { CurrencyCode, CurrencyTotals } from '@pequemodas/config';
+
 export type CrmShardId = 'p1' | 'p2';
 
 export interface CrmChatThemeConfig {
@@ -124,6 +126,7 @@ export interface CrmDirectOrderLine {
   attributes: Record<string, string>;
   quantity: number;
   unit_price_cup: number;
+  currency_code?: CurrencyCode;
 }
 
 export type CrmDirectOrderStatus =
@@ -141,7 +144,9 @@ export interface CrmDirectOrder {
   delivery_address: string | null;
   delivery_notes: string | null;
   items: CrmDirectOrderLine[];
+  // Subtotal exclusivo en CUP; el desglose completo está en totals_by_currency.
   estimated_total_cup: number;
+  totals_by_currency?: CurrencyTotals | null;
   status: CrmDirectOrderStatus;
   created_at: string;
   updated_at: string;

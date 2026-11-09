@@ -13,7 +13,8 @@ import {
   Trash2
 } from 'lucide-react';
 import { Button } from '@pequemodas/ui';
-import { formatCup, roundMoney } from '@pequemodas/utils';
+import { formatMoney, roundMoney } from '@pequemodas/utils';
+import { CurrencyTotals } from '../components/CurrencyTotals';
 import { DirectAppCheckoutCard } from '../components/DirectAppCheckoutCard';
 import { WhatsAppCheckoutCard } from '../components/WhatsAppCheckoutCard';
 import { useCart } from '../context/CartContext';
@@ -24,7 +25,7 @@ export function CartPage() {
     'Tu Bolsita de Pedido',
     'Elige comprar directo en la aplicación con chat en vivo o solicitar por WhatsApp.'
   );
-  const { items, totalQuantity, estimatedTotalCup, updateQuantity, removeItem, clearCart } =
+  const { items, totalQuantity, totalsByCurrency, updateQuantity, removeItem, clearCart } =
     useCart();
   const [checkoutChannel, setCheckoutChannel] = useState<'app' | 'whatsapp'>('app');
   const [justSubmittedInApp, setJustSubmittedInApp] = useState(false);
@@ -100,7 +101,7 @@ export function CartPage() {
               Tu carrito está vacío
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-              Agrega tus prendas o juguetes favoritos en CUP y pide en segundos desde aquí mismo o por WhatsApp, sin tarjetas.
+              Agrega tus prendas o juguetes favoritos en CUP o USD y pide en segundos desde aquí mismo o por WhatsApp, sin tarjetas.
             </p>
           </div>
 
@@ -212,10 +213,10 @@ export function CartPage() {
 
                       <div className="text-right">
                         <p className="text-[11px] text-slate-400">
-                          {formatCup(item.unitPriceCup)} c/u
+                          {formatMoney(item.unitPriceCup, item.currencyCode)} c/u
                         </p>
                         <p className="font-heading font-extrabold text-sm sm:text-base text-brand-600">
-                          {formatCup(subtotal)}
+                          {formatMoney(subtotal, item.currencyCode)}
                         </p>
                       </div>
                     </div>
@@ -232,9 +233,7 @@ export function CartPage() {
                 <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
                   Total estimado ({totalQuantity} uds.)
                 </p>
-                <p className="font-heading text-2xl font-extrabold text-slate-900">
-                  {formatCup(estimatedTotalCup)}
-                </p>
+                <CurrencyTotals totals={totalsByCurrency} showNote />
               </div>
               <span className="inline-flex items-center gap-1 rounded-full bg-white border border-slate-200 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
                 <ShieldCheck className="h-3.5 w-3.5" /> Sin pago online
@@ -276,17 +275,14 @@ export function CartPage() {
             {checkoutChannel === 'app' ? (
               <DirectAppCheckoutCard
                 items={items}
-                estimatedTotalCup={estimatedTotalCup}
+                totalsByCurrency={totalsByCurrency}
                 onOrderCompleted={() => {
                   setJustSubmittedInApp(true);
                   clearCart();
                 }}
               />
             ) : (
-              <WhatsAppCheckoutCard
-                items={items}
-                estimatedTotalCup={estimatedTotalCup}
-              />
+              <WhatsAppCheckoutCard items={items} totalsByCurrency={totalsByCurrency} />
             )}
           </div>
         </div>

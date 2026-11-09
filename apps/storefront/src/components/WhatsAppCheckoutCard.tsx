@@ -9,18 +9,20 @@ import { Alert, Button, Card, Input, Select, Textarea } from '@pequemodas/ui';
 import {
   buildWhatsAppOrderMessage,
   buildWhatsAppUrl,
-  formatCup,
-  isValidWhatsAppPhone
+  isValidWhatsAppPhone,
+  normalizeCurrencyCode,
+  type CurrencyTotal
 } from '@pequemodas/utils';
+import { CurrencyTotals } from './CurrencyTotals';
 import type { CartItem } from '../context/CartContext';
 import { useStorefront } from '../context/StorefrontContext';
 
 export function WhatsAppCheckoutCard({
   items,
-  estimatedTotalCup
+  totalsByCurrency
 }: {
   items: CartItem[];
-  estimatedTotalCup: number;
+  totalsByCurrency: CurrencyTotal[];
 }) {
   const { settings } = useStorefront();
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -66,7 +68,8 @@ export function WhatsAppCheckoutCard({
         .map(([k, v]) => `${k}: ${v}`)
         .join(', '),
       quantity: i.quantity,
-      unitPriceCup: i.unitPriceCup
+      unitPriceCup: i.unitPriceCup,
+      currencyCode: normalizeCurrencyCode(i.currencyCode)
     }));
 
     const draftMessage = buildWhatsAppOrderMessage({
@@ -98,7 +101,8 @@ export function WhatsAppCheckoutCard({
           variant_name: i.variantName,
           attributes: i.attributes,
           quantity: i.quantity,
-          unit_price_cup: i.unitPriceCup
+          unit_price_cup: i.unitPriceCup,
+          currency_code: normalizeCurrencyCode(i.currencyCode)
         }))
       });
       referenceCode = res.referenceCode;
@@ -133,9 +137,7 @@ export function WhatsAppCheckoutCard({
 
       <div className="rounded-2xl bg-brand-50/70 border border-brand-100 p-3.5 flex items-center justify-between">
         <span className="text-sm font-semibold text-slate-700">Total estimado en productos:</span>
-        <span className="font-heading text-xl font-extrabold text-brand-600">
-          {formatCup(estimatedTotalCup)}
-        </span>
+        <CurrencyTotals totals={totalsByCurrency} size="sm" showNote />
       </div>
 
       <Alert variant="info" title="Confirmación personal por WhatsApp">

@@ -1,6 +1,14 @@
-import { PAGINATION_DEFAULTS } from '@pequemodas/config';
+import {
+  DEFAULT_CURRENCY_CODE,
+  PAGINATION_DEFAULTS,
+  type CurrencyCode
+} from '@pequemodas/config';
 import type { PublicationStatus } from '@pequemodas/schemas';
-import { scoreSmartTextMatch, suggestDidYouMean } from '@pequemodas/utils';
+import {
+  normalizeCurrencyCode,
+  scoreSmartTextMatch,
+  suggestDidYouMean
+} from '@pequemodas/utils';
 import { getSupabaseClient } from './supabase-client';
 import type { ProductDetailDto } from './types';
 
@@ -13,6 +21,7 @@ export interface ProductQueryFilters {
   publicationStatus?: PublicationStatus | 'all';
   onlyFeatured?: boolean;
   sort?: ProductSortOption;
+  primaryCurrencyCode?: CurrencyCode;
   page?: number;
   pageSize?: number;
 }
@@ -40,6 +49,7 @@ function normalizeProductDto(raw: Record<string, unknown>): ProductDetailDto {
   return {
     ...dto,
     base_price_cup: Number(dto.base_price_cup),
+    currency_code: normalizeCurrencyCode(dto.currency_code),
     images: (dto.images ?? []).sort((a, b) => a.sort_order - b.sort_order),
     variants: (dto.variants ?? [])
       .map((v) => ({
@@ -54,16 +64,40 @@ function normalizeProductDto(raw: Record<string, unknown>): ProductDetailDto {
   };
 }
 
+// Nunca compara numéricamente precios de monedas distintas: primero agrupa
+// por moneda principal y luego ordena el importe dentro de cada moneda.
+export function compareProductsByCurrencyPrice(
+  a: ProductDetailDto,
+  b: ProductDetailDto,
+  direction: 'asc' | 'desc' = 'asc',
+  primaryCurrencyCode: CurrencyCode = DEFAULT_CURRENCY_CODE
+): number {
+  const aCode = normalizeCurrencyCode(a.currency_code);
+  const bCode = normalizeCurrencyCode(b.currency_code);
+  if (aCode !== bCode) {
+    if (aCode === primaryCurrencyCode) return -1;
+    if (bCode === primaryCurrencyCode) return 1;
+    return aCode.localeCompare(bCode);
+  }
+  const delta = Number(a.base_price_cup) - Number(b.base_price_cup);
+  return direction === 'asc' ? delta : -delta;
+}
+
 function sortProductsInMemory(
   list: ProductDetailDto[],
-  sort?: ProductSortOption
+  sort?: ProductSortOption,
+  primaryCurrencyCode: CurrencyCode = DEFAULT_CURRENCY_CODE
 ): ProductDetailDto[] {
   const copy = [...list];
   switch (sort) {
     case 'price_asc':
-      return copy.sort((a, b) => a.base_price_cup - b.base_price_cup);
+      return copy.sort((a, b) =>
+        compareProductsByCurrencyPrice(a, b, 'asc', primaryCurrencyCode)
+      );
     case 'price_desc':
-      return copy.sort((a, b) => b.base_price_cup - a.base_price_cup);
+      return copy.sort((a, b) =>
+        compareProductsByCurrencyPrice(a, b, 'desc', primaryCurrencyCode)
+      );
     case 'name_asc':
       return copy.sort((a, b) => a.name.localeCompare(b.name));
     default:
@@ -78,6 +112,7 @@ export async function fetchProductsPaginated(
   const page = Math.max(1, filters.page ?? 1);
   const pageSize = filters.pageSize ?? PAGINATION_DEFAULTS.storefrontPageSize;
   const searchRaw = filters.search?.trim() ?? '';
+  const primaryCurrencyCode = normalizeCurrencyCode(filters.primaryCurrencyCode);
 
   // Cuando el usuario escribe en el buscador, usamos búsqueda inteligente tolerante a errores ortográficos
   if (searchRaw) {
@@ -125,7 +160,8 @@ export async function fetchProductsPaginated(
     const ordered = filters.sort
       ? sortProductsInMemory(
           scored.map((s) => s.product),
-          filters.sort
+          filters.sort,
+          primaryCurrencyCode
         )
       : scored.sort((a, b) => b.score - a.score).map((s) => s.product);
 
@@ -156,10 +192,14 @@ export async function fetchProductsPaginated(
 
   switch (filters.sort) {
     case 'price_asc':
-      query = query.order('base_price_cup', { ascending: true });
+      query = query
+        .order('currency_code', { ascending: primaryCurrencyCode === 'CUP' })
+        .order('base_price_cup', { ascending: true });
       break;
     case 'price_desc':
-      query = query.order('base_price_cup', { ascending: false });
+      query = query
+        .order('currency_code', { ascending: primaryCurrencyCode === 'CUP' })
+        .order('base_price_cup', { ascending: false });
       break;
     case 'name_asc':
       query = query.order('name', { ascending: true });

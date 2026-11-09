@@ -1,4 +1,5 @@
 import React from 'react';
+import type { CurrencyTotals } from '@pequemodas/config';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Boxes, ExternalLink, Phone } from 'lucide-react';
 import type {
@@ -7,7 +8,7 @@ import type {
   CrmDirectOrderStatus
 } from '@pequemodas/shared';
 import { Badge } from '@pequemodas/ui';
-import { buildWhatsAppUrl, formatCup } from '@pequemodas/utils';
+import { buildWhatsAppUrl, formatCurrencyTotals } from '@pequemodas/utils';
 
 export interface ChatThreadHeaderProps {
   contact: CrmCustomerContact;
@@ -15,6 +16,12 @@ export interface ChatThreadHeaderProps {
   onBackMobile: () => void;
   onToggleBot: (paused: boolean) => void;
   onChangeOrderStatus: (orderId: string, status: CrmDirectOrderStatus) => void;
+}
+
+function orderTotals(order: CrmDirectOrder): CurrencyTotals {
+  const totals = order.totals_by_currency;
+  if (totals && Object.keys(totals).length > 0) return totals;
+  return { CUP: Number(order.estimated_total_cup) };
 }
 
 export function ChatThreadHeader({
@@ -81,7 +88,7 @@ export function ChatThreadHeader({
           <div className="flex flex-wrap items-center gap-2">
             <Badge tone="warning">
               Último pedido: {latestOrder.reference_code} (
-              {formatCup(latestOrder.estimated_total_cup)})
+              {formatCurrencyTotals(orderTotals(latestOrder))})
             </Badge>
             <select
               value={latestOrder.status}

@@ -1,7 +1,7 @@
-const SHELL_CACHE = 'pequemodas-shell-v8';
-const IMMUTABLE_CACHE = 'pequemodas-immutable-v8';
-const MEDIA_CACHE = 'pequemodas-media-v8';
-const IMAGE_ID_CACHE = 'pequemodas-img-by-id-v1';
+const SHELL_CACHE = 'pequemodas-shell-v9';
+const IMMUTABLE_CACHE = 'pequemodas-immutable-v9';
+const MEDIA_CACHE = 'pequemodas-media-v9';
+const IMAGE_ID_CACHE = 'pequemodas-img-by-id-v2';
 const MAX_MEDIA_ENTRIES = 160;
 
 const APP_SHELL = [
@@ -16,6 +16,11 @@ const APP_SHELL = [
 ];
 
 const ACTIVE_CACHES = [SHELL_CACHE, IMMUTABLE_CACHE, MEDIA_CACHE, IMAGE_ID_CACHE];
+function isUsableAsset(res) {
+  if (!res || res.status !== 200) return false;
+  const type = res.headers.get('content-type') || '';
+  return /javascript|css/i.test(type);
+}
 
 async function trimCache(cacheName, maxItems) {
   const cache = await caches.open(cacheName);
@@ -121,12 +126,15 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.open(IMMUTABLE_CACHE).then(async (cache) => {
         const cached = await cache.match(request);
-        if (cached) return cached;
-        const response = await fetch(request);
-        if (response && response.status === 200) {
-          cache.put(request, response.clone());
+        if (isUsableAsset(cached)) return cached;
+        if (cached) await cache.delete(request);
+        try {
+          const response = await fetch(request);
+          if (isUsableAsset(response)) cache.put(request, response.clone());
+          return response;
+        } catch {
+          return self.Response.error();
         }
-        return response;
       })
     );
     return;

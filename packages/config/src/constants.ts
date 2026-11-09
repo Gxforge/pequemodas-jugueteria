@@ -9,10 +9,10 @@ export const BRAND_IDENTITY = {
 } as const;
 
 export const APP_RELEASE = {
-  version: '3.1.0',
+  version: '3.1.1',
   appLabel: 'Aplicación Web (PWA)',
   summary:
-    'Katia puede elegir CUP o USD en cada producto y definir la moneda principal en Ajustes. El carrito y los pedidos suman cada moneda por separado, sin conversiones.'
+    'Monedas CUP/USD configurables, totales separados y corrección de caché PWA: los módulos JS/CSS se sirven con su tipo real y se descartan respuestas HTML antiguas.'
 } as const;
 
 export const STORAGE_LIMITS = {

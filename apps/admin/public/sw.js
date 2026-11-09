@@ -1,6 +1,6 @@
-const ADMIN_SHELL_CACHE = 'pequemodas-admin-shell-v1';
-const ADMIN_IMMUTABLE_CACHE = 'pequemodas-admin-immutable-v1';
-const ADMIN_MEDIA_CACHE = 'pequemodas-admin-media-v1';
+const ADMIN_SHELL_CACHE = 'pequemodas-admin-shell-v2';
+const ADMIN_IMMUTABLE_CACHE = 'pequemodas-admin-immutable-v2';
+const ADMIN_MEDIA_CACHE = 'pequemodas-admin-media-v2';
 
 const ADMIN_SHELL_ASSETS = [
   '/',
@@ -14,6 +14,12 @@ const ADMIN_SHELL_ASSETS = [
 ];
 
 const ACTIVE_CACHES = [ADMIN_SHELL_CACHE, ADMIN_IMMUTABLE_CACHE, ADMIN_MEDIA_CACHE];
+
+function isUsableAsset(res) {
+  if (!res || res.status !== 200) return false;
+  const type = res.headers.get('content-type') || '';
+  return /javascript|css/i.test(type);
+}
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -108,12 +114,15 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.open(ADMIN_IMMUTABLE_CACHE).then(async (cache) => {
         const cached = await cache.match(request);
-        if (cached) return cached;
-        const res = await fetch(request);
-        if (res && res.status === 200) {
-          cache.put(request, res.clone());
+        if (isUsableAsset(cached)) return cached;
+        if (cached) await cache.delete(request);
+        try {
+          const res = await fetch(request);
+          if (isUsableAsset(res)) cache.put(request, res.clone());
+          return res;
+        } catch {
+          return self.Response.error();
         }
-        return res;
       })
     );
     return;

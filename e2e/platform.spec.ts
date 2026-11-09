@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 const STOREFRONT_URL = process.env.E2E_STOREFRONT_URL || 'http://localhost:5173';
 const ADMIN_URL = process.env.E2E_ADMIN_URL || 'http://localhost:5174';
 
-test.describe('PequeModas-Juguetería — PWA v3.1.0: Arranque Sincronizado, Navegación Instantánea y Admin PWA', () => {
+test.describe('PequeModas-Juguetería — PWA v3.1.1: Arranque Sincronizado, Navegación Instantánea y Admin PWA', () => {
   test('detecta nueva versión sin recargar, oculta avisos molestos de red lenta y navega sin pantallazos', async ({
     page,
     request
@@ -12,13 +12,13 @@ test.describe('PequeModas-Juguetería — PWA v3.1.0: Arranque Sincronizado, Nav
     await expect(page.getByRole('heading', { level: 1 })).toContainText('PequeModas');
     await page.waitForTimeout(1450);
 
-    // Verifica versión v3.1.0 y que no exista el cartel de conexión móvil lenta
-    await expect(page.getByText(/Aplicación Web \(PWA\) v3\.1\.0/i)).toBeVisible();
+    // Verifica versión v3.1.1 y que no exista el cartel de conexión móvil lenta
+    await expect(page.getByText(/Aplicación Web \(PWA\) v3\.1\.1/i)).toBeVisible();
     await expect(page.getByText(/Conexión móvil lenta detectada/i)).toHaveCount(0);
 
     const verRes = await request.get(`${STOREFRONT_URL}/version.json`);
     expect(verRes.status()).toBe(200);
-    expect((await verRes.json()).version).toBe('3.1.0');
+    expect((await verRes.json()).version).toBe('3.1.1');
 
     // Simula un nuevo despliegue en vivo SIN recargar la pestaña y verifica tarjeta flotante
     await page.route('**/version.json*', async (route) => {
@@ -131,7 +131,7 @@ test.describe('PequeModas-Juguetería — PWA v3.1.0: Arranque Sincronizado, Nav
   });
 });
 
-test.describe('PequeModas-Juguetería — E2E Admin PWA v3.1.0: Menú Fijo, BD-1..BD-4 sin tecnicismos e Historial', () => {
+test.describe('PequeModas-Juguetería — E2E Admin PWA v3.1.1: Menú Fijo, BD-1..BD-4 sin tecnicismos e Historial', () => {
   test('mantiene menú lateral siempre visible al cambiar entre Productos/Categorías/Inventario y muestra BD-1..BD-4 + Historial', async ({
     page,
     request
@@ -201,7 +201,7 @@ test.describe('PequeModas-Juguetería — E2E Admin PWA v3.1.0: Menú Fijo, BD-1
   });
 });
 
-test.describe('PequeModas-Juguetería — E2E v3.1.0: Moneda CUP / USD configurable sin datos de prueba', () => {
+test.describe('PequeModas-Juguetería — E2E v3.1.1: Moneda CUP / USD configurable sin datos de prueba', () => {
   test('Katia ve CUP y USD en productos nuevos y en Ajustes sin guardar artículos de prueba', async ({
     page
   }) => {

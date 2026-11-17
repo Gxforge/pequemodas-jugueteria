@@ -32,6 +32,8 @@ por el patrón `*tokens*`, y el primer Service Worker se confundía con una
 actualización, ocultando la guía de iPhone. Ambos están corregidos y cubiertos por
 `pnpm test:e2e:ios` con WebKit. El run de GitHub Actions `42696638087` terminó en `success` con verificación de producción incluida.
 
+**Anuncios verificados en CI:** el run `44014019440` (`workflow_dispatch`) terminó en `success` con ambos jobs en verde: calidad, tipos, 30 unitarias, build, `pnpm check:ads`, E2E iPhone/WebKit y verificación en vivo de `ads.js`, shim CORS y CSP en ambos dominios. El `push` concurrente se canceló por la regla de concurrencia del workflow, no por un error.
+
 ## Lista Transparente de Bloqueos y Limitaciones Externas
 
 1. **Plan Vercel Hobby para operación comercial definitiva:** La cuenta Vercel proporcionada (`junmoxia41`) opera bajo el plan `hobby` (no comercial según los Términos de Servicio de Vercel). Los proyectos y entornos de vista previa técnica quedan configurados y operativos con catálogo vacío, pero **antes de iniciar ventas comerciales reales sobre Vercel se requiere autorización de presupuesto para Vercel Pro** (no contratado por restricción estricta de cero pagos/tarjetas).

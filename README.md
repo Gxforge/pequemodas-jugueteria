@@ -12,7 +12,7 @@ Plataforma integral de comercio electrónico infantil (**Tienda Pública PWA** +
 - `packages/ui` — Biblioteca de componentes accesibles y Guía Visual interactiva.
 - `packages/utils` — Formato y totales separados `CUP` / `USD`, generador `wa.me`, optimizador cliente WebP y utilidades.
 - `supabase/` — migraciones SQL versionadas de catálogo, pedidos y chat con Row Level Security (RLS), `seed.sql` limpio y Edge Function `storage-health`.
-- `docs/` — Los 16 documentos técnicos, de seguridad, despliegue, respaldos, PWA en iOS y manual paso a paso para Katia (`ADMIN_USER_GUIDE.md`).
+- `docs/` — Los 17 documentos técnicos, de seguridad, despliegue, respaldos, PWA en iOS y manual paso a paso para Katia (`ADMIN_USER_GUIDE.md`).
 
 ## Arranque Rápido Local
 
@@ -38,11 +38,16 @@ pnpm test          # Pruebas unitarias y de componentes (Vitest + RTL)
 pnpm build         # Compilación de producción de ambas aplicaciones
 pnpm test:e2e      # Pruebas E2E Playwright (Android Pixel 7 + Escritorio)
 pnpm check:pwa:ios # Valida etiquetas Apple, manifest, icono 180 px y Service Worker
+pnpm check:ads     # Valida ads.js único, CSP auditada y SW Network-Only
 pnpm test:e2e:ios  # E2E iPhone 13 (WebKit) + regresión Android sobre el build
 ```
 
 En iPhone la instalación se hace desde Safari → Compartir → «Añadir a pantalla de
-inicio»; la app muestra esa guía automáticamente. GitHub Actions ejecuta toda la
-verificación de calidad y PWA en cada `push` (` .github/workflows/ci.yml`).
+inicio»; la app muestra esa guía automáticamente. Los anuncios públicos de
+StudioLexair se cargan solo en la Tienda con `ads.js` y
+`data-project="pequemodas"`; el Panel privado queda excluido. Consulta
+[`docs/ADS_STUDIOLEXAIR.md`](./docs/ADS_STUDIOLEXAIR.md). GitHub Actions ejecuta
+toda la verificación de calidad, PWA y anuncios en cada `push`
+(` .github/workflows/ci.yml`).
 
 Consulta la documentación completa en [`docs/PROJECT_OVERVIEW.md`](./docs/PROJECT_OVERVIEW.md), la guía para Katia en [`docs/ADMIN_USER_GUIDE.md`](./docs/ADMIN_USER_GUIDE.md) y el estado detallado por fases en [`PROJECT_STATUS.md`](./PROJECT_STATUS.md).

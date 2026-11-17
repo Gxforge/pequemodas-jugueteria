@@ -30,6 +30,10 @@ pnpm test:e2e:ios
 
 # 9. Verificación de producción con User-Agent de Safari en iPhone
 node scripts/check-pwa-ios.mjs --live
+
+# 10. Integración aislada de anuncios StudioLexair
+pnpm check:ads
+node scripts/check-ads-integration.mjs --live
 ```
 
 ## 2. Cobertura por Capas
@@ -58,3 +62,11 @@ node scripts/check-pwa-ios.mjs --live
    - WebKit con perfil `iPhone 13` comprueba meta etiquetas Apple, icono opaco de `180 × 180`, `manifest.webmanifest`, `content-type` real de JS/SW, guía manual de «Añadir a pantalla de inicio» en la Tienda y en `/acceso`, y que no aparezca un botón falso de instalación.
    - Chromium con `Pixel 7` confirma que Android conserva sus 5 botones y no recibe la guía de iPhone.
    - GitHub Actions ejecuta lint, tipos, `30` unitarias, build, la verificación estática y la suite iOS en cada `push`; con `workflow_dispatch` valida además producción. No usa secretos reales: genera variables `VITE_*` ficticias sólo para compilar.
+
+7. **Anuncios StudioLexair (`e2e/pwa-ios.spec.ts` y `scripts/check-ads-integration.mjs`):**
+   - El HTML final de la Tienda contiene exactamente una etiqueta `ads.js` con `data-project="pequemodas"`, `defer` y `crossorigin="anonymous"`, más el shim `/ads-cors-patch.js`; el Panel Admin no contiene ninguno de los dos.
+   - La navegación SPA a `/catalogo` no duplica el script ni provoca errores de consola, CSP o `requestfailed` relacionados con anuncios.
+   - Ambos Service Workers declaran `NETWORK_ONLY_AD_HOSTS` para `studiolexair.ddns.net` y `ywrspyrplgwxkwdboaiz.supabase.co`.
+   - Si existe una CSP en `vercel.json`, `deploy-static.mjs` o en vivo, se exigen los hosts permitidos; si no existe, la auditoría pasa sin introducir una CSP nueva que rompa la app.
+   - `e2e/ads-network.fixture.ts` también simula `ads.js` y `ads-feed` para que las pruebas Android/Escritorio no dependan de la red externa ni sufran interferencias visuales.
+- La verificación de producción con WebKit `iPhone 13` y Chromium `Pixel 7` confirma que `ads.js`, `ads-feed`, `lexair_vid`, el anuncio y su imagen cargan sin errores de consola, CSP ni `requestfailed`, gracias al modo CORS exigido por la cabecera `CORP: same-origin` del servidor central.

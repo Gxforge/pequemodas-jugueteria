@@ -1,8 +1,12 @@
-const SHELL_CACHE = 'pequemodas-shell-v11';
-const IMMUTABLE_CACHE = 'pequemodas-immutable-v11';
-const MEDIA_CACHE = 'pequemodas-media-v11';
-const IMAGE_ID_CACHE = 'pequemodas-img-by-id-v2';
+const SHELL_CACHE = 'pequemodas-shell-v13';
+const IMMUTABLE_CACHE = 'pequemodas-immutable-v13';
+const MEDIA_CACHE = 'pequemodas-media-v13';
+const IMAGE_ID_CACHE = 'pequemodas-img-by-id-v4';
 const MAX_MEDIA_ENTRIES = 160;
+const NETWORK_ONLY_AD_HOSTS = [
+  'studiolexair.ddns.net',
+  'ywrspyrplgwxkwdboaiz.supabase.co'
+];
 
 const APP_SHELL = [
   '/',
@@ -64,6 +68,9 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
 
   const url = new URL(request.url);
+
+  // Anuncios StudioLexair: Network-Only estricto, jamás caché offline.
+  if (NETWORK_ONLY_AD_HOSTS.includes(url.hostname)) return;
 
   // 1. Imágenes públicas inmutables de Storage (UUID): Cache-First con límite LRU (ahorra datos móviles)
   if (

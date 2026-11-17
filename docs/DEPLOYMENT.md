@@ -43,6 +43,17 @@ que el HTML incluya `apple-mobile-web-app-capable`, que
 `verificar_produccion = true`, valida ambas URLs reales con `User-Agent` de
 Safari en iPhone. Consulta `docs/PWA_IOS.md`.
 
+## 1.3 Anuncios públicos de StudioLexair
+
+`scripts/deploy-static.mjs` verifica, antes de asignar los alias de producción,
+que `https://studiolexair.ddns.net/ads.js` aparezca **una sola vez** en la
+Tienda con `data-project="pequemodas"`, `defer` y `crossorigin="anonymous"`,
+que `/ads-cors-patch.js` responda como JavaScript, que el Panel Admin no cargue
+ninguno de los dos y que ninguna cabecera CSP en vivo bloquee los hosts de
+anuncios. La regla Network-Only de ambos Service Workers impide cachear
+`ads.js` o `ads-feed`. Consulta `docs/ADS_STUDIOLEXAIR.md` y
+`node scripts/check-ads-integration.mjs --live`.
+
 ## 2. ADVERTENCIA CRÍTICA DE CUMPLIMIENTO: Plan Vercel Hobby vs. Uso Comercial
 
 Durante la auditoría real de infraestructura se comprobó que la cuenta de Vercel asociada se encuentra en el plan **`hobby`** (`junmoxia41's projects`, `plan: hobby`).

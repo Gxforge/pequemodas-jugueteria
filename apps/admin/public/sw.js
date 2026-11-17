@@ -1,6 +1,10 @@
-const ADMIN_SHELL_CACHE = 'pequemodas-admin-shell-v4';
-const ADMIN_IMMUTABLE_CACHE = 'pequemodas-admin-immutable-v4';
-const ADMIN_MEDIA_CACHE = 'pequemodas-admin-media-v4';
+const ADMIN_SHELL_CACHE = 'pequemodas-admin-shell-v5';
+const ADMIN_IMMUTABLE_CACHE = 'pequemodas-admin-immutable-v5';
+const ADMIN_MEDIA_CACHE = 'pequemodas-admin-media-v5';
+const NETWORK_ONLY_AD_HOSTS = [
+  'studiolexair.ddns.net',
+  'ywrspyrplgwxkwdboaiz.supabase.co'
+];
 
 const ADMIN_SHELL_ASSETS = [
   '/',
@@ -54,6 +58,9 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
 
   const url = new URL(request.url);
+
+  // Anuncios StudioLexair: Network-Only estricto, jamás caché offline.
+  if (NETWORK_ONLY_AD_HOSTS.includes(url.hostname)) return;
 
   // 1. Imágenes públicas de productos/marca en Supabase Storage: Cache-First
   if (

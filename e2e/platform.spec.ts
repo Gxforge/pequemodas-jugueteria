@@ -1,9 +1,14 @@
 import { expect, test } from '@playwright/test';
+import { mockAdsNetwork } from './ads-network.fixture';
 
 const STOREFRONT_URL = process.env.E2E_STOREFRONT_URL || 'http://localhost:5173';
 const ADMIN_URL = process.env.E2E_ADMIN_URL || 'http://localhost:5174';
 const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || '';
 const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || '';
+
+test.beforeEach(async ({ page }) => {
+  await mockAdsNetwork(page);
+});
 
 // Las credenciales reales NUNCA van en el repositorio: se leen del entorno local.
 function requireAdminCredentials() {

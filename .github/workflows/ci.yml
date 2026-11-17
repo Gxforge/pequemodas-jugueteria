@@ -1,4 +1,4 @@
-name: Calidad, PWA e iOS (iPhone/iPad)
+name: Calidad, PWA, iOS y Anuncios (iPhone/iPad)
 
 on:
   push:
@@ -68,6 +68,9 @@ jobs:
       - name: Validar etiquetas Apple, manifest, icono 180 px y Service Worker
         run: pnpm check:pwa:ios
 
+      - name: Validar integración aislada de anuncios StudioLexair
+        run: pnpm check:ads
+
       - name: Instalar WebKit (Safari) y Chromium con dependencias del sistema
         run: pnpm exec playwright install --with-deps webkit chromium
 
@@ -117,3 +120,9 @@ jobs:
           STOREFRONT_URL: https://pequemodas.vercel.app
           ADMIN_URL: https://pequemodas-admin.vercel.app
         run: node scripts/check-pwa-ios.mjs --live
+
+      - name: Verificar anuncios y CSP en vivo con User-Agent de iPhone
+        env:
+          STOREFRONT_URL: https://pequemodas.vercel.app
+          ADMIN_URL: https://pequemodas-admin.vercel.app
+        run: node scripts/check-ads-integration.mjs --live

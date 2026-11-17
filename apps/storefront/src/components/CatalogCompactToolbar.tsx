@@ -40,7 +40,7 @@ export function CatalogCompactToolbar({
     (sort !== 'newest' ? 1 : 0) + (onlyAvailable ? 1 : 0) + (subcategoryId ? 1 : 0);
 
   return (
-    <div className="space-y-3.5">
+    <div className="w-full min-w-0 space-y-3.5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2.5">
           <h1 className="font-heading text-2xl sm:text-3xl font-extrabold text-slate-900">
@@ -116,7 +116,7 @@ export function CatalogCompactToolbar({
       />
 
       {rootCategories.length > 0 && (
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+        <div className="w-full min-w-0 max-w-full flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
           <button
             type="button"
             onClick={() => onCategoryChange('')}

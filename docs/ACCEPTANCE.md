@@ -12,13 +12,14 @@
 | 8 | Pedidos por WhatsApp sin descontar stock | Cumplido | `buildWhatsAppOrderMessage` + `wa.me` + RPC `request_received` verificada |
 | 9 | Base de datos con políticas RLS completas | Cumplido | 12 tablas con `rowsecurity = true` y `disable_signup = true` en vivo |
 | 10 | PWA instalable en Android, iPhone y iPad sin caché obsoleta | Cumplido | `manifest.webmanifest`, iconos 180/192/512 + `maskable`, etiquetas Apple, `apple-touch-icon.png` opaco y `sw.js` que excluye API Supabase |
-| 11 | Pruebas unitarias, integración y E2E en verde | Cumplido | Vitest (30/30), Playwright (12/12 Android + Escritorio) y 7 pruebas iOS en WebKit/Chromium; GitHub Actions en cada `push` |
-| 12 | Ningún archivo de código supera 300 líneas | Cumplido | Verificado por `pnpm check:lines` (`scripts/check-line-limit.mjs`) |
+| 11 | Pruebas unitarias, integración y E2E en verde | Cumplido | Vitest (30/30), Playwright (12/12 Android + Escritorio) y 9 pruebas iOS/anuncios en WebKit/Chromium (3 omitidas por proyecto); `pnpm check:ads` en CI |
+| 12 | Ningún archivo de código supera 300 líneas | Cumplido | Verificado por `pnpm check:lines`; el fixture de anuncios se mantuvo en un archivo aparte de 33 líneas |
 | 13 | Catálogo inicial vacío y cero datos inventados | Cumplido | `0` productos en BD; teléfonos, tarifas y horarios vacíos y editables |
-| 14 | Documentación completa (16 documentos + estado) | Cumplido | Carpeta `docs/` con `PWA_IOS.md` + `PROJECT_STATUS.md` + `README.md` |
+| 14 | Documentación completa (17 documentos + estado) | Cumplido | Carpeta `docs/` con `PWA_IOS.md`, `ADS_STUDIOLEXAIR.md`, `PROJECT_STATUS.md` + `README.md` |
 | 15 | Bloqueos externos identificados con transparencia | Cumplido | Documentados en sección inferior y en `DEPLOYMENT.md` |
 | 16 | Katia configura CUP o USD por producto y moneda principal | Cumplido | Selectores en `Productos`/`Ajustes`, `CHECK` en BD, totales separados y apéndice en vídeo |
 | 17 | iPhone/iPad recibe una guía real de instalación sin promesas falsas | Cumplido | `useIosInstallGuide`, `IosInstallSteps`, `/instalar`, meta etiquetas Apple y verificación WebKit en GitHub Actions |
+| 18 | Anuncios StudioLexair integrados sin romper CSP, caché ni flujos existentes | Cumplido | `ads.js` una sola vez con slug `pequemodas`, `defer` y `crossorigin`, shim CORS mismo-origen, Admin excluido, SW Network-Only, CSP auditada, `pnpm check:ads` y verificación WebKit/Chromium en producción |
 
 **Nota honesta sobre iOS:** Safari no dispara `beforeinstallprompt`; la instalación
 en iPhone siempre es manual desde Compartir → «Añadir a pantalla de inicio».

@@ -14,11 +14,14 @@ export function ProductCard({ product }: { product: ProductDetailDto }) {
   const { imageId, thumbUrl, fullUrl } = getPrimaryProductImage(product);
 
   return (
-    <Link to={`/producto/${product.slug}`} className="block group focus:outline-none">
+    <Link
+      to={`/producto/${product.slug}`}
+      className="block min-w-0 w-full group focus:outline-none"
+    >
       <Card
         padding="sm"
         interactive
-        className="h-full flex flex-col justify-between gap-3 group-focus-visible:ring-2 group-focus-visible:ring-brand-500"
+        className="h-full min-w-0 w-full flex flex-col justify-between gap-3 group-focus-visible:ring-2 group-focus-visible:ring-brand-500"
       >
         <div className="space-y-2.5">
           <div className="aspect-square rounded-xl bg-gradient-to-br from-brand-50 to-sky-50 overflow-hidden relative">
@@ -49,12 +52,12 @@ export function ProductCard({ product }: { product: ProductDetailDto }) {
           </h3>
         </div>
 
-        <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
-          <div>
+        <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+          <div className="min-w-0">
             {product.variants.length > 0 && (
               <span className="block text-[11px] text-slate-400">Desde</span>
             )}
-            <span className="font-heading text-base sm:text-lg font-extrabold text-brand-600">
+            <span className="block truncate font-heading text-base sm:text-lg font-extrabold text-brand-600">
               {formatMoney(avail.unitPriceCup, avail.currencyCode)}
             </span>
           </div>

@@ -128,7 +128,7 @@ async function waitReady(id) {
   throw new Error(`Timeout esperando ${id}`);
 }
 
-async function verifyHost(host, assets) {
+async function verifyHost(host, assets, project) {
   let lastError = '';
   for (let attempt = 0; attempt < 20; attempt += 1) {
     try {
@@ -176,6 +176,28 @@ async function verifyHost(host, assets) {
       if (!iosHtmlRes.ok || !iosHtml.includes('apple-mobile-web-app-capable')) {
         throw new Error(`Meta etiquetas iOS ${iosHtmlRes.status}`);
       }
+      const expectedAds = project.name === 'pequemodas' ? 1 : 0;
+      const adsCount = (iosHtml.match(/studiolexair\.ddns\.net\/ads\.js/g) || []).length;
+      if (adsCount !== expectedAds) {
+        throw new Error(`ads.js ${adsCount}, se esperaban ${expectedAds}`);
+      }
+      if (expectedAds === 1 && !/<script[^>]+studiolexair\.ddns\.net\/ads\.js[^>]+data-project="pequemodas"[^>]+defer[^>]+crossorigin="anonymous"/.test(iosHtml)) {
+        throw new Error('Etiqueta ads.js incompleta en producción');
+      }
+      const patchCount = (iosHtml.match(/src="\/ads-cors-patch\.js"/g) || []).length;
+      if (patchCount !== expectedAds) {
+        throw new Error(`ads-cors-patch.js ${patchCount}, se esperaban ${expectedAds}`);
+      }
+      if (expectedAds === 1) {
+        const patchRes = await fetch(`${base}/ads-cors-patch.js?t=${Date.now()}`, { cache: 'no-store' });
+        if (!patchRes.ok || !/javascript/i.test(patchRes.headers.get('content-type') || '')) {
+          throw new Error('ads-cors-patch.js no responde como JavaScript');
+        }
+      }
+      const csp = iosHtmlRes.headers.get('content-security-policy');
+      if (csp && (!csp.includes('https://studiolexair.ddns.net') || !csp.includes('https://ywrspyrplgwxkwdboaiz.supabase.co'))) {
+        throw new Error('CSP en vivo bloquea los hosts de anuncios');
+      }
       return {
         version: versionJson.version,
         versionCache: versionRes.headers.get('cache-control'),
@@ -183,7 +205,9 @@ async function verifyHost(host, assets) {
         assetCount: assets.length,
         spa: spa.status,
         iosIcon: iconRes.status,
-        iosManifest: manifestRes.status
+        iosManifest: manifestRes.status,
+        adsCount,
+        patchCount
       };
     } catch (err) {
       lastError = String(err);
@@ -220,7 +244,7 @@ for (const project of PROJECTS) {
     console.log(`DEPLOY ${project.label} ${id} ${created.readyState ?? 'QUEUED'}`);
     const ready = await waitReady(id);
     await new Promise((resolve) => setTimeout(resolve, 1500));
-    const previewCheck = await verifyHost(ready.url, assets);
+    const previewCheck = await verifyHost(ready.url, assets, project);
     console.log(`PREVIEW_OK ${project.label}`, JSON.stringify(previewCheck));
 
     for (const alias of project.aliases) {
@@ -232,7 +256,7 @@ for (const project of PROJECTS) {
         console.log(`ALIAS ${alias} ya asignado`);
       }
     }
-    const liveCheck = await verifyHost(project.aliases[0], assets);
+    const liveCheck = await verifyHost(project.aliases[0], assets, project);
     const result = { label: project.label, id, url: ready.url, aliases: project.aliases, check: liveCheck };
     results.push(result);
     console.log(`LIVE_OK ${project.label}`, JSON.stringify(liveCheck));

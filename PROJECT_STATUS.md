@@ -3,14 +3,14 @@
 **Desarrollado por:** StudioLexair  
 **Propietaria:** Katia (Cuba)  
 **Repositorio GitHub:** `https://github.com/Gxforge/pequemodas-jugueteria`  
-**Fecha de actualización:** 2026-11-06  
+**Fecha de actualización:** 2026-11-17  
 
 ---
 
 ## 1. Dominios Oficiales Verificados en Producción
 
-- **Tienda Pública (PWA v3.1.3):** `https://pequemodas.vercel.app` — despliegue `dpl_72sG94JhjfZn34hn3gFr7UkJ5TE3` (`200 OK`, `/version.json = 3.1.3`).
-- **Panel Administrativo (PWA v3.1.3):** `https://pequemodas-admin.vercel.app` — despliegue `dpl_7o5nHAqk335rt4NvY6V58PSDPDum` (`200 OK`, `/version.json = 3.1.3`).
+- **Tienda Pública (PWA v3.1.3 + anuncios):** `https://pequemodas.vercel.app` — despliegue `dpl_FPfykz2bjJqK4J2Ds8SV7DB186Vu` (`200 OK`, `/version.json = 3.1.3`, `ads.js` y shim CORS verificados).
+- **Panel Administrativo (PWA v3.1.3, sin anuncios):** `https://pequemodas-admin.vercel.app` — despliegue `dpl_qVzrXWa71TZgPiUsjvQXS2tvakB8` (`200 OK`, `/version.json = 3.1.3`, `ads.js` ausente).
 - **Dominios antiguos:** `pequemodas-jugueteria.vercel.app` y `pequemodas-jugueteria-admin.vercel.app` continúan retirados (`404`).
 - **Cabeceras verificadas:** `/version.json`, `/sw.js` y `/manifest.webmanifest` sin caché persistente; `/assets/*` con `public, max-age=31536000, immutable` y `content-type` real `application/javascript` / `text/css`; `/icons/apple-touch-icon.png` y `/apple-touch-icon.png` como `image/png`.
 - **Aviso sobre Vercel Hobby / Comercial:** Ambos proyectos operan actualmente en plan gratuito Hobby para validación técnica sin pagos ni tarjetas. Conforme a los Términos de Servicio de Vercel, para uso comercial permanente se debe contemplar el paso a Vercel Pro cuando el proyecto disponga de un medio de pago autorizado.
@@ -95,10 +95,25 @@ Se eliminó **sin respaldo**, por decisión explícita de la propietaria, todo e
 
 ## 9. Calidad y Verificación (`v3.1.3`)
 
-- **Límite `<= 300` líneas:** `100%` de `183` archivos conformes (`pnpm check:lines`).
+- **Límite `<= 300` líneas:** `100%` de los archivos conformes (`pnpm check:lines`); el mock de anuncios se extrajo a `e2e/ads-network.fixture.ts` para no superar el límite.
 - **Tipado, Linter, Unitarias y Build:** `pnpm typecheck`/`build`, `pnpm lint` y `pnpm test` (`30/30`) en verde.
-- **Suite E2E Playwright:** `12/12` aprobadas en `Android Pixel 7` y `Desktop Chromium`; `7` aprobadas y `3` omitidas por proyecto en la suite iOS (`iPhone 13 WebKit` + regresión `Pixel 7 Chromium`).
-- **Verificación PWA iOS:** `pnpm check:pwa:ios` estático + `--live` contra producción; etiquetas Apple, manifest, icono PNG `180 × 180`, `/sw.js` y `/assets/*.js` con `content-type` real, fallback SPA `/catalogo` y guía visible en WebKit de iPhone con cero errores de consola.
+- **Suite E2E Playwright:** `12/12` aprobadas en `Android Pixel 7` y `Desktop Chromium`; `9` aprobadas y `3` omitidas en la suite iOS/anuncios (`iPhone 13 WebKit` + regresión `Pixel 7 Chromium`), incluida la carga única de `ads.js` sin errores de consola ni CSP.
+- **Verificación PWA iOS, anuncios y CORP:** `pnpm check:pwa:ios` y `pnpm check:ads` estáticos + `--live`; etiquetas Apple, manifest, icono PNG `180 × 180`, `/sw.js` y `/assets/*.js` con `content-type` real, fallback SPA, `ads.js` una sola vez, shim CORS y una matriz final en WebKit `iPhone 13` / Chromium `Pixel 7` con `ads.js`, `ads-feed`, `lexair_vid`, anuncio e imagen cargando sin errores de consola ni CSP.
 - **GitHub Actions:** run `42696638087` en verde (`success`) con los dos jobs: calidad + E2E Safari/WebKit y verificación en vivo de Tienda y Panel con `User-Agent` de iPhone. Sin secretos reales en el repositorio ni en el workflow.
 - **Producción verificada:** `v3.1.3`, dominios antiguos en `404`, panel lateral del Admin intacto, CUP/USD sin conversión y limpieza de datos de prueba intacta.
 - **Infraestructura intacta:** sin pagos, sin dominios comprados, sin `SERVICE_ROLE` en frontend, sin pasarelas y sin datos comerciales inventados.
+
+## 10. Integración de anuncios centralizados de StudioLexair (post-`v3.1.3`)
+
+1. **Método elegido:** widget web oficial `ads.js` con Shadow DOM, porque el repositorio es una SPA React/Vite y no una app nativa, WebView, Flutter, Electron ni Tauri. No se implementó la variante nativa por API JSON.
+2. **Slug real:** `pequemodas`, confirmado contra `ads-feed` (`project=pequemodas` devuelve el anuncio activo; `pequemodas-jugueteria` devuelve `ads: []`). La Tienda pública carga el script una sola vez con `defer` y `data-project="pequemodas"`.
+3. **Superficies:** Solo `apps/storefront/index.html`. El Panel Administrativo privado queda excluido por ser una pantalla sensible; no se añadió `ads.js` a `apps/admin/index.html`.
+4. **CSP:** el repositorio no definía `Content-Security-Policy`; no se introdujo una CSP nueva que pudiera romper Tailwind, Supabase Storage, WhatsApp o Vite. `scripts/check-ads-integration.mjs` audita `vercel.json`, `deploy-static.mjs`, meta etiquetas y la cabecera en vivo; si aparece una CSP, exige los hosts de StudioLexair y Supabase Ads, además de `'self'` para el shim mismo-origen.
+5. **Service Worker:** ambos SW declaran `NETWORK_ONLY_AD_HOSTS` para `studiolexair.ddns.net` y `ywrspyrplgwxkwdboaiz.supabase.co`, garantizando Network-Only sin tocar el caché legítimo de imágenes de producto. Cachés invalidadas: Storefront `v13` / `img-by-id-v4`, Admin `v5`.
+6. **Seguridad:** cero claves privadas, tokens, `SERVICE_ROLE` o credenciales nuevas en frontend, GitHub o documentación. El endpoint de anuncios es público y CORS `*`.
+7. **Verificación:** `pnpm check:ads`, E2E iOS con stub de red, `node scripts/check-ads-integration.mjs --live` y una comprobación final en WebKit `iPhone 13` / Chromium `Pixel 7` contra producción con el anuncio real. El despliegue estático comprueba `ads.js`, el shim y su `content-type` antes de asignar alias.
+8. **Documentación:** nuevo `docs/ADS_STUDIOLEXAIR.md`; actualizados `README.md`, `docs/TESTING.md`, `docs/DEPLOYMENT.md`, `docs/ACCEPTANCE.md` y este estado.
+9. **Regresión visual detectada por E2E:** al forzar `360 × 800` en `desktop-chromium`, `ProductCard` y la tira de categorías generaban `6 px` de scroll horizontal. Se reproducía con y sin `ads.js`, por lo que no era causada por los anuncios. Se corrigió con `min-w-0`, `flex-wrap`, truncado del precio, `max-w-full` en badges y un contenedor `w-full max-w-full` con scroll horizontal real. Las tres suites volvieron a quedar en verde.
+10. **Compatibilidad CORP descubierta en producción:** el servidor central sirve `ads.js` y sus medios con `Cross-Origin-Resource-Policy: same-origin` y `Access-Control-Allow-Origin: *`. Sin modo CORS, Safari/WebKit cancelaba el script. Se añadió `crossorigin="anonymous"` a la etiqueta y un shim mismo-origen `/ads-cors-patch.js` que activa CORS en imágenes/vídeos de `studiolexair.ddns.net`. Es el único cambio respecto a la etiqueta exacta solicitada; puede retirarse cuando el backend vuelva a enviar `CORP: cross-origin`.
+11. **Imagen de categoría huérfana:** la limpieza anterior había dejado en `Juguetes` una `image_url` apuntando a un objeto borrado de Storage, lo que generaba `400` en consola. Se pusieron `image_url` e `image_storage_path` a `null` con una sesión administrativa real; las 3 categorías, sus nombres y el catálogo vacío se conservan sin datos inventados.
+12. **Producción final:** Tienda `dpl_FPfykz2bjJqK4J2Ds8SV7DB186Vu` y Panel `dpl_qVzrXWa71TZgPiUsjvQXS2tvakB8`. El despliegue validó `adsCount = 1/0`, `patchCount = 1/0`, `content-type` real del shim, `/version.json = 3.1.3`, iconos Apple, manifiesto, assets anidados y fallback SPA antes de asignar alias. La matriz final en producción (feed real + anuncio forzado + Panel) terminó con `PROD_ADS_FINAL_OK true` y cero errores relevantes.

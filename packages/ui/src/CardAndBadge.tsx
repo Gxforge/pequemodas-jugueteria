@@ -61,7 +61,7 @@ const TONE_MAP: Record<BadgeTone, string> = {
 export function Badge({ tone = 'neutral', children, className = '' }: BadgeProps) {
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${TONE_MAP[tone]} ${className}`}
+      className={`inline-flex max-w-full items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${TONE_MAP[tone]} ${className}`}
     >
       {children}
     </span>

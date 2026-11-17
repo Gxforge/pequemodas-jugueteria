@@ -19,6 +19,37 @@ async function mockExternalNetwork(page: Page) {
       await route.continue();
       return;
     }
+    if (
+      url.hostname === 'studiolexair.ddns.net' &&
+      url.pathname === '/ads.js'
+    ) {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/javascript',
+        headers: { 'access-control-allow-origin': '*' },
+        body: 'window.__lexairAdsLoaded = true;'
+      });
+      return;
+    }
+    if (
+      url.hostname === 'ywrspyrplgwxkwdboaiz.supabase.co' &&
+      url.pathname.startsWith('/functions/v1/ads-feed')
+    ) {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        headers: { 'access-control-allow-origin': '*' },
+        body: JSON.stringify({
+          ok: true,
+          project: 'pequemodas',
+          visitorHash: 'h-test',
+          ads: [],
+          floating: null,
+          inline: null
+        })
+      });
+      return;
+    }
     if (url.hostname.includes('supabase.co')) {
       const wantsObject =
         url.pathname.includes('store_settings') ||
@@ -193,5 +224,55 @@ test.describe('PWA v3.1.3 — instalación real en iPhone / iPad sin romper Andr
     await expect(
       page.getByText('Añadir a pantalla de inicio', { exact: false }).first()
     ).toBeVisible();
+  });
+});
+
+test.describe('Anuncios StudioLexair — integración web aislada', () => {
+  test('ads.js se carga una sola vez en la Tienda y nunca en el Panel privado', async ({
+    page,
+    request
+  }) => {
+    await mockExternalNetwork(page);
+    const adsErrors: string[] = [];
+    page.on('console', (message) => {
+      if (message.type() === 'error') adsErrors.push(message.text());
+    });
+    page.on('pageerror', (error) => adsErrors.push(error.message));
+    page.on('requestfailed', (failed) => {
+      if (/studiolexair|ads-feed/i.test(failed.url())) {
+        adsErrors.push(`requestfailed ${failed.url()}`);
+      }
+    });
+
+    await page.goto(`${STOREFRONT_URL}/`);
+    const adsScript = page.locator('script[src*="/ads.js"]');
+    await expect(adsScript).toHaveCount(1);
+    await expect(adsScript).toHaveAttribute(
+      'src',
+      'https://studiolexair.ddns.net/ads.js'
+    );
+    await expect(adsScript).toHaveAttribute('data-project', 'pequemodas');
+    await expect(adsScript).toHaveAttribute('defer', '');
+    await expect(adsScript).toHaveAttribute('crossorigin', 'anonymous');
+    const patchScript = page.locator('script[src="/ads-cors-patch.js"]');
+    await expect(patchScript).toHaveCount(1);
+    await expect(patchScript).toHaveAttribute('defer', '');
+
+    await page
+      .getByRole('navigation', { name: /Navegación rápida móvil/i })
+      .getByRole('link', { name: 'Catálogo' })
+      .click();
+    await expect(page).toHaveURL(/\/catalogo$/);
+    await expect(page.locator('script[src*="/ads.js"]')).toHaveCount(1);
+
+    const relevantErrors = adsErrors.filter((text) =>
+      /studiolexair|ads-feed|Content-Security-Policy|CSP|requestfailed/i.test(text)
+    );
+    expect(relevantErrors).toEqual([]);
+
+    const adminHtml = await (await request.get(`${ADMIN_URL}/`)).text();
+    expect(adminHtml).not.toContain('studiolexair.ddns.net/ads.js');
+    expect(adminHtml).not.toContain('data-project="pequemodas"');
+    expect(adminHtml).not.toContain('/ads-cors-patch.js');
   });
 });

@@ -23,6 +23,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ios": "playwright test --config=playwright.ios.config.ts",
     "check:pwa:ios": "node scripts/check-pwa-ios.mjs",
+    "check:ads": "node scripts/check-ads-integration.mjs",
     "deploy:static": "node scripts/deploy-static.mjs"
   },
   "devDependencies": {
